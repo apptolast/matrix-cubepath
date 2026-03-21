@@ -4,6 +4,7 @@ import { createSessionToken, COOKIE_NAME } from '../middleware/auth.middleware';
 
 const COOKIE_MAX_AGE = 7 * 24 * 60 * 60 * 1000; // 7 days
 const IS_PROD = process.env.NODE_ENV === 'production';
+const SECURE_COOKIE = process.env.SECURE_COOKIE !== 'false' && IS_PROD;
 
 // Username: 3-30 chars, alphanumeric + underscore + hyphen only
 const USERNAME_RE = /^[a-zA-Z0-9_-]{3,30}$/;
@@ -12,7 +13,7 @@ function setCookie(res: Response, username: string): void {
   const token = createSessionToken(username);
   res.cookie(COOKIE_NAME, token, {
     httpOnly: true,
-    secure: IS_PROD,
+    secure: SECURE_COOKIE,
     sameSite: 'lax',
     maxAge: COOKIE_MAX_AGE,
   });
