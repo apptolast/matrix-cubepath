@@ -1,0 +1,40 @@
+services:
+  app:
+    build: .
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3939
+      DATA_DIR: /data
+      SESSION_SECRET: ${SESSION_SECRET}
+    volumes:
+      - matrix_data:/data
+    networks:
+      - caddy_net
+    # Not exposed directly — Caddy proxies to it
+    expose:
+      - '3939'
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - '80:80'
+      - '443:443'
+      - '443:443/udp'
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - caddy_net
+    depends_on:
+      - app
+
+volumes:
+  matrix_data:
+  caddy_data:
+  caddy_config:
+
+networks:
+  caddy_net:

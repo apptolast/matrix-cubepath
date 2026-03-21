@@ -1,0 +1,32 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: SSH deploy to CubePath VPS
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            cd /app/matrix
+
+            # Backup data before deploy
+            BACKUP_DIR=/backups/matrix/$(date +%Y%m%d-%H%M%S)
+            mkdir -p $BACKUP_DIR
+            docker compose cp app:/data $BACKUP_DIR/ 2>/dev/null || echo "No running container, skipping backup"
+
+            # Keep only last 7 backups
+            ls -dt /backups/matrix/*/ 2>/dev/null | tail -n +8 | xargs rm -rf 2>/dev/null || true
+
+            # Deploy
+            git pull origin main
+            docker compose up --build -d
+            docker image prune -f
