@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { logger } from '../lib/logger';
 import { z } from 'zod';
 import { passwordsRepo, NewPassword } from '../repositories/passwords.repository';
 import { settingsRepo } from '../repositories/settings.repository';
@@ -102,7 +103,7 @@ const setupSchema = z.object({
 });
 
 const unlockSchema = z.object({
-  masterPassword: z.string().min(1),
+  masterPassword: z.string().min(8),
 });
 
 const createSchema = z.object({
@@ -260,8 +261,8 @@ export const passwordsController = {
     try {
       decryptedPassword = decrypt(entry.encryptedPassword, encryptionKey!);
     } catch (err) {
-      console.error(`[passwords] Failed to decrypt password for entry ${id}:`, err);
-      return res.status(500).json({ error: 'Failed to decrypt password', entryId: id });
+      logger.error('passwords', 'Failed to decrypt password entry');
+      return res.status(500).json({ error: 'Failed to decrypt password' });
     }
 
     res.json({

@@ -2,7 +2,7 @@
   "name": "matrix-cubepath",
   "productName": "Matrix",
   "version": "1.0.0",
-  "description": "Personal Management System — Web Edition",
+  "description": "Projects Management System — Web Edition",
   "private": true,
   "packageManager": "pnpm@10.23.0",
   "scripts": {

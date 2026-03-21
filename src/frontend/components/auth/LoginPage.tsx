@@ -1,4 +1,5 @@
 import { useState, FormEvent } from 'react';
+import { PasswordInput } from '../ui/PasswordInput';
 
 interface LoginPageProps {
   onLoginSuccess: () => void;
@@ -67,7 +68,7 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold text-matrix-accent tracking-widest uppercase">Matrix</h1>
-          <p className="text-xs text-matrix-muted mt-1 tracking-wider">Personal Management System</p>
+          <p className="text-xs text-matrix-muted mt-1 tracking-wider">Projects Management System</p>
         </div>
 
         {/* Tab toggle */}
@@ -117,9 +118,8 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
             <label htmlFor="password" className="block text-xs text-matrix-muted mb-1 tracking-wide uppercase">
               Password
             </label>
-            <input
+            <PasswordInput
               id="password"
-              type="password"
               autoComplete={isRegister ? 'new-password' : 'current-password'}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -134,9 +134,8 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
               <label htmlFor="confirm" className="block text-xs text-matrix-muted mb-1 tracking-wide uppercase">
                 Confirm password
               </label>
-              <input
+              <PasswordInput
                 id="confirm"
-                type="password"
                 autoComplete="new-password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}

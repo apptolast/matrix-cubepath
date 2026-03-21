@@ -67,7 +67,11 @@ export const useDialogStore = create<DialogStore>((set, get) => ({
   _close: () => {
     const { dialog } = get();
     if (!dialog) return;
-    dialog.resolve(dialog.type === 'confirm' ? false : null);
+    if (dialog.type === 'confirm') {
+      dialog.resolve(false);
+    } else {
+      dialog.resolve(null);
+    }
     set({ dialog: null });
   },
 }));

@@ -1,4 +1,4 @@
-# Matrix — Personal Management System
+# Matrix — Projects Management System
 
 ## Quick Reference
 
