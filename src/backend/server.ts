@@ -20,6 +20,7 @@ import { localSettingsRouter } from './routes/local-settings.routes';
 import { logsRouter } from './routes/logs.routes';
 
 const app = express();
+app.set('trust proxy', 1);
 
 // Global rate limit — 300 requests per minute per IP
 // (React Query + multiple views can easily do 30-50 on load)
