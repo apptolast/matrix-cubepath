@@ -10,7 +10,6 @@ import { useUiStore } from '../../stores/ui.store';
 import { t } from '../../lib/i18n';
 import { ResizableTextarea } from '../ui/ResizableTextarea';
 import { useDialogStore } from '../../stores/dialog.store';
-import { useFilePicker } from '../../hooks/useFilePicker';
 
 interface Props {
   projectId: number;
@@ -27,11 +26,9 @@ export function ProjectDetail({ projectId, onBack }: Props) {
 
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState('');
-  const [editPath, setEditPath] = useState('');
   const [editUrl, setEditUrl] = useState('');
   const [editDescription, setEditDescription] = useState('');
   const { confirm } = useDialogStore();
-  const { pickDirectory } = useFilePicker();
 
   if (isLoading || !project) return <div className="p-6 text-matrix-muted">{t('loading', language)}</div>;
 
@@ -54,7 +51,6 @@ export function ProjectDetail({ projectId, onBack }: Props) {
 
   const startEdit = () => {
     setEditName(project.name);
-    setEditPath(project.path || '');
     setEditUrl(project.url || '');
     setEditDescription(project.description || '');
     setIsEditing(true);
@@ -65,7 +61,6 @@ export function ProjectDetail({ projectId, onBack }: Props) {
       {
         id: project.id,
         name: editName.trim() || undefined,
-        path: editPath.trim() || undefined,
         url: editUrl.trim() || undefined,
         description: editDescription.trim() || undefined,
       },
@@ -81,14 +76,6 @@ export function ProjectDetail({ projectId, onBack }: Props) {
       danger: true,
     });
     if (ok) deleteProject.mutate(project.id, { onSuccess: onBack });
-  };
-
-  const handleSelectDirectory = async () => {
-    const dir = await pickDirectory({
-      title: language === 'es' ? 'Ruta del proyecto' : 'Project path',
-      defaultValue: editPath,
-    });
-    if (dir) setEditPath(dir);
   };
 
   const openFolder = () => {
@@ -111,20 +98,6 @@ export function ProjectDetail({ projectId, onBack }: Props) {
               placeholder={t('projectName', language)}
               className="w-full px-3 py-2 bg-matrix-bg border border-matrix-border rounded text-lg font-semibold text-gray-200 placeholder-matrix-muted focus:border-matrix-accent focus:outline-none"
             />
-            <div className="flex gap-2">
-              <input
-                value={editPath}
-                onChange={(e) => setEditPath(e.target.value)}
-                placeholder={t('projectPath', language)}
-                className="flex-1 px-3 py-2 bg-matrix-bg border border-matrix-border rounded text-sm text-gray-200 placeholder-matrix-muted focus:border-matrix-accent focus:outline-none"
-              />
-              <button
-                onClick={handleSelectDirectory}
-                className="px-3 py-2 text-sm bg-matrix-bg border border-matrix-border rounded text-gray-300 hover:bg-matrix-surface transition-colors"
-              >
-                📁
-              </button>
-            </div>
             <input
               value={editUrl}
               onChange={(e) => setEditUrl(e.target.value)}
@@ -303,7 +276,14 @@ export function ProjectDetail({ projectId, onBack }: Props) {
                         <span className="text-matrix-accent font-mono">
                           {scanData.roadmap.completedPhases || 0}/{scanData.roadmap.totalPhases || 0}
                         </span>
-                        <span className="text-gray-500 text-[10px]">{scanData.roadmap.lineCount || 0} lines</span>
+                        <span className="text-gray-500 text-[10px]">
+                          {scanData.roadmap.lineCount || 0} lines
+                        </span>
+                        {scanData.roadmap.totalPhases > 0 && (
+                          <span className="text-gray-500 text-[10px]">
+                            ({Math.round(((scanData.roadmap.completedPhases || 0) / scanData.roadmap.totalPhases) * 100)}%)
+                          </span>
+                        )}
                       </>
                     ) : (
                       <span className="text-matrix-danger">✕</span>

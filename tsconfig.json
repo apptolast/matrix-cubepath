@@ -12,7 +12,8 @@
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "jsx": "react-jsx",
-    "strict": true
+    "strict": true,
+    "types": ["vite-plugin-pwa/react"]
   },
   "include": ["src/**/*"]
 }

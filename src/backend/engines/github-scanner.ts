@@ -91,7 +91,7 @@ export async function syncFromGitHub(
   const paths = (tree?.tree || []).map((t) => t.path || '').filter(Boolean);
 
   const techStats: TechStats = {
-    totalLines: languages ? Object.values(languages).reduce((a, b) => a + b, 0) : 0,
+    totalLines: languages ? Math.round(Object.values(languages).reduce((a, b) => a + b, 0) / 40) : 0,
     languages: languages ? mapGitHubLanguages(languages) : [],
     hasTests: paths.some(
       (p) => /^(tests?|__tests__|spec|e2e|cypress|playwright)\//i.test(p) || /\.(test|spec)\.[jt]sx?$/.test(p),
@@ -185,7 +185,7 @@ function mapGitHubLanguages(ghLangs: Record<string, number>): TechStats['languag
     .map(([name, bytes]) => ({
       name,
       color: LANG_COLORS[name] || '#888888',
-      lines: bytes,
+      lines: Math.round(bytes / 40),
       percent: total > 0 ? Math.round((bytes / total) * 100) : 0,
     }))
     .sort((a, b) => b.lines - a.lines);
@@ -205,17 +205,26 @@ function getRoadmapProgress(content: string): { totalPhases: number; completedPh
   let totalPhases = 0;
   let completedPhases = 0;
 
+  // Count ## and ### headers as phases; ✅ marks completion
   for (const line of lines) {
     const trimmed = line.trim();
-    if (/^#{2}\s+/.test(trimmed)) {
+    if (/^#{2,3}\s+/.test(trimmed)) {
       totalPhases++;
       if (/✅/.test(trimmed)) completedPhases++;
     }
-    if (/^[-*]\s+\[x\]/i.test(trimmed)) {
-      totalPhases++;
-      completedPhases++;
-    } else if (/^[-*]\s+\[ \]/.test(trimmed)) {
-      totalPhases++;
+  }
+
+  // If no ✅ markers found, fall back to checkbox ratio
+  if (totalPhases > 0 && completedPhases === 0) {
+    let checked = 0;
+    let total = 0;
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (/^[-*]\s+\[x\]/i.test(trimmed)) { checked++; total++; }
+      else if (/^[-*]\s+\[ \]/.test(trimmed)) { total++; }
+    }
+    if (total > 0) {
+      return { totalPhases: total, completedPhases: checked };
     }
   }
 

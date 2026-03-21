@@ -15,9 +15,9 @@
 
 ---
 
-## Implemented
+## Implemented ✅
 
-### Infrastructure
+### Infrastructure ✅
 
 - [x] Migration from Electron → standalone web app (removed `window.matrix.*`, IPC, preload)
 - [x] Entry point `src/backend/start.ts` (pure Node.js, no Electron)
@@ -27,7 +27,7 @@
 - [x] `trust proxy` for reverse proxy compatibility (Traefik)
 - [x] `SECURE_COOKIE` env var for HTTPS-only cookie control
 
-### Deployment
+### Deployment ✅
 
 - [x] CubePath VPS provisioned (Ubuntu, Docker pre-installed)
 - [x] Dokploy installed and configured as deployment manager
@@ -36,14 +36,14 @@
 - [x] Auto-deploy on push to `main` via Dokploy
 - [x] Docker volume `matrix_data` for persistent data
 
-### Demo & Security
+### Demo & Security ✅
 
 - [x] Demo user with full mock data (`DEMO_USER` env var)
 - [x] Demo data reset on each startup + endpoint `POST /api/demo/reset`
 - [x] Global rate limiter: 300 req/min per IP on all API endpoints
 - [x] Auth rate limiter: 10 req/15min on `/auth/login` and `/auth/register`
 
-### Authentication
+### Authentication ✅
 
 - [x] Registration and login with scrypt password hashing (`crypto.scryptSync`, 64-byte key)
 - [x] HMAC session tokens with `SESSION_SECRET` (no express-session dependency)
@@ -55,7 +55,7 @@
 - [x] Timing-safe comparison — always runs hash for unknown users
 - [x] Client-side validation in LoginPage before fetch
 
-### Backend API
+### Backend API ✅
 
 - [x] Full CRUD: missions, objectives, plans, tasks
 - [x] Ideas with evaluation and status pipeline
@@ -67,7 +67,7 @@
 - [x] Logs API (`GET /api/logs`, `POST /api/logs/clear`)
 - [x] Stats and deadlines endpoints
 
-### GitHub API Integration
+### GitHub API Integration ✅
 
 - [x] `src/backend/engines/github-scanner.ts` — GitHub API calls: languages, commits, file tree, README/ROADMAP/TODO detection
 - [x] Settings backend — store/retrieve `github_token` in `settings` table per user
@@ -77,7 +77,7 @@
 - [x] Project create — accepts GitHub URL (`https://github.com/owner/repo` or `owner/repo`)
 - [x] Project detail — "Sync from GitHub" button (visible when project has `url` configured)
 
-### Frontend
+### Frontend ✅
 
 - [x] Sidebar with tabs: Overview, Projects, Tasks, Ideas, Passwords, Settings
 - [x] OverviewView — home page with summary dashboard
@@ -92,12 +92,12 @@
 - [x] Hooks: `useActivityMetrics`, `useIdeasPipeline`, `useDeadlines`, `useTasks`
 - [x] Store: `pomodoro.store`, `dialog.store`
 
-### CI/CD
+### CI/CD ✅
 
 - [x] `ci.yml`: TypeScript typecheck on every push/PR to `main`
 - [x] ~~`release.yml`: SSH deploy to VPS~~ — removed in favor of Dokploy auto-deploy
 
-### Hackathon Requirements
+### Hackathon Requirements ✅
 
 - [x] README.md with description, demo link, and deployment instructions
 - [x] Public repository
@@ -110,13 +110,18 @@
 
 ### Issues to Investigate
 
-- [ ] React Query fires all queries in parallel on view mount — review if this causes excessive load or race conditions
+- [x] React Query fires all queries in parallel on view mount — reviewed: duplicate hook calls are auto-deduplicated by React Query (same key = 1 HTTP request). Fixed `refetchOnMount: 'always'` → default (`true`) to avoid unnecessary refetches on tab navigation
 
 ### Features
 
-- [ ] Notifications for upcoming deadlines
+- [x] Notifications for upcoming deadlines (DeadlineBanner + UpcomingDeadlines widget + Settings toggle)
 - [ ] Data export (JSON/CSV)
-- [ ] Offline mode / PWA (nice to have)
+  - Backend: `GET /api/export` endpoint (auth required) that queries all user tables (missions, objectives, plans, tasks, ideas, idea_evaluations, projects, project_links, activity_log, settings) and returns a single JSON file with ISO timestamps
+  - Backend: `GET /api/export?format=csv` variant that returns a ZIP with one CSV per table
+  - Passwords excluded by default (security) — optional `includePasswords=true` flag exports them encrypted
+  - Frontend: "Export my data" button in SettingsView → triggers download via `window.location` or Blob
+  - Future: `POST /api/import` to restore from exported JSON (validate schema with Zod before inserting)
+- [x] PWA support (manifest, service worker, install prompt, offline caching, update notification)
 
 ### Password Vault Security Hardening
 
@@ -132,12 +137,14 @@
 - [ ] Configurable password generator (custom length, character sets, exclude ambiguous chars)
 - [ ] Vault unlock/access activity logging (timestamps, failed attempts)
 
-### Migration Gaps (Electron → Web)
+### Migration Gaps (Electron → Web) ✅
 
 See [Migration section in README](./README.md#migration-from-matrix-electron) for context.
 
-- [ ] Deepen local filesystem project scanning for self-hosted instances (Electron scanned directories, git info, line counts)
-- [ ] Port remaining Electron-specific UX patterns to web equivalents
+- [x] Local filesystem scanner ported and functional (`POST /projects/:id/scan`)
+- [x] GitHub scanner added as alternative (`POST /projects/:id/sync-github`)
+- [x] All Electron-specific patterns removed (IPC, preload, native dialogs, BrowserWindow)
+- [x] File dialogs replaced with text input / form-based UX
 
 ---
 

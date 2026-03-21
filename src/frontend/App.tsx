@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AppShell } from './components/layout/AppShell';
 import { LoginPage } from './components/auth/LoginPage';
+import { ServiceWorkerRegister } from './components/pwa/ServiceWorkerRegister';
+import { InstallPrompt } from './components/pwa/InstallPrompt';
 import { useUiStore, Theme } from './stores/ui.store';
 import { apiFetch } from './lib/api';
 
@@ -14,7 +16,6 @@ const queryClient = new QueryClient({
         return failureCount < 1;
       },
       staleTime: 5000,
-      refetchOnMount: 'always',
     },
     mutations: {
       onError: (error) => {
@@ -113,6 +114,8 @@ export function App() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <AppShell />
+        <ServiceWorkerRegister />
+        <InstallPrompt />
       </ThemeProvider>
     </QueryClientProvider>
   );
