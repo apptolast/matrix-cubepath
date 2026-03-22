@@ -5,9 +5,6 @@ import { createSessionToken, COOKIE_NAME } from '../middleware/auth.middleware';
 const COOKIE_MAX_AGE = 7 * 24 * 60 * 60 * 1000; // 7 days
 const SECURE_COOKIE = process.env.SECURE_COOKIE === 'true';
 
-// Username: 3-30 chars, alphanumeric + underscore + hyphen only
-const USERNAME_RE = /^[a-zA-Z0-9_-]{3,30}$/;
-
 function setCookie(res: Response, username: string): void {
   const token = createSessionToken(username);
   res.cookie(COOKIE_NAME, token, {
@@ -19,22 +16,8 @@ function setCookie(res: Response, username: string): void {
 }
 
 export function register(req: Request, res: Response): void {
-  const { username, password } = req.body ?? {};
+  const { username, password } = req.body;
 
-  if (typeof username !== 'string' || typeof password !== 'string') {
-    res.status(400).json({ error: 'Username and password are required' });
-    return;
-  }
-  if (!USERNAME_RE.test(username)) {
-    res.status(400).json({
-      error: 'Username must be 3-30 characters: letters, numbers, _ or -',
-    });
-    return;
-  }
-  if (password.length < 8 || password.length > 128) {
-    res.status(400).json({ error: 'Password must be between 8 and 128 characters' });
-    return;
-  }
   if (userExists(username)) {
     res.status(409).json({ error: 'Username already taken' });
     return;
@@ -46,12 +29,8 @@ export function register(req: Request, res: Response): void {
 }
 
 export function login(req: Request, res: Response): void {
-  const { username, password } = req.body ?? {};
+  const { username, password } = req.body;
 
-  if (typeof username !== 'string' || typeof password !== 'string') {
-    res.status(400).json({ error: 'Username and password are required' });
-    return;
-  }
   if (!verifyUser(username, password)) {
     res.status(401).json({ error: 'Invalid credentials' });
     return;

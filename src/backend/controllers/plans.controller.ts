@@ -1,32 +1,10 @@
 import { Request, Response } from 'express';
-import { z } from 'zod';
 import { plansRepo } from '../repositories/plans.repository';
 import { activityRepo } from '../repositories/activity.repository';
 import { tasksRepo } from '../repositories/tasks.repository';
 import { projectsRepo } from '../repositories/projects.repository';
 import { calcPlanProgress } from '../lib/progress';
-
-const createSchema = z.object({
-  objectiveId: z.number(),
-  title: z.string().min(1),
-  description: z.string().optional(),
-  sortOrder: z.number().optional(),
-  deadline: z.string().optional(),
-});
-
-const updateSchema = z.object({
-  title: z.string().min(1).optional(),
-  description: z.string().optional(),
-  status: z.enum(['in_progress', 'completed']).optional(),
-  sortOrder: z.number().optional(),
-  objectiveId: z.number().optional(),
-  deadline: z.string().optional(),
-});
-
-const deleteSchema = z.object({
-  action: z.enum(['reassign', 'cascade']).optional(),
-  newParentId: z.number().optional(),
-});
+import { cascadeDeleteBody } from '../validations/common.validation';
 
 export const plansController = {
   getAll(req: Request, res: Response) {
@@ -42,17 +20,13 @@ export const plansController = {
   },
 
   create(req: Request, res: Response) {
-    const parsed = createSchema.safeParse(req.body);
-    if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten().fieldErrors });
-    const p = plansRepo.create(parsed.data);
+    const p = plansRepo.create(req.body);
     activityRepo.log('created', 'plan', p.id, `Created plan: ${p.title}`);
     res.status(201).json(p);
   },
 
   update(req: Request, res: Response) {
-    const parsed = updateSchema.safeParse(req.body);
-    if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten().fieldErrors });
-    const p = plansRepo.update(Number(req.params.id), parsed.data);
+    const p = plansRepo.update(Number(req.params.id), req.body);
     if (!p) return res.status(404).json({ error: 'Plan not found' });
     res.json({ ...p, progress: calcPlanProgress(p.id) });
   },
@@ -64,7 +38,7 @@ export const plansController = {
 
     const children = tasksRepo.findByPlanId(id);
     if (children.length > 0) {
-      const parsed = deleteSchema.safeParse(req.body);
+      const parsed = cascadeDeleteBody.safeParse(req.body);
       if (!parsed.success || !parsed.data.action) {
         return res
           .status(400)

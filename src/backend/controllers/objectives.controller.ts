@@ -1,31 +1,11 @@
 import { Request, Response } from 'express';
-import { z } from 'zod';
 import { objectivesRepo } from '../repositories/objectives.repository';
 import { activityRepo } from '../repositories/activity.repository';
 import { plansRepo } from '../repositories/plans.repository';
 import { tasksRepo } from '../repositories/tasks.repository';
 import { projectsRepo } from '../repositories/projects.repository';
-import { calcObjectiveProgress, calcPlanProgress } from '../lib/progress';
-
-const createSchema = z.object({
-  missionId: z.number(),
-  title: z.string().min(1),
-  description: z.string().optional(),
-  sortOrder: z.number().optional(),
-});
-
-const updateSchema = z.object({
-  title: z.string().min(1).optional(),
-  description: z.string().optional(),
-  status: z.enum(['in_progress', 'completed']).optional(),
-  sortOrder: z.number().optional(),
-  missionId: z.number().optional(),
-});
-
-const deleteSchema = z.object({
-  action: z.enum(['reassign', 'cascade']).optional(),
-  newParentId: z.number().optional(),
-});
+import { calcObjectiveProgress } from '../lib/progress';
+import { cascadeDeleteBody } from '../validations/common.validation';
 
 export const objectivesController = {
   getAll(req: Request, res: Response) {
@@ -42,17 +22,13 @@ export const objectivesController = {
   },
 
   create(req: Request, res: Response) {
-    const parsed = createSchema.safeParse(req.body);
-    if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten().fieldErrors });
-    const o = objectivesRepo.create(parsed.data);
+    const o = objectivesRepo.create(req.body);
     activityRepo.log('created', 'objective', o.id, `Created objective: ${o.title}`);
     res.status(201).json(o);
   },
 
   update(req: Request, res: Response) {
-    const parsed = updateSchema.safeParse(req.body);
-    if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten().fieldErrors });
-    const o = objectivesRepo.update(Number(req.params.id), parsed.data);
+    const o = objectivesRepo.update(Number(req.params.id), req.body);
     if (!o) return res.status(404).json({ error: 'Objective not found' });
     res.json({ ...o, progress: calcObjectiveProgress(o.id) });
   },
@@ -64,7 +40,7 @@ export const objectivesController = {
 
     const children = plansRepo.findByObjectiveId(id);
     if (children.length > 0) {
-      const parsed = deleteSchema.safeParse(req.body);
+      const parsed = cascadeDeleteBody.safeParse(req.body);
       if (!parsed.success || !parsed.data.action) {
         return res
           .status(400)

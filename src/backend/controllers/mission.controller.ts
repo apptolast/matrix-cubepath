@@ -1,5 +1,4 @@
 import { Request, Response } from 'express';
-import { z } from 'zod';
 import { missionRepo } from '../repositories/mission.repository';
 import { objectivesRepo } from '../repositories/objectives.repository';
 import { plansRepo } from '../repositories/plans.repository';
@@ -7,22 +6,7 @@ import { tasksRepo } from '../repositories/tasks.repository';
 import { projectsRepo } from '../repositories/projects.repository';
 import { activityRepo } from '../repositories/activity.repository';
 import { calcMissionProgress } from '../lib/progress';
-
-const createSchema = z.object({
-  title: z.string().min(1),
-  description: z.string().optional(),
-});
-
-const updateSchema = z.object({
-  title: z.string().min(1).optional(),
-  description: z.string().optional(),
-  status: z.enum(['in_progress', 'completed']).optional(),
-});
-
-const deleteSchema = z.object({
-  action: z.enum(['reassign', 'cascade']).optional(),
-  newParentId: z.number().optional(),
-});
+import { cascadeDeleteBody } from '../validations/common.validation';
 
 export const missionController = {
   getAll(_req: Request, res: Response) {
@@ -38,21 +22,15 @@ export const missionController = {
   },
 
   create(req: Request, res: Response) {
-    const parsed = createSchema.safeParse(req.body);
-    if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten().fieldErrors });
-
     const existing = missionRepo.findAll();
     if (existing.length > 0) return res.status(409).json({ error: 'Only one active mission allowed' });
 
-    const m = missionRepo.create(parsed.data);
+    const m = missionRepo.create(req.body);
     res.status(201).json(m);
   },
 
   update(req: Request, res: Response) {
-    const parsed = updateSchema.safeParse(req.body);
-    if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten().fieldErrors });
-
-    const m = missionRepo.update(Number(req.params.id), parsed.data);
+    const m = missionRepo.update(Number(req.params.id), req.body);
     if (!m) return res.status(404).json({ error: 'Mission not found' });
     res.json({ ...m, progress: calcMissionProgress(m.id) });
   },
@@ -64,7 +42,7 @@ export const missionController = {
 
     const children = objectivesRepo.findByMissionId(id);
     if (children.length > 0) {
-      const parsed = deleteSchema.safeParse(req.body);
+      const parsed = cascadeDeleteBody.safeParse(req.body);
       if (!parsed.success || !parsed.data.action) {
         return res.status(400).json({ error: 'Mission has objectives. Provide action: "cascade" to delete all.' });
       }

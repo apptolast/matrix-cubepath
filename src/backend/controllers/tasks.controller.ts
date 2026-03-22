@@ -1,28 +1,7 @@
 import { Request, Response } from 'express';
-import { z } from 'zod';
 import { tasksRepo } from '../repositories/tasks.repository';
 import { activityRepo } from '../repositories/activity.repository';
 import { projectsRepo } from '../repositories/projects.repository';
-
-const createSchema = z.object({
-  planId: z.number(),
-  title: z.string().min(1),
-  description: z.string().optional(),
-  status: z.enum(['pending', 'in_progress', 'done']).optional(),
-  priority: z.enum(['low', 'medium', 'high', 'urgent']).optional(),
-  sortOrder: z.number().optional(),
-  deadline: z.string().optional(),
-});
-
-const updateSchema = z.object({
-  title: z.string().min(1).optional(),
-  description: z.string().optional(),
-  status: z.enum(['pending', 'in_progress', 'done']).optional(),
-  priority: z.enum(['low', 'medium', 'high', 'urgent']).optional(),
-  sortOrder: z.number().optional(),
-  planId: z.number().optional(),
-  deadline: z.string().nullable().optional(),
-});
 
 export const tasksController = {
   getAll(req: Request, res: Response) {
@@ -32,7 +11,7 @@ export const tasksController = {
     res.json(tasksRepo.findFiltered(filters));
   },
 
-  getDeadlines(req: Request, res: Response) {
+  getDeadlines(_req: Request, res: Response) {
     const allTasks = tasksRepo.findAll();
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -40,26 +19,20 @@ export const tasksController = {
 
     const isValidDate = (d: string | null | undefined): d is string => {
       if (!d) return false;
-      const date = new Date(d);
-      return !Number.isNaN(date.getTime());
+      return !Number.isNaN(new Date(d).getTime());
     };
 
     const pending = allTasks.filter((t) => t.status !== 'done' && isValidDate(t.deadline));
 
-    const overdue = pending.filter((t) => {
-      const d = new Date(t.deadline!);
-      return d < today;
-    });
+    const overdue = pending.filter((t) => new Date(t.deadline!) < today);
 
     const dueToday = pending.filter((t) => {
-      const d = new Date(t.deadline!);
-      const taskDay = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+      const taskDay = new Date(new Date(t.deadline!).toDateString());
       return taskDay.getTime() === today.getTime();
     });
 
     const dueSoon = pending.filter((t) => {
-      const d = new Date(t.deadline!);
-      const taskDay = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+      const taskDay = new Date(new Date(t.deadline!).toDateString());
       return taskDay > today && taskDay <= soon;
     });
 
@@ -78,24 +51,17 @@ export const tasksController = {
   },
 
   create(req: Request, res: Response) {
-    const parsed = createSchema.safeParse(req.body);
-    if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten().fieldErrors });
-    const t = tasksRepo.create(parsed.data);
+    const t = tasksRepo.create(req.body);
     activityRepo.log('created', 'task', t.id, `Created task: ${t.title}`);
     res.status(201).json(t);
   },
 
   update(req: Request, res: Response) {
-    const parsed = updateSchema.safeParse(req.body);
-    if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten().fieldErrors });
+    const data: Record<string, unknown> = { ...req.body };
+    const { status } = req.body;
 
-    const data: Record<string, unknown> = { ...parsed.data };
-    const status = parsed.data.status;
-
-    // Handle empty string deadline as null (to clear it)
-    if (data.deadline === '') {
-      data.deadline = null;
-    }
+    // Treat empty string deadline as null (clear it)
+    if (data.deadline === '') data.deadline = null;
 
     if (status === 'done') {
       data.completedAt = new Date().toISOString();

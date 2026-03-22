@@ -1,5 +1,4 @@
 import { Request, Response } from 'express';
-import { z } from 'zod';
 import { ideasRepo } from '../repositories/ideas.repository';
 import { tasksRepo } from '../repositories/tasks.repository';
 import { activityRepo } from '../repositories/activity.repository';
@@ -7,40 +6,6 @@ import { getDb } from '../db/connection';
 import { plans, objectives, projects, ideas, ideaEvaluations } from '../db/schema';
 import { eq, count, desc, sql } from 'drizzle-orm';
 import { logger } from '../lib/logger';
-
-const createSchema = z.object({
-  title: z.string().min(1),
-  description: z.string().optional(),
-  targetType: z.enum(['mission', 'objective', 'plan', 'task']).optional(),
-  targetId: z.number().optional(),
-  projectId: z.number().optional(),
-});
-
-const updateSchema = z.object({
-  title: z.string().min(1).optional(),
-  description: z.string().optional(),
-  status: z.enum(['pending', 'evaluating', 'approved', 'rejected', 'promoted']).optional(),
-  targetType: z.enum(['mission', 'objective', 'plan', 'task']).nullable().optional(),
-  targetId: z.number().nullable().optional(),
-  projectId: z.number().nullable().optional(),
-});
-
-const evaluateSchema = z.object({
-  alignmentScore: z.number().min(1).max(10),
-  impactScore: z.number().min(1).max(10),
-  costScore: z.number().min(1).max(10),
-  riskScore: z.number().min(1).max(10),
-  reasoning: z.string().optional(),
-});
-
-const decideSchema = z.object({
-  decision: z.enum(['approved', 'rejected']),
-});
-
-const promoteSchema = z.object({
-  type: z.enum(['task', 'plan', 'objective', 'project']),
-  parentId: z.number().optional(),
-});
 
 function calcTotalScore(a: number, i: number, c: number, r: number): number {
   return Math.round((a * 0.4 + i * 0.3 + (10 - c) * 0.15 + (10 - r) * 0.15) * 100) / 100;
@@ -62,17 +27,13 @@ export const ideasController = {
   },
 
   create(req: Request, res: Response) {
-    const parsed = createSchema.safeParse(req.body);
-    if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten().fieldErrors });
-    const idea = ideasRepo.create(parsed.data);
+    const idea = ideasRepo.create(req.body);
     activityRepo.log('created', 'idea', idea.id, `Created idea: ${idea.title}`);
     res.status(201).json(idea);
   },
 
   update(req: Request, res: Response) {
-    const parsed = updateSchema.safeParse(req.body);
-    if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten().fieldErrors });
-    const idea = ideasRepo.update(Number(req.params.id), parsed.data as Parameters<typeof ideasRepo.update>[1]);
+    const idea = ideasRepo.update(Number(req.params.id), req.body as Parameters<typeof ideasRepo.update>[1]);
     if (!idea) return res.status(404).json({ error: 'Idea not found' });
     res.json(idea);
   },
@@ -91,10 +52,7 @@ export const ideasController = {
     const idea = ideasRepo.findById(id);
     if (!idea) return res.status(404).json({ error: 'Idea not found' });
 
-    const parsed = evaluateSchema.safeParse(req.body);
-    if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten().fieldErrors });
-
-    const { alignmentScore, impactScore, costScore, riskScore, reasoning } = parsed.data;
+    const { alignmentScore, impactScore, costScore, riskScore, reasoning } = req.body;
     const totalScore = calcTotalScore(alignmentScore, impactScore, costScore, riskScore);
 
     const evaluation = ideasRepo.upsertEvaluation(id, {
@@ -106,7 +64,6 @@ export const ideasController = {
       reasoning,
     });
 
-    // Move idea to evaluating if still pending
     if (idea.status === 'pending') {
       ideasRepo.update(id, { status: 'evaluating' });
     }
@@ -125,10 +82,7 @@ export const ideasController = {
     const idea = ideasRepo.findById(id);
     if (!idea) return res.status(404).json({ error: 'Idea not found' });
 
-    const parsed = decideSchema.safeParse(req.body);
-    if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten().fieldErrors });
-
-    const { decision } = parsed.data;
+    const { decision } = req.body;
     ideasRepo.updateEvaluationDecision(id, decision);
     const updated = ideasRepo.update(id, { status: decision });
     activityRepo.log('decided', 'idea', id, `Decided idea "${idea.title}": ${decision}`);
@@ -140,10 +94,7 @@ export const ideasController = {
     const idea = ideasRepo.findById(id);
     if (!idea) return res.status(404).json({ error: 'Idea not found' });
 
-    const parsed = promoteSchema.safeParse(req.body);
-    if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten().fieldErrors });
-
-    const { type, parentId } = parsed.data;
+    const { type, parentId } = req.body;
     const db = getDb();
     let createdId: number;
 

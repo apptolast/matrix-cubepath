@@ -1,6 +1,5 @@
 import { Request, Response } from 'express';
 import { logger } from '../lib/logger';
-import { z } from 'zod';
 import { passwordsRepo, NewPassword } from '../repositories/passwords.repository';
 import { settingsRepo } from '../repositories/settings.repository';
 import { activityRepo } from '../repositories/activity.repository';
@@ -67,7 +66,6 @@ function resetAttempts() {
   lockoutUntil = 0;
 }
 
-/** Parse and validate :id param, returns number or sends 400 */
 function parseId(req: Request, res: Response): number | null {
   const id = Number(req.params.id);
   if (!Number.isInteger(id) || id <= 0) {
@@ -77,7 +75,6 @@ function parseId(req: Request, res: Response): number | null {
   return id;
 }
 
-/** Decrypt notes safely — handles v1: prefixed, legacy encrypted, and plaintext */
 function decryptNotes(notes: string | null | undefined, key: Buffer): string {
   if (!notes) return '';
   if (isEncrypted(notes)) {
@@ -87,7 +84,6 @@ function decryptNotes(notes: string | null | undefined, key: Buffer): string {
       return notes;
     }
   }
-  // Legacy: try decrypt if it looks like old format (iv:tag:ct), otherwise plaintext
   if (notes.split(':').length >= 3) {
     try {
       return decrypt(notes, key);
@@ -98,46 +94,8 @@ function decryptNotes(notes: string | null | undefined, key: Buffer): string {
   return notes;
 }
 
-const setupSchema = z.object({
-  masterPassword: z.string().min(8),
-});
-
-const unlockSchema = z.object({
-  masterPassword: z.string().min(8),
-});
-
-const createSchema = z.object({
-  label: z.string().min(1),
-  domain: z.string().optional(),
-  username: z.string().optional(),
-  password: z.string().min(1),
-  category: z.enum(['email', 'social', 'dev', 'finance', 'gaming', 'work', 'other']).default('other'),
-  favorite: z.number().min(0).max(1).default(0),
-  notes: z.string().optional(),
-});
-
-const updateSchema = createSchema.partial();
-
-const importConfirmSchema = z.object({
-  entries: z.array(
-    z.object({
-      label: z.string().min(1),
-      domain: z.string().optional(),
-      username: z.string().optional(),
-      password: z.string().min(1),
-      category: z.enum(['email', 'social', 'dev', 'finance', 'gaming', 'work', 'other']).default('other'),
-      notes: z.string().optional(),
-    }),
-  ),
-});
-
-const changeMasterSchema = z.object({
-  currentPassword: z.string().min(1),
-  newPassword: z.string().min(8),
-});
-
 export const passwordsController = {
-  async isSetup(req: Request, res: Response) {
+  async isSetup(_req: Request, res: Response) {
     const authHash = settingsRepo.findByKey('passwords_auth_hash');
     res.json({ isSetup: !!authHash, isUnlocked: !!encryptionKey });
   },
@@ -145,17 +103,12 @@ export const passwordsController = {
   async setup(req: Request, res: Response) {
     if (!checkRateLimit(res)) return;
 
-    const parsed = setupSchema.safeParse(req.body);
-    if (!parsed.success) {
-      return res.status(400).json({ error: parsed.error.flatten().fieldErrors });
-    }
-
     const existing = settingsRepo.findByKey('passwords_auth_hash');
     if (existing) {
       return res.status(400).json({ error: 'Vault already setup' });
     }
 
-    const { masterPassword } = parsed.data;
+    const { masterPassword } = req.body;
     const authResult = deriveAuthHash(masterPassword);
     const encSalt = generateEncSalt();
 
@@ -173,12 +126,7 @@ export const passwordsController = {
   async unlock(req: Request, res: Response) {
     if (!checkRateLimit(res)) return;
 
-    const parsed = unlockSchema.safeParse(req.body);
-    if (!parsed.success) {
-      return res.status(400).json({ error: parsed.error.flatten().fieldErrors });
-    }
-
-    const { masterPassword } = parsed.data;
+    const { masterPassword } = req.body;
     const storedHash = settingsRepo.findByKey('passwords_auth_hash');
     const storedSalt = settingsRepo.findByKey('passwords_salt_auth');
     const encSalt = settingsRepo.findByKey('passwords_salt_enc');
@@ -193,7 +141,6 @@ export const passwordsController = {
       return res.status(401).json({ error: 'Incorrect password' });
     }
 
-    // Detect legacy vault (created before domain-separated key derivation)
     const legacy = isLegacyAuth(masterPassword, storedSalt.value, storedHash.value);
     encryptionKey = deriveEncryptionKey(masterPassword, encSalt.value, legacy);
     resetInactivityTimer();
@@ -202,15 +149,13 @@ export const passwordsController = {
     res.json({ ok: true });
   },
 
-  async lock(req: Request, res: Response) {
+  async lock(_req: Request, res: Response) {
     lockVault();
     res.json({ ok: true });
   },
 
   async getAll(req: Request, res: Response) {
-    if (!encryptionKey) {
-      return res.status(401).json({ error: 'Vault is locked' });
-    }
+    if (!encryptionKey) return res.status(401).json({ error: 'Vault is locked' });
     resetInactivityTimer();
 
     const { search, category } = req.query;
@@ -244,23 +189,19 @@ export const passwordsController = {
   },
 
   async getById(req: Request, res: Response) {
-    if (!encryptionKey) {
-      return res.status(401).json({ error: 'Vault is locked' });
-    }
+    if (!encryptionKey) return res.status(401).json({ error: 'Vault is locked' });
     resetInactivityTimer();
 
     const id = parseId(req, res);
     if (id === null) return;
 
     const entry = passwordsRepo.findById(id);
-    if (!entry) {
-      return res.status(404).json({ error: 'Password not found' });
-    }
+    if (!entry) return res.status(404).json({ error: 'Password not found' });
 
     let decryptedPassword = '';
     try {
       decryptedPassword = decrypt(entry.encryptedPassword, encryptionKey!);
-    } catch (err) {
+    } catch {
       logger.error('passwords', 'Failed to decrypt password entry');
       return res.status(500).json({ error: 'Failed to decrypt password' });
     }
@@ -280,17 +221,10 @@ export const passwordsController = {
   },
 
   async create(req: Request, res: Response) {
-    if (!encryptionKey) {
-      return res.status(401).json({ error: 'Vault is locked' });
-    }
+    if (!encryptionKey) return res.status(401).json({ error: 'Vault is locked' });
     resetInactivityTimer();
 
-    const parsed = createSchema.safeParse(req.body);
-    if (!parsed.success) {
-      return res.status(400).json({ error: parsed.error.flatten().fieldErrors });
-    }
-
-    const { label, domain, username, password, category, favorite, notes } = parsed.data;
+    const { label, domain, username, password, category, favorite, notes } = req.body;
     const encryptedPassword = encrypt(password, encryptionKey!);
     const encryptedNotes = notes ? encrypt(notes, encryptionKey!) : undefined;
 
@@ -319,25 +253,16 @@ export const passwordsController = {
   },
 
   async update(req: Request, res: Response) {
-    if (!encryptionKey) {
-      return res.status(401).json({ error: 'Vault is locked' });
-    }
+    if (!encryptionKey) return res.status(401).json({ error: 'Vault is locked' });
     resetInactivityTimer();
 
     const id = parseId(req, res);
     if (id === null) return;
 
     const existing = passwordsRepo.findById(id);
-    if (!existing) {
-      return res.status(404).json({ error: 'Password not found' });
-    }
+    if (!existing) return res.status(404).json({ error: 'Password not found' });
 
-    const parsed = updateSchema.safeParse(req.body);
-    if (!parsed.success) {
-      return res.status(400).json({ error: parsed.error.flatten().fieldErrors });
-    }
-
-    const { label, domain, username, password, category, favorite, notes } = parsed.data;
+    const { label, domain, username, password, category, favorite, notes } = req.body;
     const updateData: Partial<NewPassword> = {};
 
     if (label !== undefined) updateData.label = label;
@@ -364,18 +289,14 @@ export const passwordsController = {
   },
 
   async delete(req: Request, res: Response) {
-    if (!encryptionKey) {
-      return res.status(401).json({ error: 'Vault is locked' });
-    }
+    if (!encryptionKey) return res.status(401).json({ error: 'Vault is locked' });
     resetInactivityTimer();
 
     const id = parseId(req, res);
     if (id === null) return;
 
     const existing = passwordsRepo.findById(id);
-    if (!existing) {
-      return res.status(404).json({ error: 'Password not found' });
-    }
+    if (!existing) return res.status(404).json({ error: 'Password not found' });
 
     const label = existing.label;
     passwordsRepo.delete(id);
@@ -385,19 +306,11 @@ export const passwordsController = {
   },
 
   async bulkDelete(req: Request, res: Response) {
-    if (!encryptionKey) {
-      return res.status(401).json({ error: 'Vault is locked' });
-    }
+    if (!encryptionKey) return res.status(401).json({ error: 'Vault is locked' });
     resetInactivityTimer();
 
-    const schema = z.object({ ids: z.array(z.number().int().positive()).min(1) });
-    const parsed = schema.safeParse(req.body);
-    if (!parsed.success) {
-      return res.status(400).json({ error: parsed.error.flatten().fieldErrors });
-    }
-
     let deleted = 0;
-    for (const id of parsed.data.ids) {
+    for (const id of req.body.ids) {
       const existing = passwordsRepo.findById(id);
       if (existing) {
         passwordsRepo.delete(id);
@@ -410,18 +323,14 @@ export const passwordsController = {
   },
 
   async toggleFavorite(req: Request, res: Response) {
-    if (!encryptionKey) {
-      return res.status(401).json({ error: 'Vault is locked' });
-    }
+    if (!encryptionKey) return res.status(401).json({ error: 'Vault is locked' });
     resetInactivityTimer();
 
     const id = parseId(req, res);
     if (id === null) return;
 
     const existing = passwordsRepo.findById(id);
-    if (!existing) {
-      return res.status(404).json({ error: 'Password not found' });
-    }
+    if (!existing) return res.status(404).json({ error: 'Password not found' });
 
     const newFavorite = existing.favorite === 1 ? 0 : 1;
     const updated = passwordsRepo.update(id, { favorite: newFavorite });
@@ -430,9 +339,7 @@ export const passwordsController = {
   },
 
   async parseImportFile(req: Request, res: Response) {
-    if (!encryptionKey) {
-      return res.status(401).json({ error: 'Vault is locked' });
-    }
+    if (!encryptionKey) return res.status(401).json({ error: 'Vault is locked' });
     resetInactivityTimer();
 
     const { content } = req.body;
@@ -448,19 +355,11 @@ export const passwordsController = {
   },
 
   async confirmImport(req: Request, res: Response) {
-    if (!encryptionKey) {
-      return res.status(401).json({ error: 'Vault is locked' });
-    }
+    if (!encryptionKey) return res.status(401).json({ error: 'Vault is locked' });
     resetInactivityTimer();
 
-    const parsed = importConfirmSchema.safeParse(req.body);
-    if (!parsed.success) {
-      return res.status(400).json({ error: parsed.error.flatten().fieldErrors });
-    }
-
-    const { entries } = parsed.data;
+    const { entries } = req.body;
     let skipped = 0;
-
     const newEntries: NewPassword[] = [];
 
     for (const entry of entries) {
@@ -492,23 +391,15 @@ export const passwordsController = {
     }
 
     activityRepo.log('created', 'password', 0, `Imported ${inserted} passwords`);
-
     res.json({ inserted, skippedDuplicates: skipped });
   },
 
   async changeMasterPassword(req: Request, res: Response) {
-    if (!encryptionKey) {
-      return res.status(401).json({ error: 'Vault is locked' });
-    }
+    if (!encryptionKey) return res.status(401).json({ error: 'Vault is locked' });
     if (!checkRateLimit(res)) return;
     resetInactivityTimer();
 
-    const parsed = changeMasterSchema.safeParse(req.body);
-    if (!parsed.success) {
-      return res.status(400).json({ error: parsed.error.flatten().fieldErrors });
-    }
-
-    const { currentPassword, newPassword } = parsed.data;
+    const { currentPassword, newPassword } = req.body;
     const storedHash = settingsRepo.findByKey('passwords_auth_hash');
     const storedSalt = settingsRepo.findByKey('passwords_salt_auth');
 
@@ -522,7 +413,6 @@ export const passwordsController = {
       return res.status(401).json({ error: 'Incorrect current password' });
     }
 
-    // Decrypt all entries first — abort entirely if any fail
     const allPasswords = passwordsRepo.getAllForRekey();
     const decryptedEntries: { id: number; password: string; notes?: string }[] = [];
     const failedIds: number[] = [];
@@ -546,7 +436,6 @@ export const passwordsController = {
       });
     }
 
-    // Re-encrypt with new key and write atomically
     const newAuthResult = deriveAuthHash(newPassword);
     const newEncSalt = generateEncSalt();
     const newEncryptionKey = deriveEncryptionKey(newPassword, newEncSalt);
@@ -557,7 +446,6 @@ export const passwordsController = {
       notes: entry.notes ? encrypt(entry.notes, newEncryptionKey) : undefined,
     }));
 
-    // Atomic transaction: all entries + settings updated together
     passwordsRepo.rekeyAll(rekeyUpdates);
     settingsRepo.upsert('passwords_auth_hash', newAuthResult.hash);
     settingsRepo.upsert('passwords_salt_auth', newAuthResult.salt);

@@ -1,11 +1,6 @@
 import { Request, Response } from 'express';
-import { z } from 'zod';
 import { settingsRepo } from '../repositories/settings.repository';
 import { fetchGitHubUser } from '../engines/github-scanner';
-
-const upsertSchema = z.object({
-  value: z.string(),
-});
 
 export const settingsController = {
   getAll(_req: Request, res: Response) {
@@ -19,9 +14,7 @@ export const settingsController = {
   },
 
   upsert(req: Request, res: Response) {
-    const parsed = upsertSchema.safeParse(req.body);
-    if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten().fieldErrors });
-    const s = settingsRepo.upsert(req.params.key, parsed.data.value);
+    const s = settingsRepo.upsert(req.params.key, req.body.value);
     res.json(s);
   },
 
