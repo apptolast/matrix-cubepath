@@ -212,6 +212,16 @@ const dict = {
     dailyNotesPlaceholder: "Today's notes...",
     saving: 'Saving...',
     savedLower: 'Saved',
+    // Auth
+    appSubtitle: 'Projects Management System',
+    signIn: 'Sign in',
+    register: 'Register',
+    createAccount: 'Create account',
+    authenticating: 'Authenticating',
+    creatingAccount: 'Creating account',
+    loginFailed: 'Login failed',
+    registrationFailed: 'Registration failed',
+    networkError: 'Network error — please try again',
   },
   es: {
     overview: 'Resumen',
@@ -426,6 +436,16 @@ const dict = {
     dailyNotesPlaceholder: 'Notas del día...',
     saving: 'Guardando...',
     savedLower: 'Guardado',
+    // Auth
+    appSubtitle: 'Sistema de gestión de proyectos',
+    signIn: 'Iniciar sesión',
+    register: 'Registrarse',
+    createAccount: 'Crear cuenta',
+    authenticating: 'Autenticando',
+    creatingAccount: 'Creando cuenta',
+    loginFailed: 'Error al iniciar sesión',
+    registrationFailed: 'Error al registrarse',
+    networkError: 'Error de red — inténtalo de nuevo',
   },
 } as const;
 

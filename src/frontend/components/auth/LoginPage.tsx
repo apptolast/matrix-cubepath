@@ -1,5 +1,7 @@
 import { useState, useRef, FormEvent } from 'react';
 import { PasswordInput } from '../ui/PasswordInput';
+import { useUiStore } from '../../stores/ui.store';
+import { t } from '../../lib/i18n';
 
 interface LoginPageProps {
   onLoginSuccess: () => void;
@@ -19,16 +21,16 @@ function getElementCenter(el: Element) {
   return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
 }
 
-async function doLogin(user: string, pass: string, onSuccess: () => void, onError: (msg: string) => void) {
+async function doLogin(user: string, pass: string): Promise<string | null> {
   const res = await fetch('/api/auth/login', {
     method: 'POST',
     credentials: 'same-origin',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ username: user, password: pass }),
   });
-  if (res.ok) return onSuccess();
+  if (res.ok) return null;
   const data = await res.json().catch(() => ({}));
-  onError(data.error || 'Login failed');
+  return data.error || null;
 }
 
 export function LoginPage({ onLoginSuccess }: LoginPageProps) {
@@ -45,7 +47,17 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
   const formRef = useRef<HTMLFormElement>(null);
   const demoBtnRef = useRef<HTMLButtonElement>(null);
 
+  const { theme, setTheme, language, setLanguage } = useUiStore();
   const isRegister = mode === 'register';
+  const l = (key: Parameters<typeof t>[0]) => t(key, language);
+
+  function toggleTheme() {
+    setTheme(theme === 'dark' ? 'light' : 'dark');
+  }
+
+  function toggleLanguage() {
+    setLanguage(language === 'en' ? 'es' : 'en');
+  }
 
   function validate(): string | null {
     if (!USERNAME_RE.test(username)) return 'Username must be 3-30 characters: letters, numbers, _ or -';
@@ -76,10 +88,10 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
         onLoginSuccess();
       } else {
         const data = await res.json().catch(() => ({}));
-        setError(data.error || (isRegister ? 'Registration failed' : 'Login failed'));
+        setError(data.error || l(isRegister ? 'registrationFailed' : 'loginFailed'));
       }
     } catch {
-      setError('Network error — please try again');
+      setError(l('networkError'));
     } finally {
       setLoading(false);
     }
@@ -161,9 +173,11 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
     setDemotyping(false);
     setLoading(true);
     try {
-      await doLogin(DEMO_USER, DEMO_PASS, onLoginSuccess, setError);
+      const err = await doLogin(DEMO_USER, DEMO_PASS);
+      if (err) setError(err);
+      else onLoginSuccess();
     } catch {
-      setError('Network error — please try again');
+      setError(l('networkError'));
     } finally {
       setLoading(false);
     }
@@ -176,7 +190,7 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold text-matrix-accent tracking-widest uppercase">Matrix</h1>
-          <p className="text-xs text-matrix-muted mt-1 tracking-wider">Projects Management System</p>
+          <p className="text-xs text-matrix-muted mt-1 tracking-wider">{l('appSubtitle')}</p>
         </div>
 
         {/* Tab toggle */}
@@ -192,7 +206,7 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
               mode === 'login' ? 'text-matrix-bg' : 'text-matrix-muted hover:text-matrix-text'
             }`}
           >
-            Sign in
+            {l('signIn')}
           </button>
           <button
             type="button"
@@ -201,7 +215,7 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
               mode === 'register' ? 'text-matrix-bg' : 'text-matrix-muted hover:text-matrix-text'
             }`}
           >
-            Register
+            {l('register')}
           </button>
         </div>
 
@@ -212,7 +226,7 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
         >
           <div>
             <label htmlFor="username" className="block text-xs text-matrix-muted mb-1 tracking-wide uppercase">
-              Username
+              {l('username')}
             </label>
             <input
               id="username"
@@ -232,7 +246,7 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
 
           <div>
             <label htmlFor="password" className="block text-xs text-matrix-muted mb-1 tracking-wide uppercase">
-              Password
+              {l('password')}
             </label>
             <PasswordInput
               id="password"
@@ -251,7 +265,7 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
           {isRegister && (
             <div>
               <label htmlFor="confirm" className="block text-xs text-matrix-muted mb-1 tracking-wide uppercase">
-                Confirm password
+                {l('confirmPassword')}
               </label>
               <PasswordInput
                 id="confirm"
@@ -274,30 +288,67 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
             {loading ? (
               <span className="inline-flex items-center gap-2">
                 <span className="w-3.5 h-3.5 border-2 border-matrix-bg/30 border-t-matrix-bg rounded-full animate-spin" />
-                {isRegister ? 'Creating account' : 'Authenticating'}
+                {l(isRegister ? 'creatingAccount' : 'authenticating')}
               </span>
             ) : isRegister ? (
-              'Create account'
+              l('createAccount')
             ) : (
-              'Sign in'
+              l('signIn')
             )}
           </button>
         </form>
 
-        <button
-          ref={demoBtnRef}
-          type="button"
-          onClick={handleDemoLogin}
-          disabled={demotyping || loading}
-          className="mt-5 mx-auto flex items-center gap-2 px-4 py-2 rounded-lg border border-matrix-border/50 text-matrix-muted text-xs font-mono tracking-wide hover:border-matrix-accent/60 hover:text-matrix-accent hover:shadow-[0_0_12px_rgba(var(--matrix-accent),0.15)] transition-all duration-300 disabled:opacity-40"
-        >
-          <span className="text-matrix-accent/70">$</span>
-          <span>access</span>
-          <span className="text-matrix-accent">--demo</span>
-          <span
-            className={`w-1.5 h-3.5 bg-current ${demotyping ? 'animate-pulse' : 'animate-[blink_1s_step-end_infinite]'}`}
-          />
-        </button>
+        <div className="mt-5 flex items-center justify-center gap-3">
+          <button
+            ref={demoBtnRef}
+            type="button"
+            onClick={handleDemoLogin}
+            disabled={demotyping || loading}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg border border-matrix-border/50 text-matrix-muted text-xs font-mono tracking-wide hover:border-matrix-accent/60 hover:text-matrix-accent hover:shadow-[0_0_12px_rgba(var(--matrix-accent),0.15)] transition-all duration-300 disabled:opacity-40"
+          >
+            <span className="text-matrix-accent/70">$</span>
+            <span>access</span>
+            <span className="text-matrix-accent">--demo</span>
+            <span
+              className={`w-1.5 h-3.5 bg-current ${demotyping ? 'animate-pulse' : 'animate-[blink_1s_step-end_infinite]'}`}
+            />
+          </button>
+
+          <span className="w-px h-4 bg-matrix-border/30" />
+
+          <button
+            type="button"
+            onClick={toggleTheme}
+            className="p-1 text-matrix-muted/40 hover:text-matrix-muted transition-colors"
+            aria-label="Toggle theme"
+          >
+            {theme === 'dark' ? (
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z"
+                />
+              </svg>
+            ) : (
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M21.752 15.002A9.72 9.72 0 0 1 18 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 0 0 3 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 0 0 9.002-5.998Z"
+                />
+              </svg>
+            )}
+          </button>
+
+          <button
+            type="button"
+            onClick={toggleLanguage}
+            className="p-1 text-[10px] font-mono text-matrix-muted/40 hover:text-matrix-muted tracking-wider uppercase transition-colors leading-none"
+          >
+            {language === 'en' ? 'es' : 'en'}
+          </button>
+        </div>
       </div>
 
       {/* Animated demo cursor */}
