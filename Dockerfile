@@ -38,8 +38,15 @@ RUN pnpm install --frozen-lockfile --prod
 # Copy build artifacts
 COPY --from=builder /app/dist ./dist
 
-# Persistent data directory (mounted as volume in docker-compose)
-RUN mkdir -p /data
+# Create non-root user and data directory
+RUN apk add --no-cache su-exec \
+ && addgroup -S appgroup \
+ && adduser -S appuser -G appgroup \
+ && mkdir -p /data \
+ && chown -R appuser:appgroup /app /data
+
+COPY docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 ENV NODE_ENV=production
 ENV PORT=3939
@@ -47,4 +54,7 @@ ENV DATA_DIR=/data
 
 EXPOSE 3939
 
-CMD ["node", "dist/backend/start.js"]
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD wget -qO- http://localhost:3939/api/health || exit 1
+
+ENTRYPOINT ["docker-entrypoint.sh"]
