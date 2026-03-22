@@ -53,20 +53,8 @@ beforeEach(() => {
 
 describe('tasksController', () => {
   describe('create', () => {
-    it('returns 400 when title is missing', () => {
-      const req = mockReq({ body: { planId: 1 } });
-      const res = mockRes();
-      tasksController.create(req, res);
-      expect(res.status).toHaveBeenCalledWith(400);
-      expect(tasksRepo.create).not.toHaveBeenCalled();
-    });
-
-    it('returns 400 when planId is missing', () => {
-      const req = mockReq({ body: { title: 'Test' } });
-      const res = mockRes();
-      tasksController.create(req, res);
-      expect(res.status).toHaveBeenCalledWith(400);
-    });
+    // Validation (missing title, missing planId) is now handled by validate middleware at route level.
+    // See src/tests/validations/tasks.validation.test.ts for schema tests.
 
     it('creates task and returns 201', () => {
       vi.mocked(tasksRepo.create).mockReturnValue({ id: 1, title: 'Test', status: 'pending' } as Task);

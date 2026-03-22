@@ -32,40 +32,10 @@ beforeEach(() => {
 });
 
 describe('auth.controller', () => {
+  // Input validation (missing fields, regex, length) is now handled by validate middleware at route level.
+  // See src/tests/validations/auth.validation.test.ts for schema tests.
+
   describe('register', () => {
-    it('returns 400 when body is missing username or password', () => {
-      const res = mockRes();
-      register(mockReq({}), res);
-      expect(res.status).toHaveBeenCalledWith(400);
-    });
-
-    it('returns 400 when username fails regex (too short)', () => {
-      const res = mockRes();
-      register(mockReq({ username: 'ab', password: 'password123' }), res);
-      expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ error: expect.stringContaining('3-30') }));
-    });
-
-    it('returns 400 when username has invalid characters', () => {
-      const res = mockRes();
-      register(mockReq({ username: 'user name!', password: 'password123' }), res);
-      expect(res.status).toHaveBeenCalledWith(400);
-    });
-
-    it('returns 400 when password is too short', () => {
-      const res = mockRes();
-      register(mockReq({ username: 'validuser', password: '1234567' }), res);
-      expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ error: expect.stringContaining('8') }));
-    });
-
-    it('returns 400 when password exceeds 128 chars', () => {
-      const res = mockRes();
-      register(mockReq({ username: 'validuser', password: 'a'.repeat(129) }), res);
-      expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ error: expect.stringContaining('128') }));
-    });
-
     it('returns 409 when username is already taken', () => {
       vi.mocked(userExists).mockReturnValue(true);
       const res = mockRes();
@@ -81,28 +51,9 @@ describe('auth.controller', () => {
       expect(res.cookie).toHaveBeenCalled();
       expect(res.status).toHaveBeenCalledWith(201);
     });
-
-    it('accepts username with underscore and hyphen', () => {
-      vi.mocked(userExists).mockReturnValue(false);
-      const res = mockRes();
-      register(mockReq({ username: 'user_name-1', password: 'password123' }), res);
-      expect(createUser).toHaveBeenCalled();
-    });
-
-    it('rejects username longer than 30 chars', () => {
-      const res = mockRes();
-      register(mockReq({ username: 'a'.repeat(31), password: 'password123' }), res);
-      expect(res.status).toHaveBeenCalledWith(400);
-    });
   });
 
   describe('login', () => {
-    it('returns 400 when body is missing credentials', () => {
-      const res = mockRes();
-      login(mockReq({}), res);
-      expect(res.status).toHaveBeenCalledWith(400);
-    });
-
     it('returns 401 when credentials are invalid', () => {
       vi.mocked(verifyUser).mockReturnValue(false);
       const res = mockRes();

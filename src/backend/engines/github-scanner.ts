@@ -220,8 +220,12 @@ function getRoadmapProgress(content: string): { totalPhases: number; completedPh
     let total = 0;
     for (const line of lines) {
       const trimmed = line.trim();
-      if (/^[-*]\s+\[x\]/i.test(trimmed)) { checked++; total++; }
-      else if (/^[-*]\s+\[ \]/.test(trimmed)) { total++; }
+      if (/^[-*]\s+\[x\]/i.test(trimmed)) {
+        checked++;
+        total++;
+      } else if (/^[-*]\s+\[ \]/.test(trimmed)) {
+        total++;
+      }
     }
     if (total > 0) {
       return { totalPhases: total, completedPhases: checked };

@@ -19,6 +19,7 @@ import { passwordsRouter } from './routes/passwords.routes';
 import { externalRouter } from './routes/external.routes';
 import { localSettingsRouter } from './routes/local-settings.routes';
 import { logsRouter } from './routes/logs.routes';
+import { notesRouter } from './routes/notes.routes';
 
 const app = express();
 app.set('trust proxy', 1);
@@ -85,6 +86,7 @@ app.use('/api', passwordsRouter);
 app.use('/api', externalRouter);
 app.use('/api', localSettingsRouter);
 app.use('/api', logsRouter);
+app.use('/api', notesRouter);
 
 // Serve frontend static files in production
 if (process.env.NODE_ENV === 'production') {
