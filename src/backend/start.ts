@@ -23,14 +23,15 @@ const server = expressApp.listen(API_PORT, () => {
   logger.info('main', `Matrix server running on port ${API_PORT}`);
 });
 
-process.on('SIGTERM', () => {
-  logger.info('main', 'SIGTERM received, shutting down');
-  server.close();
-  process.exit(0);
-});
+function gracefulShutdown(signal: string) {
+  logger.info('main', `${signal} received, shutting down`);
+  server.close(() => {
+    logger.info('main', 'Server closed');
+    process.exit(0);
+  });
+  // Force exit if close takes too long
+  setTimeout(() => process.exit(1), 5000).unref();
+}
 
-process.on('SIGINT', () => {
-  logger.info('main', 'SIGINT received, shutting down');
-  server.close();
-  process.exit(0);
-});
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
