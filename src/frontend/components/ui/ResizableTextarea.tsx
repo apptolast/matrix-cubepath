@@ -13,8 +13,7 @@ export function ResizableTextarea({ className = '', rows = 2, ...props }: Resiza
   return (
     <textarea
       rows={rows}
-      style={{ resize: 'vertical' }}
-      className={`w-full text-sm bg-matrix-surface border border-matrix-border rounded px-2 py-1.5 text-gray-200 placeholder-matrix-muted/50 focus:outline-none focus:border-matrix-accent min-h-[4rem] ${className}`}
+      className={`w-full text-sm bg-matrix-surface border border-matrix-border rounded px-2 py-1.5 text-gray-200 placeholder-matrix-muted/50 focus:outline-none focus:border-matrix-accent min-h-[4rem] resize-y ${className}`}
       {...props}
     />
   );

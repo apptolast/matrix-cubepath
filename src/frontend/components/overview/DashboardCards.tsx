@@ -141,20 +141,23 @@ export function QuickCaptureCard({ language }: { language: 'en' | 'es' }) {
   const createTask = useCreateTask();
   const { data: plans } = usePlans();
 
-  //TODO - Add error handling and loading states
+  const isSaving = createIdea.isPending || createTask.isPending;
+
   const handleSave = () => {
-    if (!title.trim()) return;
+    if (!title.trim() || isSaving) return;
+    const onSuccess = () => {
+      setTitle('');
+      setDescription('');
+      setPlanId('');
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    };
     if (mode === 'idea') {
-      createIdea.mutate({ title: title.trim(), description: description.trim() || undefined });
+      createIdea.mutate({ title: title.trim(), description: description.trim() || undefined }, { onSuccess });
     } else {
       if (!planId) return;
-      createTask.mutate({ planId: Number(planId), title: title.trim() });
+      createTask.mutate({ planId: Number(planId), title: title.trim() }, { onSuccess });
     }
-    setTitle('');
-    setDescription('');
-    setPlanId('');
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
   };
 
   const inputCls =
@@ -202,12 +205,13 @@ export function QuickCaptureCard({ language }: { language: 'en' | 'es' }) {
         <div className="flex items-center gap-2">
           <button
             onClick={handleSave}
-            disabled={!title.trim() || (mode === 'task' && !planId)}
+            disabled={!title.trim() || (mode === 'task' && !planId) || isSaving}
             className="text-xs px-3 py-1.5 bg-matrix-accent/10 text-matrix-accent rounded hover:bg-matrix-accent/20 transition-colors disabled:opacity-50"
           >
-            {t('create' as LangKey, language)}
+            {isSaving ? '...' : t('create' as LangKey, language)}
           </button>
           {saved && <span className="text-xs text-green-400">{t('saved' as LangKey, language)} ✓</span>}
+          {(createIdea.isError || createTask.isError) && <span className="text-xs text-red-400">Error</span>}
         </div>
       </div>
     </SectionCard>

@@ -78,10 +78,6 @@ export function ProjectDetail({ projectId, onBack }: Props) {
     if (ok) deleteProject.mutate(project.id, { onSuccess: onBack });
   };
 
-  const openFolder = () => {
-    // In web mode, just show the path — can't open local directories
-  };
-
   return (
     <div className="p-6">
       {/* Header */}
@@ -188,7 +184,7 @@ export function ProjectDetail({ projectId, onBack }: Props) {
       {/* Info cards grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
         {project.path && (
-          <div onClick={openFolder} className="cursor-pointer hover:border-matrix-accent/50 transition-colors">
+          <div>
             <InfoCard label={t('directory', language)} value={project.resolvedPath || project.path} small />
           </div>
         )}
