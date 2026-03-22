@@ -29,3 +29,10 @@ export const passwordChangeMasterBody = z.object({
   currentPassword: z.string().min(1),
   newPassword: z.string().min(8),
 });
+
+export const passwordImportParseBody = z.object({
+  content: z
+    .string()
+    .min(1)
+    .max(10 * 1024 * 1024),
+});

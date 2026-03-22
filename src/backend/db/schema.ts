@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, text, integer, real } from 'drizzle-orm/sqlite-core';
 
 export const mission = sqliteTable('mission', {
   id: integer('id').primaryKey({ autoIncrement: true }),
@@ -104,7 +104,7 @@ export const ideaEvaluations = sqliteTable('idea_evaluations', {
   impactScore: integer('impact_score').notNull(),
   costScore: integer('cost_score').notNull(),
   riskScore: integer('risk_score').notNull(),
-  totalScore: integer('total_score').notNull(),
+  totalScore: real('total_score').notNull(),
   reasoning: text('reasoning'),
   decision: text('decision').notNull().default('pending'),
   decidedAt: text('decided_at'),

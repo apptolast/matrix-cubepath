@@ -6,6 +6,7 @@ import {
   passwordCreateBody,
   passwordUpdateBody,
   passwordImportConfirmBody,
+  passwordImportParseBody,
   passwordBulkDeleteBody,
   passwordChangeMasterBody,
 } from '../validations/passwords.validation';
@@ -17,7 +18,11 @@ router.post('/passwords/setup', validate({ body: passwordMasterBody }), password
 router.post('/passwords/unlock', validate({ body: passwordMasterBody }), passwordsController.unlock);
 router.post('/passwords/lock', passwordsController.lock);
 
-router.post('/passwords/import/parse', passwordsController.parseImportFile);
+router.post(
+  '/passwords/import/parse',
+  validate({ body: passwordImportParseBody }),
+  passwordsController.parseImportFile,
+);
 router.post(
   '/passwords/import/confirm',
   validate({ body: passwordImportConfirmBody }),
