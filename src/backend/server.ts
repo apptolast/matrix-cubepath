@@ -64,19 +64,6 @@ if (process.env.NODE_ENV !== 'production') {
 app.use('/api', authRouter);
 app.use('/api', healthRouter);
 
-// Demo reset endpoint — only active when DEMO_USER is set
-if (process.env.DEMO_USER) {
-  app.post('/api/demo/reset', (_req, res) => {
-    try {
-      const { seedDemoUser } = require('./db/seed-demo') as typeof import('./db/seed-demo');
-      seedDemoUser();
-      res.json({ ok: true });
-    } catch (err) {
-      res.status(500).json({ error: String(err) });
-    }
-  });
-}
-
 // All other API routes require authentication
 app.use('/api', requireAuth);
 
@@ -95,6 +82,22 @@ app.use('/api', externalRouter);
 app.use('/api', localSettingsRouter);
 app.use('/api', logsRouter);
 app.use('/api', notesRouter);
+
+// Demo data reset — only allowed for the demo user
+app.post('/api/demo/reset', (req, res) => {
+  const username = (req as unknown as { matrixUser?: string }).matrixUser;
+  if (username !== 'demo') {
+    res.status(403).json({ error: 'Forbidden' });
+    return;
+  }
+  try {
+    const { seedDemoUser } = require('./db/seed-demo') as typeof import('./db/seed-demo');
+    seedDemoUser();
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: String(err) });
+  }
+});
 
 // Serve frontend static files in production
 if (process.env.NODE_ENV === 'production') {
