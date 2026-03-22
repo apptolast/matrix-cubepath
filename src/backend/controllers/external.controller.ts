@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { logger } from '../lib/logger';
 
 interface HnStory {
   id: number;
@@ -18,6 +19,15 @@ interface GitHubRepo {
   html_url: string;
   language: string;
 }
+
+interface Quote {
+  quote: string;
+  author: string;
+}
+
+// In-memory cache for the daily quote: one API call per day max
+let cachedQuote: { data: Quote; fetchedAt: number } | null = null;
+const QUOTE_CACHE_TTL = 24 * 60 * 60 * 1000; // 24h
 
 const FALLBACK_QUOTES = [
   { quote: 'The only way to do great work is to love what you do.', author: 'Steve Jobs' },
@@ -66,15 +76,46 @@ const FALLBACK_QUOTES = [
   { quote: 'The secret of getting ahead is getting started.', author: 'Mark Twain' },
 ];
 
-function getFallbackQuote() {
+function getFallbackQuote(): Quote {
   const randomIndex = Math.floor(Math.random() * FALLBACK_QUOTES.length);
   return FALLBACK_QUOTES[randomIndex];
 }
 
+async function fetchQuoteFromAPI(): Promise<Quote | null> {
+  try {
+    const response = await fetch('https://zenquotes.io/api/random', {
+      signal: AbortSignal.timeout(3000),
+    });
+    if (!response.ok) return null;
+    const data = (await response.json()) as Array<{ q: string; a: string }>;
+    if (!Array.isArray(data) || !data[0]?.q || !data[0]?.a) return null;
+    // ZenQuotes returns "Too many requests" as quote text when rate-limited
+    if (data[0].q.toLowerCase().includes('too many requests')) return null;
+    return { quote: data[0].q, author: data[0].a };
+  } catch {
+    return null;
+  }
+}
+
 export const externalController = {
   async getDailyQuote(_req: Request, res: Response) {
-    // Use random fallback quote (avoid external APIs that may be blocked/down)
-    res.json(getFallbackQuote());
+    // Return cached quote if still valid
+    if (cachedQuote && Date.now() - cachedQuote.fetchedAt < QUOTE_CACHE_TTL) {
+      return res.json(cachedQuote.data);
+    }
+
+    // Try external API
+    const apiQuote = await fetchQuoteFromAPI();
+    if (apiQuote) {
+      cachedQuote = { data: apiQuote, fetchedAt: Date.now() };
+      return res.json(apiQuote);
+    }
+
+    // Fallback to local quotes
+    logger.warn('external', 'ZenQuotes API unavailable, using fallback');
+    const fallback = getFallbackQuote();
+    cachedQuote = { data: fallback, fetchedAt: Date.now() };
+    res.json(fallback);
   },
 
   async getDevFeed(_req: Request, res: Response) {
