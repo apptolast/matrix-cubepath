@@ -45,6 +45,7 @@ export function logout(_req: Request, res: Response): void {
   res.json({ ok: true });
 }
 
-export function checkSession(_req: Request, res: Response): void {
-  res.json({ ok: true });
+export function checkSession(req: Request, res: Response): void {
+  const username = (req as Request & { matrixUser?: string }).matrixUser;
+  res.json({ ok: true, username, isDemo: username === 'demo' });
 }

@@ -81,11 +81,18 @@ describe('auth.controller', () => {
   });
 
   describe('checkSession', () => {
-    it('returns ok', () => {
-      const req = mockReq();
+    it('returns ok with username and isDemo flag', () => {
+      const req = { ...mockReq(), matrixUser: 'alice' } as unknown as Request;
       const res = mockRes();
       checkSession(req, res);
-      expect(res.json).toHaveBeenCalledWith({ ok: true });
+      expect(res.json).toHaveBeenCalledWith({ ok: true, username: 'alice', isDemo: false });
+    });
+
+    it('returns isDemo true for demo user', () => {
+      const req = { ...mockReq(), matrixUser: 'demo' } as unknown as Request;
+      const res = mockRes();
+      checkSession(req, res);
+      expect(res.json).toHaveBeenCalledWith({ ok: true, username: 'demo', isDemo: true });
     });
   });
 });
