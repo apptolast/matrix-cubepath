@@ -147,7 +147,7 @@ export const passwordsController = {
 
     const parsed = setupSchema.safeParse(req.body);
     if (!parsed.success) {
-      return res.status(400).json({ error: parsed.error.errors });
+      return res.status(400).json({ error: parsed.error.flatten().fieldErrors });
     }
 
     const existing = settingsRepo.findByKey('passwords_auth_hash');
@@ -175,7 +175,7 @@ export const passwordsController = {
 
     const parsed = unlockSchema.safeParse(req.body);
     if (!parsed.success) {
-      return res.status(400).json({ error: parsed.error.errors });
+      return res.status(400).json({ error: parsed.error.flatten().fieldErrors });
     }
 
     const { masterPassword } = parsed.data;
@@ -287,7 +287,7 @@ export const passwordsController = {
 
     const parsed = createSchema.safeParse(req.body);
     if (!parsed.success) {
-      return res.status(400).json({ error: parsed.error.errors });
+      return res.status(400).json({ error: parsed.error.flatten().fieldErrors });
     }
 
     const { label, domain, username, password, category, favorite, notes } = parsed.data;
@@ -334,7 +334,7 @@ export const passwordsController = {
 
     const parsed = updateSchema.safeParse(req.body);
     if (!parsed.success) {
-      return res.status(400).json({ error: parsed.error.errors });
+      return res.status(400).json({ error: parsed.error.flatten().fieldErrors });
     }
 
     const { label, domain, username, password, category, favorite, notes } = parsed.data;
@@ -393,7 +393,7 @@ export const passwordsController = {
     const schema = z.object({ ids: z.array(z.number().int().positive()).min(1) });
     const parsed = schema.safeParse(req.body);
     if (!parsed.success) {
-      return res.status(400).json({ error: parsed.error.errors });
+      return res.status(400).json({ error: parsed.error.flatten().fieldErrors });
     }
 
     let deleted = 0;
@@ -455,7 +455,7 @@ export const passwordsController = {
 
     const parsed = importConfirmSchema.safeParse(req.body);
     if (!parsed.success) {
-      return res.status(400).json({ error: parsed.error.errors });
+      return res.status(400).json({ error: parsed.error.flatten().fieldErrors });
     }
 
     const { entries } = parsed.data;
@@ -505,7 +505,7 @@ export const passwordsController = {
 
     const parsed = changeMasterSchema.safeParse(req.body);
     if (!parsed.success) {
-      return res.status(400).json({ error: parsed.error.errors });
+      return res.status(400).json({ error: parsed.error.flatten().fieldErrors });
     }
 
     const { currentPassword, newPassword } = parsed.data;
