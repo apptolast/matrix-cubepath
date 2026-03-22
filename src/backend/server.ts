@@ -2,6 +2,7 @@ import express from 'express';
 import path from 'path';
 import cookieParser from 'cookie-parser';
 import rateLimit from 'express-rate-limit';
+import { logger } from './lib/logger';
 import { requireAuth } from './middleware/auth.middleware';
 import { authRouter } from './routes/auth.routes';
 import { healthRouter } from './routes/health.routes';
@@ -97,7 +98,7 @@ if (process.env.NODE_ENV === 'production') {
 
 app.use((err: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   const message = err instanceof Error ? err.message : 'Internal server error';
-  console.error('[Matrix API Error]', message);
+  logger.error('api', message);
   res.status(500).json({ error: message });
 });
 

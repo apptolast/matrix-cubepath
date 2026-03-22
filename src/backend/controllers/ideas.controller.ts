@@ -6,6 +6,7 @@ import { activityRepo } from '../repositories/activity.repository';
 import { getDb } from '../db/connection';
 import { plans, objectives, projects, ideas, ideaEvaluations } from '../db/schema';
 import { eq, count, desc, sql } from 'drizzle-orm';
+import { logger } from '../lib/logger';
 
 const createSchema = z.object({
   title: z.string().min(1),
@@ -222,7 +223,7 @@ export const ideasController = {
         .all();
       res.json(rows);
     } catch (err) {
-      console.error('[ideas/top-scored]', err);
+      logger.error('ideas', 'Failed to get top scored', err);
       res.json([]);
     }
   },
@@ -241,7 +242,7 @@ export const ideasController = {
         rejected: counts['rejected'] || 0,
       });
     } catch (err) {
-      console.error('[ideas/funnel]', err);
+      logger.error('ideas', 'Failed to get funnel', err);
       res.json({ pending: 0, evaluating: 0, approved: 0, promoted: 0, rejected: 0 });
     }
   },

@@ -3,6 +3,7 @@ import fs from 'fs';
 import { closeUserDb, getUserDbPath, openUserDb } from '../db/user-db';
 import { runMigrations } from '../db/migrate';
 import { userDbContext } from '../db/context';
+import { logger } from '../lib/logger';
 
 type AuthenticatedRequest = Request & {
   matrixUser?: string;
@@ -30,7 +31,7 @@ export const dbController = {
 
       res.json({ success: true, message: 'Database reset complete' });
     } catch (error) {
-      console.error('Database reset failed:', error);
+      logger.error('db', 'Database reset failed', error);
       res.status(500).json({ error: 'Failed to reset database' });
     }
   },

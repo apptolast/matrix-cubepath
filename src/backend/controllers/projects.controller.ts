@@ -7,6 +7,7 @@ import { normalizeGitHubRepo, syncFromGitHub } from '../engines/github-scanner';
 import { activityRepo } from '../repositories/activity.repository';
 import { localSettings } from '../lib/localSettings';
 import { settingsRepo } from '../repositories/settings.repository';
+import { logger } from '../lib/logger';
 
 // Detect Windows absolute path (e.g. C:\Users\...) even when running on Linux
 function isAbsoluteAnyPlatform(p: string): boolean {
@@ -235,7 +236,7 @@ export const projectsController = {
       activityRepo.log('scanned', 'project', id, `Scanned project: ${p.name}`);
       res.json({ scan, techStats });
     } catch (err) {
-      console.error(`[scan] Error scanning project ${id} at path "${p.path}":`, err);
+      logger.error('scan', `Error scanning project ${id} at path "${p.path}"`, err);
       res.status(500).json({ error: 'Scan failed', detail: String(err) });
     }
   },

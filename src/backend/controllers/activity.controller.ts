@@ -3,6 +3,7 @@ import { activityRepo } from '../repositories/activity.repository';
 import { getDb } from '../db/connection';
 import { activityLog, tasks } from '../db/schema';
 import { eq, count, sql, and, gte, isNotNull } from 'drizzle-orm';
+import { logger } from '../lib/logger';
 
 function toDateStr(date: Date): string {
   return date.toISOString().split('T')[0];
@@ -176,7 +177,7 @@ export const activityController = {
         keyMetrics: { velocity: tasksThisWeek, wip, throughput, cycleTimeDays },
       });
     } catch (err) {
-      console.error('[activity/metrics]', err);
+      logger.error('activity', 'Failed to compute metrics', err);
       res.status(500).json({ error: 'Failed to compute metrics' });
     }
   },
