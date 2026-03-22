@@ -38,6 +38,14 @@ app.use('/api', globalLimiter);
 app.use(express.json());
 app.use(cookieParser());
 
+// Security headers
+app.use((_req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  next();
+});
+
 // CORS — only needed for dev (in prod, same origin via reverse proxy)
 if (process.env.NODE_ENV !== 'production') {
   app.use((_req, res, next) => {
@@ -101,7 +109,7 @@ if (process.env.NODE_ENV === 'production') {
 app.use((err: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   const message = err instanceof Error ? err.message : 'Internal server error';
   logger.error('api', message);
-  res.status(500).json({ error: message });
+  res.status(500).json({ error: 'Internal server error' });
 });
 
 export { app as expressApp };
