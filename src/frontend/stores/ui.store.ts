@@ -11,6 +11,7 @@ interface UiState {
   theme: Theme;
   quickCreateModal: { type: 'task' | 'idea' | null };
   deadlinesHidden: boolean;
+  isDemo: boolean;
   setActiveTab: (tab: Tab) => void;
   toggleSidebar: () => void;
   openSidebar: () => void;
@@ -20,6 +21,7 @@ interface UiState {
   openQuickCreate: (type: 'task' | 'idea') => void;
   closeQuickCreate: () => void;
   toggleDeadlinesHidden: () => void;
+  setIsDemo: (isDemo: boolean) => void;
 }
 
 export const useUiStore = create<UiState>((set) => ({
@@ -30,6 +32,7 @@ export const useUiStore = create<UiState>((set) => ({
   theme: 'dark',
   quickCreateModal: { type: null },
   deadlinesHidden: false,
+  isDemo: false,
   setActiveTab: (tab) => set({ activeTab: tab }),
   toggleSidebar: () => set((s) => ({ sidebarCollapsed: !s.sidebarCollapsed })),
   openSidebar: () => set({ sidebarOpen: true }),
@@ -39,4 +42,5 @@ export const useUiStore = create<UiState>((set) => ({
   openQuickCreate: (type) => set({ quickCreateModal: { type } }),
   closeQuickCreate: () => set({ quickCreateModal: { type: null } }),
   toggleDeadlinesHidden: () => set((s) => ({ deadlinesHidden: !s.deadlinesHidden })),
+  setIsDemo: (isDemo) => set({ isDemo }),
 }));

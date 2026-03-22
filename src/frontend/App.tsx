@@ -5,7 +5,6 @@ import { LoginPage } from './components/auth/LoginPage';
 import { ServiceWorkerRegister } from './components/pwa/ServiceWorkerRegister';
 import { InstallPrompt } from './components/pwa/InstallPrompt';
 import { useUiStore, Theme } from './stores/ui.store';
-import { apiFetch } from './lib/api';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -49,42 +48,24 @@ if (cachedTheme === 'light' || cachedTheme === 'dark') {
 function ThemeProvider({ children }: { children: React.ReactNode }) {
   const { theme, setTheme } = useUiStore();
 
-  // Sync Zustand with cached theme on mount
+  // On mount: localStorage > system preference > dark
   useEffect(() => {
     const cached = localStorage.getItem('matrix-theme');
     if (cached === 'light' || cached === 'dark') {
       setTheme(cached as Theme);
+    } else {
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      setTheme(prefersDark ? 'dark' : 'light');
     }
   }, [setTheme]);
 
-  // Apply theme class to root element
+  // Sync theme → DOM + localStorage whenever it changes
   useEffect(() => {
     const root = document.documentElement;
     root.classList.remove('dark', 'light');
     root.classList.add(theme);
     localStorage.setItem('matrix-theme', theme);
   }, [theme]);
-
-  // Load saved theme from DB on startup and apply if different
-  useEffect(() => {
-    apiFetch<Record<string, string>>('/settings')
-      .then((settings) => {
-        if (settings?.theme === 'light' || settings?.theme === 'dark') {
-          setTheme(settings.theme as Theme);
-        }
-      })
-      .catch(() => {});
-  }, [setTheme]);
-
-  // Detect system theme preference
-  useEffect(() => {
-    const mq = window.matchMedia('(prefers-color-scheme: dark)');
-    const handler = (e: MediaQueryListEvent) => {
-      setTheme(e.matches ? 'dark' : 'light');
-    };
-    mq.addEventListener('change', handler);
-    return () => mq.removeEventListener('change', handler);
-  }, [setTheme]);
 
   return <>{children}</>;
 }
@@ -94,20 +75,34 @@ export function App() {
 
   useEffect(() => {
     fetch('/api/auth/session', { credentials: 'same-origin' })
-      .then((res) => setAuthState(res.ok ? 'authenticated' : 'unauthenticated'))
+      .then(async (res) => {
+        if (res.ok) {
+          const data = await res.json().catch(() => ({}));
+          useUiStore.getState().setIsDemo(!!data.isDemo);
+          setAuthState('authenticated');
+        } else {
+          setAuthState('unauthenticated');
+        }
+      })
       .catch(() => setAuthState('unauthenticated'));
   }, []);
 
   if (authState === 'checking') {
     return (
-      <div className="min-h-screen bg-matrix-bg flex items-center justify-center">
-        <span className="text-matrix-muted text-sm tracking-wider">…</span>
-      </div>
+      <ThemeProvider>
+        <div className="min-h-screen bg-matrix-bg flex items-center justify-center">
+          <span className="text-matrix-muted text-sm tracking-wider">…</span>
+        </div>
+      </ThemeProvider>
     );
   }
 
   if (authState === 'unauthenticated') {
-    return <LoginPage onLoginSuccess={() => setAuthState('authenticated')} />;
+    return (
+      <ThemeProvider>
+        <LoginPage onLoginSuccess={() => setAuthState('authenticated')} />
+      </ThemeProvider>
+    );
   }
 
   return (
