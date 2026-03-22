@@ -60,8 +60,9 @@ if (process.env.NODE_ENV !== 'production') {
   });
 }
 
-// Auth routes (public — no requireAuth guard)
+// Public routes (no auth required)
 app.use('/api', authRouter);
+app.use('/api', healthRouter);
 
 // Demo reset endpoint — only active when DEMO_USER is set
 if (process.env.DEMO_USER) {
@@ -80,7 +81,6 @@ if (process.env.DEMO_USER) {
 app.use('/api', requireAuth);
 
 // Protected API routes
-app.use('/api', healthRouter);
 app.use('/api', missionRouter);
 app.use('/api', objectivesRouter);
 app.use('/api', plansRouter);
