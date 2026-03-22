@@ -175,7 +175,7 @@ export const ideasController = {
       res.json(rows);
     } catch (err) {
       logger.error('ideas', 'Failed to get top scored', err);
-      res.json([]);
+      res.status(500).json({ error: 'Failed to get top scored ideas' });
     }
   },
 
@@ -194,7 +194,7 @@ export const ideasController = {
       });
     } catch (err) {
       logger.error('ideas', 'Failed to get funnel', err);
-      res.json({ pending: 0, evaluating: 0, approved: 0, promoted: 0, rejected: 0 });
+      res.status(500).json({ error: 'Failed to get funnel data' });
     }
   },
 };
