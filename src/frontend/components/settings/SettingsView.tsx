@@ -37,7 +37,7 @@ function SettingRow({ label, children, last = false }: { label: string; children
 }
 
 export function SettingsView() {
-  const { language, setLanguage, theme, setTheme } = useUiStore();
+  const { language, setLanguage, theme, setTheme, isDemo } = useUiStore();
   const { data: settings } = useSettings();
   const { data: githubStatus, refetch: refetchGitHubStatus } = useGitHubStatus();
   const updateSetting = useUpdateSetting();
@@ -111,6 +111,7 @@ export function SettingsView() {
   const mission = missions?.[0];
   const deleteMission = useDeleteMission();
   const [showDeleteMission, setShowDeleteMission] = useState(false);
+  const [demoRestoring, setDemoRestoring] = useState(false);
   const [deleteMissionPwd, setDeleteMissionPwd] = useState('');
   const [deleteMissionError, setDeleteMissionError] = useState('');
   const [deleteMissionSuccess, setDeleteMissionSuccess] = useState(false);
@@ -492,66 +493,117 @@ export function SettingsView() {
           </div>
         </SectionCard>
 
-        {/* ── Danger Zone ── */}
-        <SectionCard className="border-matrix-danger/20">
-          <SectionHeader title={language === 'es' ? 'Zona peligrosa' : 'Danger Zone'} />
-
-          {/* Delete Mission */}
-          {mission && (
-            <div className="px-4 py-3 flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-matrix-border/30">
+        {/* ── Demo Reset ── */}
+        {isDemo && (
+          <SectionCard className="border-matrix-accent/20">
+            <SectionHeader title={language === 'es' ? 'Datos de demostración' : 'Demo Data'} />
+            <div className="px-4 py-3 flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <p className="text-sm text-gray-400">{t('deleteMission' as LangKey, language)}</p>
-                <p className="text-xs text-matrix-muted mt-0.5">{t('deleteMissionDesc' as LangKey, language)}</p>
+                <p className="text-sm text-gray-400">
+                  {language === 'es' ? 'Restaurar datos de ejemplo' : 'Restore sample data'}
+                </p>
+                <p className="text-xs text-matrix-muted mt-0.5">
+                  {language === 'es'
+                    ? 'Restablece todos los datos a su estado original.'
+                    : 'Resets all data back to its original state.'}
+                </p>
               </div>
               <button
-                onClick={() => {
-                  if (!passwordStatus?.isSetup) {
-                    alert(t('deleteMissionNoVault' as LangKey, language));
-                    return;
+                onClick={async () => {
+                  const ok = await confirm({
+                    title: language === 'es' ? 'Restaurar datos de demo' : 'Restore demo data',
+                    description:
+                      language === 'es'
+                        ? 'Se borrarán todos los cambios y se restaurarán los datos originales.'
+                        : 'All changes will be lost and original sample data will be restored.',
+                    confirmLabel: language === 'es' ? 'Restaurar' : 'Restore',
+                  });
+                  if (!ok) return;
+                  setDemoRestoring(true);
+                  await apiFetch('/demo/reset', { method: 'POST' });
+                  await new Promise((r) => setTimeout(r, 1500));
+                  window.location.reload();
+                }}
+                disabled={demoRestoring}
+                className="px-4 py-1.5 rounded-md text-sm text-matrix-accent border border-matrix-accent/30 hover:bg-matrix-accent/10 transition-colors whitespace-nowrap disabled:opacity-50"
+              >
+                {demoRestoring ? (
+                  <span className="inline-flex items-center gap-2">
+                    <span className="w-3.5 h-3.5 border-2 border-matrix-accent/30 border-t-matrix-accent rounded-full animate-spin" />
+                    {language === 'es' ? 'Restaurando...' : 'Restoring...'}
+                  </span>
+                ) : language === 'es' ? (
+                  'Restaurar'
+                ) : (
+                  'Restore'
+                )}
+              </button>
+            </div>
+          </SectionCard>
+        )}
+
+        {/* ── Danger Zone ── */}
+        {!isDemo && (
+          <SectionCard className="border-matrix-danger/20">
+            <SectionHeader title={language === 'es' ? 'Zona peligrosa' : 'Danger Zone'} />
+
+            {/* Delete Mission */}
+            {mission && (
+              <div className="px-4 py-3 flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-matrix-border/30">
+                <div>
+                  <p className="text-sm text-gray-400">{t('deleteMission' as LangKey, language)}</p>
+                  <p className="text-xs text-matrix-muted mt-0.5">{t('deleteMissionDesc' as LangKey, language)}</p>
+                </div>
+                <button
+                  onClick={() => {
+                    if (!passwordStatus?.isSetup) {
+                      alert(t('deleteMissionNoVault' as LangKey, language));
+                      return;
+                    }
+                    setShowDeleteMission(true);
+                  }}
+                  className="px-4 py-1.5 rounded-md text-sm text-matrix-danger border border-matrix-danger/30 hover:bg-matrix-danger/10 transition-colors whitespace-nowrap"
+                >
+                  {t('deleteMission' as LangKey, language)}
+                </button>
+              </div>
+            )}
+
+            {/* Reset Database */}
+            <div className="px-4 py-3 flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm text-gray-400">{language === 'es' ? 'Borrar base de datos' : 'Reset Database'}</p>
+                <p className="text-xs text-matrix-muted mt-0.5">
+                  {language === 'es' ? 'Elimina todos los datos permanentemente' : 'Permanently deletes all data'}
+                </p>
+              </div>
+              <button
+                onClick={async () => {
+                  const first = await confirm({
+                    title: language === 'es' ? '¿Borrar toda la base de datos?' : 'Delete entire database?',
+                    description: language === 'es' ? 'Esta acción no se puede deshacer.' : 'This cannot be undone.',
+                    danger: true,
+                    confirmLabel: language === 'es' ? 'Continuar' : 'Continue',
+                  });
+                  if (!first) return;
+                  const second = await confirm({
+                    title: language === 'es' ? '¿Estás seguro?' : 'Are you sure?',
+                    description: language === 'es' ? 'Todos los datos se perderán.' : 'All data will be lost.',
+                    danger: true,
+                    confirmLabel: language === 'es' ? 'Borrar todo' : 'Delete everything',
+                  });
+                  if (second) {
+                    await apiFetch('/db/reset', { method: 'POST' });
+                    window.location.reload();
                   }
-                  setShowDeleteMission(true);
                 }}
                 className="px-4 py-1.5 rounded-md text-sm text-matrix-danger border border-matrix-danger/30 hover:bg-matrix-danger/10 transition-colors whitespace-nowrap"
               >
-                {t('deleteMission' as LangKey, language)}
+                {language === 'es' ? 'Borrar' : 'Reset'}
               </button>
             </div>
-          )}
-
-          {/* Reset Database */}
-          <div className="px-4 py-3 flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="text-sm text-gray-400">{language === 'es' ? 'Borrar base de datos' : 'Reset Database'}</p>
-              <p className="text-xs text-matrix-muted mt-0.5">
-                {language === 'es' ? 'Elimina todos los datos permanentemente' : 'Permanently deletes all data'}
-              </p>
-            </div>
-            <button
-              onClick={async () => {
-                const first = await confirm({
-                  title: language === 'es' ? '¿Borrar toda la base de datos?' : 'Delete entire database?',
-                  description: language === 'es' ? 'Esta acción no se puede deshacer.' : 'This cannot be undone.',
-                  danger: true,
-                  confirmLabel: language === 'es' ? 'Continuar' : 'Continue',
-                });
-                if (!first) return;
-                const second = await confirm({
-                  title: language === 'es' ? '¿Estás seguro?' : 'Are you sure?',
-                  description: language === 'es' ? 'Todos los datos se perderán.' : 'All data will be lost.',
-                  danger: true,
-                  confirmLabel: language === 'es' ? 'Borrar todo' : 'Delete everything',
-                });
-                if (second) {
-                  await apiFetch('/db/reset', { method: 'POST' });
-                  window.location.reload();
-                }
-              }}
-              className="px-4 py-1.5 rounded-md text-sm text-matrix-danger border border-matrix-danger/30 hover:bg-matrix-danger/10 transition-colors whitespace-nowrap"
-            >
-              {language === 'es' ? 'Borrar' : 'Reset'}
-            </button>
-          </div>
-        </SectionCard>
+          </SectionCard>
+        )}
       </div>
 
       {/* ── Change Password Modal ── */}
