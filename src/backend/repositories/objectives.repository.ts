@@ -1,4 +1,4 @@
-import { eq, count } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { getDb } from '../db/connection';
 import { objectives } from '../db/schema';
 
@@ -15,11 +15,6 @@ export const objectivesRepo = {
 
   findById(id: number) {
     return getDb().select().from(objectives).where(eq(objectives.id, id)).get();
-  },
-
-  countByMissionId(missionId: number) {
-    const result = getDb().select({ count: count() }).from(objectives).where(eq(objectives.missionId, missionId)).get();
-    return result?.count ?? 0;
   },
 
   create(data: { missionId: number; title: string; description?: string; sortOrder?: number }) {
@@ -40,12 +35,6 @@ export const objectivesRepo = {
       .where(eq(objectives.id, id))
       .returning()
       .get();
-  },
-
-  reassignToMission(ids: number[], newMissionId: number) {
-    for (const id of ids) {
-      getDb().update(objectives).set({ missionId: newMissionId, updatedAt: now() }).where(eq(objectives.id, id)).run();
-    }
   },
 
   delete(id: number) {

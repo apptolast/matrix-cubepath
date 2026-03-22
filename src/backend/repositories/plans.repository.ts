@@ -1,4 +1,4 @@
-import { eq, count } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { getDb } from '../db/connection';
 import { plans } from '../db/schema';
 
@@ -15,11 +15,6 @@ export const plansRepo = {
 
   findById(id: number) {
     return getDb().select().from(plans).where(eq(plans.id, id)).get();
-  },
-
-  countByObjectiveId(objectiveId: number) {
-    const result = getDb().select({ count: count() }).from(plans).where(eq(plans.objectiveId, objectiveId)).get();
-    return result?.count ?? 0;
   },
 
   create(data: { objectiveId: number; title: string; description?: string; sortOrder?: number; deadline?: string }) {
