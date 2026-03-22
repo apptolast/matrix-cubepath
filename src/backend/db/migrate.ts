@@ -181,4 +181,11 @@ export function runMigrations() {
 
   db.run(sql`CREATE INDEX IF NOT EXISTS idx_passwords_domain_username ON passwords (domain, username)`);
   db.run(sql`CREATE INDEX IF NOT EXISTS idx_passwords_category ON passwords (category)`);
+
+  db.run(sql`CREATE TABLE IF NOT EXISTS daily_notes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    date TEXT NOT NULL UNIQUE,
+    content TEXT NOT NULL DEFAULT '',
+    updated_at TEXT NOT NULL
+  )`);
 }
