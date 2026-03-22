@@ -46,7 +46,8 @@ RUN apk add --no-cache su-exec \
  && chown -R appuser:appgroup /app /data
 
 COPY docker-entrypoint.sh /usr/local/bin/
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+RUN sed -i 's/\r$//' /usr/local/bin/docker-entrypoint.sh \
+ && chmod +x /usr/local/bin/docker-entrypoint.sh
 
 ENV NODE_ENV=production
 ENV PORT=3939
