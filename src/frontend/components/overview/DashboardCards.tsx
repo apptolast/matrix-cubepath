@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useProjects, Project } from '../../hooks/useProjects';
 import { useStats } from '../../hooks/useStats';
 import { useMission } from '../../hooks/useMission';
@@ -13,6 +13,7 @@ import { t, LangKey } from '../../lib/i18n';
 import { ProgressBar, SectionCard } from './primitives';
 import { Dropdown } from '../ui/Dropdown';
 import { ResizableTextarea } from '../ui/ResizableTextarea';
+import { useNoteDates, useNote, useSaveNote } from '../../hooks/useNotes';
 
 // --- StatsCard ---
 
@@ -405,37 +406,176 @@ export function UpcomingDeadlinesCard({ language }: { language: 'en' | 'es' }) {
   );
 }
 
-// --- ScratchpadCard ---
+// --- DailyNotesCard ---
+
+const WEEKDAYS = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
+const MONTHS = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+];
+
+function formatDate(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
 
 export function ScratchpadCard({ language }: { language: 'en' | 'es' }) {
-  const [notes, setNotes] = useState(() => {
-    try {
-      return localStorage.getItem('matrix-scratchpad') || '';
-    } catch {
-      return '';
+  const today = formatDate(new Date());
+  const [selectedDate, setSelectedDate] = useState(today);
+  const [viewDate, setViewDate] = useState(new Date());
+  const [draft, setDraft] = useState('');
+  const [dirty, setDirty] = useState(false);
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const { data: dates } = useNoteDates();
+  const { data: noteData } = useNote(selectedDate);
+  const saveNote = useSaveNote();
+
+  const datesSet = new Set(dates ?? []);
+
+  // Load content from server when it arrives — only if the user hasn't started typing
+  useEffect(() => {
+    if (!dirty && noteData !== undefined) {
+      setDraft(noteData.content);
     }
-  });
+  }, [noteData, dirty]);
+
+  // Reset dirty flag when date changes
+  useEffect(() => {
+    setDirty(false);
+  }, [selectedDate]);
 
   const handleChange = (val: string) => {
-    setNotes(val);
-    try {
-      localStorage.setItem('matrix-scratchpad', val);
-    } catch {
-      /* ignore */
-    }
+    setDraft(val);
+    setDirty(true);
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(() => {
+      saveNote.mutate({ date: selectedDate, content: val });
+      setDirty(false);
+    }, 600);
   };
 
+  const handleSave = () => {
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    saveNote.mutate({ date: selectedDate, content: draft });
+    setDirty(false);
+  };
+
+  const getDays = () => {
+    const year = viewDate.getFullYear();
+    const month = viewDate.getMonth();
+    const firstDay = (new Date(year, month, 1).getDay() + 6) % 7;
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const daysInPrev = new Date(year, month, 0).getDate();
+    const days: { date: Date; current: boolean }[] = [];
+    for (let i = firstDay - 1; i >= 0; i--)
+      days.push({ date: new Date(year, month - 1, daysInPrev - i), current: false });
+    for (let i = 1; i <= daysInMonth; i++) days.push({ date: new Date(year, month, i), current: true });
+    const rem = 35 - days.length;
+    for (let i = 1; i <= rem; i++) days.push({ date: new Date(year, month + 1, i), current: false });
+    return days;
+  };
+
+  const label = new Date(selectedDate + 'T00:00:00').toLocaleDateString(language === 'es' ? 'es-ES' : 'en-US', {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+  });
+
   return (
-    <SectionCard title={language === 'es' ? 'Bloc de notas' : 'Scratchpad'} icon="✏">
+    <SectionCard title={t('dailyNotes', language)} icon="✏">
+      {/* Calendar header */}
+      <div className="flex items-center justify-between mb-1.5">
+        <button
+          onClick={() => setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() - 1, 1))}
+          className="p-0.5 text-gray-500 hover:text-gray-300 transition-colors"
+        >
+          ‹
+        </button>
+        <span className="text-[11px] text-gray-400">
+          {MONTHS[viewDate.getMonth()]} {viewDate.getFullYear()}
+        </span>
+        <button
+          onClick={() => setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 1))}
+          className="p-0.5 text-gray-500 hover:text-gray-300 transition-colors"
+        >
+          ›
+        </button>
+      </div>
+
+      {/* Weekday labels */}
+      <div className="grid grid-cols-7 mb-0.5">
+        {WEEKDAYS.map((d) => (
+          <div key={d} className="text-[9px] text-center text-gray-600">
+            {d}
+          </div>
+        ))}
+      </div>
+
+      {/* Days grid */}
+      <div className="grid grid-cols-7 gap-y-0.5 mb-2">
+        {getDays().map((day, i) => {
+          const ds = formatDate(day.date);
+          const isSelected = ds === selectedDate;
+          const isToday = ds === today;
+          const hasNote = datesSet.has(ds);
+          return (
+            <button
+              key={i}
+              disabled={!day.current}
+              onClick={() => {
+                if (!day.current || ds === selectedDate) return;
+                // Flush pending save before switching
+                if (saveTimer.current) {
+                  clearTimeout(saveTimer.current);
+                  if (dirty) saveNote.mutate({ date: selectedDate, content: draft });
+                }
+                setSelectedDate(ds);
+              }}
+              className={`relative text-[10px] py-0.5 rounded transition-colors
+                ${!day.current ? 'text-gray-700 cursor-default' : ''}
+                ${isSelected ? 'bg-matrix-accent text-white font-medium' : day.current ? 'text-gray-400 hover:bg-matrix-bg hover:text-gray-200' : ''}
+                ${isToday && !isSelected ? 'ring-1 ring-matrix-accent/40' : ''}
+              `}
+            >
+              {day.date.getDate()}
+              {hasNote && !isSelected && (
+                <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0.5 h-0.5 rounded-full bg-matrix-accent" />
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Note editor */}
+      <div className="text-[10px] text-gray-500 mb-1">{label}</div>
       <ResizableTextarea
-        value={notes}
+        value={draft}
         onChange={(e) => handleChange(e.target.value)}
-        placeholder={language === 'es' ? 'Escribe notas rápidas aquí...' : 'Quick notes, reminders, ideas...'}
-        rows={5}
+        placeholder={t('dailyNotesPlaceholder', language)}
+        rows={4}
       />
-      <p className="text-[10px] text-gray-500 mt-1 text-right">
-        {language === 'es' ? 'Guardado localmente' : 'Saved locally'}
-      </p>
+      <div className="flex items-center justify-between mt-1">
+        <p className="text-[10px] text-gray-600">
+          {saveNote.isPending ? t('saving', language) : t('savedLower', language)}
+        </p>
+        <button
+          onClick={handleSave}
+          disabled={saveNote.isPending}
+          className="text-[10px] px-2 py-0.5 bg-matrix-accent/10 text-matrix-accent rounded hover:bg-matrix-accent/20 transition-colors disabled:opacity-50"
+        >
+          {t('save', language)}
+        </button>
+      </div>
     </SectionCard>
   );
 }

@@ -207,6 +207,11 @@ const dict = {
     completed: 'Done',
     created: 'Created',
     logout: 'Log out',
+    // Daily Notes
+    dailyNotes: 'Daily Notes',
+    dailyNotesPlaceholder: "Today's notes...",
+    saving: 'Saving...',
+    savedLower: 'Saved',
   },
   es: {
     overview: 'Resumen',
@@ -416,6 +421,11 @@ const dict = {
     completed: 'Hechas',
     created: 'Creadas',
     logout: 'Cerrar sesión',
+    // Daily Notes
+    dailyNotes: 'Bloc de notas',
+    dailyNotesPlaceholder: 'Notas del día...',
+    saving: 'Guardando...',
+    savedLower: 'Guardado',
   },
 } as const;
 
