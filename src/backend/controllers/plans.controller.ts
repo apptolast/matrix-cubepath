@@ -4,6 +4,7 @@ import { plansRepo } from '../repositories/plans.repository';
 import { activityRepo } from '../repositories/activity.repository';
 import { tasksRepo } from '../repositories/tasks.repository';
 import { projectsRepo } from '../repositories/projects.repository';
+import { calcPlanProgress } from '../lib/progress';
 
 const createSchema = z.object({
   objectiveId: z.number(),
@@ -26,23 +27,6 @@ const deleteSchema = z.object({
   action: z.enum(['reassign', 'cascade']).optional(),
   newParentId: z.number().optional(),
 });
-
-function taskProgress(status: string): number {
-  switch (status) {
-    case 'done':
-      return 100;
-    case 'in_progress':
-      return 50;
-    default:
-      return 0;
-  }
-}
-
-function calcPlanProgress(planId: number): number {
-  const planTasks = tasksRepo.findByPlanId(planId);
-  if (planTasks.length === 0) return 0;
-  return Math.round(planTasks.reduce((sum, t) => sum + taskProgress(t.status), 0) / planTasks.length);
-}
 
 export const plansController = {
   getAll(req: Request, res: Response) {

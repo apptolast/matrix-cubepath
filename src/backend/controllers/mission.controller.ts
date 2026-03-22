@@ -6,6 +6,7 @@ import { plansRepo } from '../repositories/plans.repository';
 import { tasksRepo } from '../repositories/tasks.repository';
 import { projectsRepo } from '../repositories/projects.repository';
 import { activityRepo } from '../repositories/activity.repository';
+import { calcMissionProgress } from '../lib/progress';
 
 const createSchema = z.object({
   title: z.string().min(1),
@@ -22,37 +23,6 @@ const deleteSchema = z.object({
   action: z.enum(['reassign', 'cascade']).optional(),
   newParentId: z.number().optional(),
 });
-
-function taskProgress(status: string): number {
-  switch (status) {
-    case 'done':
-      return 100;
-    case 'in_progress':
-      return 50;
-    default:
-      return 0;
-  }
-}
-
-function avgProgress(values: number[]): number {
-  if (values.length === 0) return 0;
-  return Math.round(values.reduce((a, b) => a + b, 0) / values.length);
-}
-
-function calcPlanProgress(planId: number): number {
-  const planTasks = tasksRepo.findByPlanId(planId);
-  return avgProgress(planTasks.map((t) => taskProgress(t.status)));
-}
-
-function calcObjectiveProgress(objectiveId: number): number {
-  const objPlans = plansRepo.findByObjectiveId(objectiveId);
-  return avgProgress(objPlans.map((p) => calcPlanProgress(p.id)));
-}
-
-function calcMissionProgress(missionId: number): number {
-  const objs = objectivesRepo.findByMissionId(missionId);
-  return avgProgress(objs.map((o) => calcObjectiveProgress(o.id)));
-}
 
 export const missionController = {
   getAll(_req: Request, res: Response) {
