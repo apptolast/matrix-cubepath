@@ -23,14 +23,14 @@
 
 Matrix-CubePath is the web evolution of [Matrix](https://github.com/bpstack/matrix), originally built as an Electron desktop app. The core mission hierarchy and task management remain the same, but the migration brought fundamental changes:
 
-| | Matrix (Electron) | Matrix-CubePath (Web) |
-|---|---|---|
-| **Runtime** | Desktop app (.exe / .dmg) | Web app — accessible from any browser |
-| **Users** | Single user, no authentication | Multi-user with registration, login, and rate limiting |
-| **Database** | One shared SQLite file | Auth DB + isolated per-user SQLite databases |
+|                      | Matrix (Electron)                                          | Matrix-CubePath (Web)                                    |
+| -------------------- | ---------------------------------------------------------- | -------------------------------------------------------- |
+| **Runtime**          | Desktop app (.exe / .dmg)                                  | Web app — accessible from any browser                    |
+| **Users**            | Single user, no authentication                             | Multi-user with registration, login, and rate limiting   |
+| **Database**         | One shared SQLite file                                     | Auth DB + isolated per-user SQLite databases             |
 | **Project Scanning** | Local filesystem (reads directories, git info, file stats) | GitHub API (repos, languages, commits, README detection) |
-| **File Access** | Native dialogs via Electron IPC | Form inputs (no filesystem access) |
-| **Deployment** | Packaged binary with auto-updates | Docker container on any VPS or cloud provider |
+| **File Access**      | Native dialogs via Electron IPC                            | Form inputs (no filesystem access)                       |
+| **Deployment**       | Packaged binary with auto-updates                          | Docker container on any VPS or cloud provider            |
 
 The most visible change is the **Projects module**: the Electron version scanned your local machine for repos, reading the file tree, running git commands, and counting lines of code. The web version pulls this information from the GitHub API instead — fetching languages, commits, CI/CD status, and documentation presence without needing local access.
 
@@ -83,6 +83,10 @@ Capture raw ideas, score them across dimensions (alignment, impact, cost, risk),
 
 Encrypted password storage with categories, notes, and search.
 
+### Daily Notes
+
+Calendar-based daily notepad. Pick a day, write plain text, it saves to the database. Dots mark days with notes. Auto-save with debounce + manual save button.
+
 ### Activity & Analytics
 
 Every action is logged automatically. The right panel shows:
@@ -100,6 +104,10 @@ Each user gets their own isolated SQLite database. Register as many accounts as 
 ### i18n
 
 English and Spanish supported. Preference stored per user.
+
+### Mobile Responsive
+
+Fully usable on mobile and tablet with no desktop experience changes. Sidebar collapses into a slide-over overlay triggered by a hamburger button. Kanban columns stack vertically on small screens. Each task card includes an inline status selector (mobile-only) as an alternative to drag and drop. Password table columns hide progressively. All modals and views adapt via Tailwind breakpoints — no extra dependencies.
 
 ---
 
@@ -296,9 +304,10 @@ src/
 │   ├── db/              # Schema (Drizzle), migrations, per-user DB, demo seed
 │   ├── engines/         # Project scanner (GitHub API + local filesystem)
 │   ├── lib/             # Logger, local settings, session helpers
-│   ├── middleware/       # Auth guard, rate limiting
+│   ├── middleware/       # Auth guard, rate limiting, Zod validate middleware
 │   ├── repositories/    # Drizzle queries, one per domain
-│   ├── routes/          # Express routers (thin, delegate to controllers)
+│   ├── routes/          # Express routers (thin, validate + delegate to controllers)
+│   ├── validations/     # Zod schemas per domain (body, params, query)
 │   └── start.ts         # Entry point
 ├── frontend/
 │   ├── components/      # React views and UI components, organized by domain

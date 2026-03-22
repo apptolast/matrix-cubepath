@@ -66,6 +66,15 @@
 - [x] Local settings (basePath)
 - [x] Logs API (`GET /api/logs`, `POST /api/logs/clear`)
 - [x] Stats and deadlines endpoints
+- [x] Daily Notes — `daily_notes` table, `GET /notes`, `GET /notes/:date`, `PUT /notes/:date`
+
+### Validation ✅
+
+- [x] Centralized `validate()` middleware (`src/backend/middleware/validate.middleware.ts`) — factory function that receives `{ body?, params?, query? }` Zod schemas, runs `safeParse`, returns 400 with `flatten().fieldErrors` on failure, and mutates `req` with transformed data
+- [x] All Zod schemas extracted to `src/backend/validations/` (one file per domain: mission, objectives, plans, tasks, ideas, projects, passwords, settings, local-settings, auth, notes)
+- [x] Shared schemas in `common.validation.ts`: `deadlineField` (YYYY-MM-DD + valid date), `cascadeDeleteBody` (action + newParentId for hierarchical deletes)
+- [x] New validations added: deadline format on plans/tasks, auth register/login with Zod (replaces manual checks), URL format on projects (https or owner/repo)
+- [x] Routes use `validate()` middleware before controller — controllers no longer import Zod or call `safeParse` for standard CRUD (only cascade delete logic remains inline)
 
 ### GitHub API Integration ✅
 
@@ -83,7 +92,9 @@
 - [x] OverviewView — home page with summary dashboard
 - [x] TaskBoard with priorities, deadlines, calendar picker, kanban columns
 - [x] IdeasView with creation/editing modal and pipeline
-- [x] RightPanel: activity metrics, pomodoro timer, top ideas
+- [x] RightPanel: activity metrics, pomodoro timer, top ideas, daily thought, dev feed
+- [x] Daily Thought — ZenQuotes API with 24h in-memory cache + local fallback quotes
+- [x] Dev Feed — Hacker News top stories + GitHub trending repos (free APIs, no key required)
 - [x] PasswordsView with CSV/TXT import via `<input type="file">`
 - [x] SettingsView with logs viewer and GitHub config
 - [x] Auth views (login / register)
@@ -91,6 +102,8 @@
 - [x] Dark/light theme (Zustand + matchMedia)
 - [x] Hooks: `useActivityMetrics`, `useIdeasPipeline`, `useDeadlines`, `useTasks`
 - [x] Store: `pomodoro.store`, `dialog.store`
+- [x] Daily Notes — calendar-based notepad in Overview: inline calendar grid with dot indicators, date picker, plain text editor with debounce auto-save + manual save button, dirty flag prevents overwriting user input during query refetch
+- [x] Responsive / mobile design — sidebar overlay with hamburger (`md:hidden`), kanban columns stack on mobile (`grid-cols-1`), inline status selector per task card (mobile-only), edit/delete buttons always visible, password table columns hide progressively, modals fit small screens, all views adapted with Tailwind breakpoints only
 
 ### CI/CD ✅
 
