@@ -27,9 +27,7 @@ export function ServiceWorkerRegister() {
   return (
     <div className="fixed bottom-4 right-4 z-50 bg-matrix-surface border border-matrix-border rounded-lg shadow-lg p-4 max-w-xs">
       <p className="text-sm text-gray-200 mb-3">
-        {language === 'es'
-          ? 'Nueva versión disponible.'
-          : 'New version available.'}
+        {language === 'es' ? 'Nueva versión disponible.' : 'New version available.'}
       </p>
       <div className="flex gap-2">
         <button

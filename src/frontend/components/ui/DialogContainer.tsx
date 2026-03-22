@@ -44,10 +44,7 @@ export function DialogContainer() {
   };
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-      onClick={_close}
-    >
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={_close}>
       <div
         className="bg-matrix-surface border border-matrix-border rounded-lg shadow-xl w-full max-w-sm mx-4 p-5"
         onClick={(e) => e.stopPropagation()}
