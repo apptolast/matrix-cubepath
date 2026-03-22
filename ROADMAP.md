@@ -115,6 +115,7 @@
 ### Features
 
 - [x] Notifications for upcoming deadlines (DeadlineBanner + UpcomingDeadlines widget + Settings toggle)
+- [ ] Tech Radar & Dependencies Health dashboard (replace current mock data in RightPanel)
 - [ ] Data export (JSON/CSV)
   - Backend: `GET /api/export` endpoint (auth required) that queries all user tables (missions, objectives, plans, tasks, ideas, idea_evaluations, projects, project_links, activity_log, settings) and returns a single JSON file with ISO timestamps
   - Backend: `GET /api/export?format=csv` variant that returns a ZIP with one CSV per table
@@ -150,13 +151,13 @@ See [Migration section in README](./README.md#migration-from-matrix-electron) fo
 
 ## Key Decisions
 
-| Decision          | Choice                      | Reason                                                    |
-| ----------------- | --------------------------- | --------------------------------------------------------- |
-| Reverse proxy     | Traefik (via Dokploy)       | Auto HTTPS + web UI for deployment management             |
-| Deploy            | Dokploy auto-deploy on push | No SSH keys needed, web dashboard, rollback support       |
-| Database          | SQLite (per-user)           | Sufficient for self-hosted, no external services required  |
-| Containers        | Single app container        | Traefik provided by Dokploy, no need for separate proxy   |
-| Password hashing  | scrypt (Node.js native)     | No external dependency, resistant to brute-force attacks   |
-| Session tokens    | HMAC cookies                | Stateless, no session store needed, httpOnly + secure     |
-| API routes        | Relative (`/api/...`)       | Reverse proxy handles routing, no hardcoded host          |
-| CSV import        | `<input type="file">`       | Native browser API, no Electron dependency                |
+| Decision         | Choice                      | Reason                                                    |
+| ---------------- | --------------------------- | --------------------------------------------------------- |
+| Reverse proxy    | Traefik (via Dokploy)       | Auto HTTPS + web UI for deployment management             |
+| Deploy           | Dokploy auto-deploy on push | No SSH keys needed, web dashboard, rollback support       |
+| Database         | SQLite (per-user)           | Sufficient for self-hosted, no external services required |
+| Containers       | Single app container        | Traefik provided by Dokploy, no need for separate proxy   |
+| Password hashing | scrypt (Node.js native)     | No external dependency, resistant to brute-force attacks  |
+| Session tokens   | HMAC cookies                | Stateless, no session store needed, httpOnly + secure     |
+| API routes       | Relative (`/api/...`)       | Reverse proxy handles routing, no hardcoded host          |
+| CSV import       | `<input type="file">`       | Native browser API, no Electron dependency                |

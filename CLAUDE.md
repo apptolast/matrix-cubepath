@@ -3,16 +3,26 @@
 ## Quick Reference
 
 - **Package manager**: pnpm (never npm/yarn)
-- **Start**: `pnpm start` (launches Electron + Express on :3939 + React UI)
+- **Dev**: `pnpm dev` (backend + frontend in parallel)
+- **Typecheck**: `pnpm typecheck`
 - **Test**: `pnpm test`
+- **Production**: `pnpm start:prod` (Express serves built frontend)
 - **DB**: SQLite via better-sqlite3 + Drizzle ORM (WAL mode)
 
 ## Architecture
 
-- `src/backend/` — Electron main process: Express server, DB, engines
-- `src/frontend/` — React renderer: Tailwind, Zustand, React Query
-- Express runs embedded on localhost:3939, accessed via fetch from renderer
-- Preload script exposes `window.matrix.apiBase` via contextBridge
+- `src/backend/` — Express server, DB, engines (pure Node.js, no Electron)
+- `src/frontend/` — React 18 + Vite + Tailwind CSS 3.4 + Zustand + React Query
+- Entry point: `src/backend/start.ts`
+- Frontend talks to backend via `apiFetch('/api/...')`
+- Per-user SQLite databases via `AsyncLocalStorage`
+
+## Deployment
+
+- Docker multi-stage build → Dokploy → Traefik (auto HTTPS)
+- Domain: `matrix.stackbp.es`
+- Auto-deploy on push to `main`
+- Env vars: `SESSION_SECRET`, `SECURE_COOKIE`, `DATA_DIR`, `DEMO_USER`
 
 ## Conventions
 
@@ -24,6 +34,7 @@
 - Frontend views: `src/frontend/components/{domain}/{Domain}View.tsx`
 - Stores: `src/frontend/stores/*.store.ts` (Zustand)
 - API calls: `src/frontend/lib/api.ts` → `apiFetch<T>(path, options)`
+- Logging: use `logger` from `src/backend/lib/logger.ts` (never `console.error`)
 
 ## Data Hierarchy
 
@@ -36,7 +47,7 @@ Mission → Objectives → Plans → Tasks
 
 ## Sidebar Tabs
 
-Overview | Projects | Tasks | Ideas | Passwords (coming soon) | Settings
+Overview | Projects | Tasks | Ideas | Passwords | Settings
 
 ## i18n
 
@@ -45,20 +56,15 @@ Overview | Projects | Tasks | Ideas | Passwords (coming soon) | Settings
 
 ## Stack
 
-Electron Forge (Vite) | React 18 | Tailwind CSS 3.4 | Zustand | Drizzle ORM | Express 4 | Zod | Vitest
+Node.js + Express 4 | React 18 | Vite | Tailwind CSS 3.4 | Zustand | React Query | Drizzle ORM | Zod | Vitest
 
 ## Key Decisions
 
-- Vite over Webpack (better DX, faster builds)
+- Vite for frontend bundling (fast HMR)
 - Tailwind v3.4 (not v4)
-- Drizzle over Prisma (cleaner Electron packaging)
+- Drizzle over Prisma (lighter, better for SQLite)
 - better-sqlite3 for native SQLite (WAL mode)
-- Vite externals: better-sqlite3 + express in rollupOptions.external
-- AutoUnpackNativesPlugin for .node files in asar
 - Tables created via raw SQL in migrate.ts (no drizzle-kit at runtime)
-- pnpm requires `node-linker=hoisted` in .npmrc (Electron Forge requirement)
-- Globals: `MAIN_WINDOW_VITE_DEV_SERVER_URL` and `MAIN_WINDOW_VITE_NAME`
-
-## Progress
-
-- Phase 0 (Infrastructure + DB): DONE
+- scrypt for password hashing (Node.js native, no bcrypt dependency)
+- HMAC session tokens (stateless, no express-session)
+- PWA via vite-plugin-pwa + workbox
