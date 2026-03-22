@@ -15,7 +15,7 @@ import { DialogContainer } from '../ui/DialogContainer';
 import { DeadlineBanner } from './DeadlineBanner';
 
 export function AppShell() {
-  const { activeTab, language } = useUiStore();
+  const { activeTab, language, openSidebar } = useUiStore();
 
   useKeyboardShortcuts();
 
@@ -48,6 +48,17 @@ export function AppShell() {
   return (
     <div className="flex flex-col h-screen bg-matrix-bg text-gray-200">
       <DeadlineBanner />
+      <div className="flex items-center justify-between px-3 py-2 bg-matrix-surface border-b border-matrix-border md:hidden">
+        <button
+          onClick={openSidebar}
+          className="text-matrix-muted hover:text-matrix-accent transition-colors text-lg leading-none"
+          aria-label="Open sidebar"
+        >
+          ☰
+        </button>
+        <span className="text-sm text-matrix-accent font-medium tracking-wide">Matrix</span>
+        <div className="w-5" />
+      </div>
       <div className="flex flex-1 overflow-hidden">
         <Sidebar />
         <main className="flex-1 overflow-auto">{renderContent()}</main>

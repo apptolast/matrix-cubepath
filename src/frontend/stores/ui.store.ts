@@ -6,12 +6,15 @@ export type Theme = 'dark' | 'light';
 interface UiState {
   activeTab: Tab;
   sidebarCollapsed: boolean;
+  sidebarOpen: boolean;
   language: 'en' | 'es';
   theme: Theme;
   quickCreateModal: { type: 'task' | 'idea' | null };
   deadlinesHidden: boolean;
   setActiveTab: (tab: Tab) => void;
   toggleSidebar: () => void;
+  openSidebar: () => void;
+  closeSidebar: () => void;
   setLanguage: (lang: 'en' | 'es') => void;
   setTheme: (theme: Theme) => void;
   openQuickCreate: (type: 'task' | 'idea') => void;
@@ -22,12 +25,15 @@ interface UiState {
 export const useUiStore = create<UiState>((set) => ({
   activeTab: 'overview',
   sidebarCollapsed: false,
+  sidebarOpen: false,
   language: 'en',
   theme: 'dark',
   quickCreateModal: { type: null },
   deadlinesHidden: false,
   setActiveTab: (tab) => set({ activeTab: tab }),
   toggleSidebar: () => set((s) => ({ sidebarCollapsed: !s.sidebarCollapsed })),
+  openSidebar: () => set({ sidebarOpen: true }),
+  closeSidebar: () => set({ sidebarOpen: false }),
   setLanguage: (language) => set({ language }),
   setTheme: (theme) => set({ theme }),
   openQuickCreate: (type) => set({ quickCreateModal: { type } }),

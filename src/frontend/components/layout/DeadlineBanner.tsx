@@ -31,7 +31,7 @@ export function DeadlineBanner() {
 
   return (
     <div
-      className={`px-3 py-1.5 text-xs flex items-center justify-between ${
+      className={`px-3 py-1.5 text-xs flex flex-col gap-1.5 sm:flex-row sm:items-center sm:justify-between ${
         overdue.length > 0 ? 'bg-red-600' : 'bg-amber-500'
       }`}
     >
@@ -50,7 +50,7 @@ export function DeadlineBanner() {
           )}
         </div>
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
         <span className="text-white/80 whitespace-nowrap cursor-pointer" onClick={() => setActiveTab('tasks')}>
           {language === 'es' ? 'Ver tareas →' : 'View tasks →'}
         </span>
