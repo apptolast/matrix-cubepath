@@ -188,4 +188,14 @@ export function runMigrations() {
     content TEXT NOT NULL DEFAULT '',
     updated_at TEXT NOT NULL
   )`);
+
+  // FK indexes for query performance
+  db.run(sql.raw(`CREATE INDEX IF NOT EXISTS idx_objectives_mission_id ON objectives(mission_id)`));
+  db.run(sql.raw(`CREATE INDEX IF NOT EXISTS idx_plans_objective_id ON plans(objective_id)`));
+  db.run(sql.raw(`CREATE INDEX IF NOT EXISTS idx_tasks_plan_id ON tasks(plan_id)`));
+  db.run(sql.raw(`CREATE INDEX IF NOT EXISTS idx_project_links_project_id ON project_links(project_id)`));
+  db.run(sql.raw(`CREATE INDEX IF NOT EXISTS idx_project_links_linkable ON project_links(linkable_type, linkable_id)`));
+  db.run(sql.raw(`CREATE INDEX IF NOT EXISTS idx_project_scans_project_id ON project_scans(project_id)`));
+  db.run(sql.raw(`CREATE INDEX IF NOT EXISTS idx_idea_evaluations_idea_id ON idea_evaluations(idea_id)`));
+  db.run(sql.raw(`CREATE INDEX IF NOT EXISTS idx_activity_log_entity ON activity_log(entity_type, entity_id)`));
 }
