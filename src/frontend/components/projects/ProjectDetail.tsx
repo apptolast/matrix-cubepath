@@ -30,7 +30,7 @@ export function ProjectDetail({ projectId, onBack }: Props) {
   const [editDescription, setEditDescription] = useState('');
   const { confirm } = useDialogStore();
 
-  if (isLoading || !project) return <div className="p-6 text-matrix-muted">{t('loading', language)}</div>;
+  if (isLoading || !project) return <div className="p-3 md:p-6 text-matrix-muted">{t('loading', language)}</div>;
 
   const ts = project.techStats;
   const scan = project.scan;
@@ -79,15 +79,15 @@ export function ProjectDetail({ projectId, onBack }: Props) {
   };
 
   return (
-    <div className="p-6">
+    <div className="p-3 md:p-6">
       {/* Header */}
       <button onClick={onBack} className="text-sm text-matrix-muted hover:text-gray-300 mb-4 transition-colors">
         ← {t('projects', language)}
       </button>
 
-      <div className="flex items-start justify-between mb-6">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between mb-6">
         {isEditing ? (
-          <div className="flex-1 space-y-3 mr-4">
+          <div className="flex-1 space-y-3 lg:mr-4 min-w-0">
             <input
               value={editName}
               onChange={(e) => setEditName(e.target.value)}
@@ -106,7 +106,7 @@ export function ProjectDetail({ projectId, onBack }: Props) {
               placeholder={t('taskDescription', language)}
               rows={2}
             />
-            <div className="flex gap-2">
+            <div className="flex flex-col gap-2 sm:flex-row">
               <button
                 onClick={saveEdit}
                 className="px-3 py-1.5 text-sm bg-matrix-accent text-black rounded hover:bg-matrix-accent-hover transition-colors font-medium"
@@ -122,7 +122,7 @@ export function ProjectDetail({ projectId, onBack }: Props) {
             </div>
           </div>
         ) : (
-          <div>
+          <div className="min-w-0">
             <div className="flex items-center gap-3 mb-1">
               <h1 className="text-xl font-semibold text-gray-200">{project.name}</h1>
               <button
@@ -145,7 +145,7 @@ export function ProjectDetail({ projectId, onBack }: Props) {
             )}
           </div>
         )}
-        <div className="flex gap-2 shrink-0">
+        <div className="flex flex-wrap gap-2 shrink-0">
           {!isEditing && (
             <>
               <button
@@ -182,7 +182,7 @@ export function ProjectDetail({ projectId, onBack }: Props) {
       </div>
 
       {/* Info cards grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
         {project.path && (
           <div>
             <InfoCard label={t('directory', language)} value={project.resolvedPath || project.path} small />
@@ -272,12 +272,12 @@ export function ProjectDetail({ projectId, onBack }: Props) {
                         <span className="text-matrix-accent font-mono">
                           {scanData.roadmap.completedPhases || 0}/{scanData.roadmap.totalPhases || 0}
                         </span>
-                        <span className="text-gray-500 text-[10px]">
-                          {scanData.roadmap.lineCount || 0} lines
-                        </span>
+                        <span className="text-gray-500 text-[10px]">{scanData.roadmap.lineCount || 0} lines</span>
                         {scanData.roadmap.totalPhases > 0 && (
                           <span className="text-gray-500 text-[10px]">
-                            ({Math.round(((scanData.roadmap.completedPhases || 0) / scanData.roadmap.totalPhases) * 100)}%)
+                            (
+                            {Math.round(((scanData.roadmap.completedPhases || 0) / scanData.roadmap.totalPhases) * 100)}
+                            %)
                           </span>
                         )}
                       </>
@@ -411,7 +411,7 @@ export function ProjectDetail({ projectId, onBack }: Props) {
                     ? 'Cuenta encabezados ## como fases/etapas del proyecto. Las fases se consideran completadas cuando tienen ✅ al final o están marcadas como [x]. El número de líneas indica el nivel de detalle.'
                     : 'Counts ## headers as project phases/stages. Phases are marked complete with ✅ at the end or [x] checkboxes. Line count indicates detail level.'}
                 </p>
-                <div className="mt-1.5 flex gap-2">
+                <div className="mt-1.5 flex flex-wrap gap-2">
                   <code className="px-1.5 py-0.5 bg-matrix-bg rounded text-[10px] text-gray-500">
                     ## Phase 1: Setup ✅
                   </code>

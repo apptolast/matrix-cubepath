@@ -18,7 +18,7 @@ function SectionCard({ children, className = '' }: { children: React.ReactNode; 
 
 function SectionHeader({ title, right }: { title: string; right?: React.ReactNode }) {
   return (
-    <div className="flex items-center justify-between px-4 py-3 border-b border-matrix-border/60">
+    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between px-4 py-3 border-b border-matrix-border/60">
       <h3 className="text-xs font-semibold text-gray-300 uppercase tracking-wider">{title}</h3>
       {right}
     </div>
@@ -27,9 +27,11 @@ function SectionHeader({ title, right }: { title: string; right?: React.ReactNod
 
 function SettingRow({ label, children, last = false }: { label: string; children: React.ReactNode; last?: boolean }) {
   return (
-    <div className={`flex items-center justify-between px-4 py-3 ${!last ? 'border-b border-matrix-border/30' : ''}`}>
+    <div
+      className={`flex flex-col items-start gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between ${!last ? 'border-b border-matrix-border/30' : ''}`}
+    >
       <span className="text-sm text-gray-400">{label}</span>
-      <div className="flex items-center gap-2">{children}</div>
+      <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:justify-end">{children}</div>
     </div>
   );
 }
@@ -191,7 +193,7 @@ export function SettingsView() {
     }`;
 
   return (
-    <div className="p-6 max-w-2xl mx-auto">
+    <div className="p-3 md:p-6 max-w-2xl mx-auto">
       <h1 className="text-xl font-semibold text-gray-200 mb-6">{t('settings', language)}</h1>
 
       <div className="space-y-5">
@@ -237,7 +239,7 @@ export function SettingsView() {
           <div className="px-4 py-3 space-y-2">
             <div className="space-y-2">
               <div className="text-xs text-matrix-muted">{t('githubToken', language)}</div>
-              <div className="flex gap-2 items-center">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                 <input
                   type="password"
                   value={githubToken}
@@ -259,7 +261,7 @@ export function SettingsView() {
 
             <div className="space-y-2">
               <div className="text-xs text-matrix-muted">{t('githubDefaultOwner', language)}</div>
-              <div className="flex gap-2 items-center">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                 <input
                   value={githubDefaultOwner}
                   onChange={(e) => setGithubDefaultOwner(e.target.value)}
@@ -348,7 +350,7 @@ export function SettingsView() {
                   return (
                     <div
                       key={shortcut.action}
-                      className={`flex items-center justify-between px-4 py-2.5 hover:bg-matrix-bg/50 ${!isLast ? 'border-b border-matrix-border/30' : ''}`}
+                      className={`flex flex-col items-start gap-2 px-4 py-2.5 hover:bg-matrix-bg/50 sm:flex-row sm:items-center sm:justify-between ${!isLast ? 'border-b border-matrix-border/30' : ''}`}
                     >
                       <span className="text-sm text-gray-400">{shortcut.label}</span>
                       <div className="flex items-center gap-2">
@@ -381,7 +383,7 @@ export function SettingsView() {
                 })}
               </div>
 
-              <div className="flex items-center justify-between px-4 py-3 border-t border-matrix-border/60 bg-matrix-bg/30">
+              <div className="flex flex-col gap-2 px-4 py-3 border-t border-matrix-border/60 bg-matrix-bg/30 sm:flex-row sm:items-center sm:justify-between">
                 <button
                   onClick={() => {
                     resetToDefaults.mutate();
@@ -417,7 +419,7 @@ export function SettingsView() {
           <SectionCard>
             <SectionHeader title={t('vault', language)} />
             <div className="px-4 py-3">
-              <div className="flex items-center gap-2">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-2">
                 {passwordStatus.isUnlocked ? (
                   <>
                     <div className="flex items-center gap-1.5 text-sm text-matrix-success">
@@ -439,7 +441,7 @@ export function SettingsView() {
                     </button>
                   </>
                 ) : (
-                  <div className="flex gap-2 flex-1">
+                  <div className="flex flex-col gap-2 flex-1 sm:flex-row">
                     <input
                       type="password"
                       value={unlockPwd}
@@ -496,7 +498,7 @@ export function SettingsView() {
 
           {/* Delete Mission */}
           {mission && (
-            <div className="px-4 py-3 flex items-center justify-between border-b border-matrix-border/30">
+            <div className="px-4 py-3 flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-matrix-border/30">
               <div>
                 <p className="text-sm text-gray-400">{t('deleteMission' as LangKey, language)}</p>
                 <p className="text-xs text-matrix-muted mt-0.5">{t('deleteMissionDesc' as LangKey, language)}</p>
@@ -517,7 +519,7 @@ export function SettingsView() {
           )}
 
           {/* Reset Database */}
-          <div className="px-4 py-3 flex items-center justify-between">
+          <div className="px-4 py-3 flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-sm text-gray-400">{language === 'es' ? 'Borrar base de datos' : 'Reset Database'}</p>
               <p className="text-xs text-matrix-muted mt-0.5">
@@ -555,8 +557,8 @@ export function SettingsView() {
       {/* ── Change Password Modal ── */}
       {/* ── Delete Mission Modal ── */}
       {showDeleteMission && mission && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-          <div className="bg-matrix-surface border border-matrix-danger/30 rounded-xl p-6 w-full max-w-md shadow-xl">
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+          <div className="bg-matrix-surface border border-matrix-danger/30 rounded-xl p-5 sm:p-6 w-full max-w-md shadow-xl max-h-[calc(100vh-2rem)] overflow-y-auto">
             <div className="flex items-center gap-2 mb-4">
               <span className="text-matrix-danger text-lg">⚠</span>
               <h3 className="text-sm font-semibold text-matrix-danger">{t('deleteMission' as LangKey, language)}</h3>
@@ -591,7 +593,7 @@ export function SettingsView() {
               {deleteMissionSuccess && (
                 <p className="text-xs text-matrix-success">{t('missionDeleted' as LangKey, language)}</p>
               )}
-              <div className="flex gap-2 pt-1">
+              <div className="flex flex-col-reverse gap-2 pt-1 sm:flex-row">
                 <button
                   onClick={handleDeleteMission}
                   disabled={!deleteMissionPwd || deleteMission.isPending}
@@ -617,8 +619,8 @@ export function SettingsView() {
 
       {/* ── Change Password Modal ── */}
       {showChangePassword && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-matrix-surface border border-matrix-border rounded-xl p-6 w-full max-w-md shadow-xl">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-matrix-surface border border-matrix-border rounded-xl p-5 sm:p-6 w-full max-w-md shadow-xl max-h-[calc(100vh-2rem)] overflow-y-auto">
             <h3 className="text-sm font-semibold text-gray-200 mb-4">{t('changeMasterPassword', language)}</h3>
             <div className="space-y-3">
               <input
@@ -644,7 +646,7 @@ export function SettingsView() {
               />
               {pwdError && <p className="text-xs text-matrix-danger">{pwdError}</p>}
               {pwdSuccess && <p className="text-xs text-matrix-success">{t('passwordChanged', language)}</p>}
-              <div className="flex gap-2 pt-1">
+              <div className="flex flex-col-reverse gap-2 pt-1 sm:flex-row">
                 <button
                   onClick={handleChangePassword}
                   disabled={changeMasterPwd.isPending || !currentPwd || !newPwd || !confirmPwd}

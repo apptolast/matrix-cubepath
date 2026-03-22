@@ -28,7 +28,7 @@ export function ProjectsView() {
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const { confirm } = useDialogStore();
 
-  if (isLoading) return <div className="p-6 text-matrix-muted">{t('loading', language)}</div>;
+  if (isLoading) return <div className="p-3 md:p-6 text-matrix-muted">{t('loading', language)}</div>;
 
   if (selectedId) {
     return <ProjectDetail projectId={selectedId} onBack={() => setSelectedId(null)} />;
@@ -55,12 +55,12 @@ export function ProjectsView() {
   };
 
   return (
-    <div className="p-6">
-      <div className="flex items-center justify-between mb-6">
+    <div className="p-3 md:p-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6">
         <h1 className="text-xl font-semibold text-gray-200">{t('projects', language)}</h1>
         <button
           onClick={() => setShowForm(!showForm)}
-          className="px-3 py-1.5 text-sm bg-matrix-accent/20 text-matrix-accent rounded hover:bg-matrix-accent/30 transition-colors"
+          className="w-full sm:w-auto px-3 py-1.5 text-sm bg-matrix-accent/20 text-matrix-accent rounded hover:bg-matrix-accent/30 transition-colors"
         >
           + {t('newProject', language)}
         </button>
@@ -86,7 +86,7 @@ export function ProjectsView() {
             placeholder={t('taskDescription', language)}
             rows={2}
           />
-          <div className="flex gap-2">
+          <div className="flex flex-col gap-2 sm:flex-row">
             <button
               onClick={handleCreate}
               className="px-3 py-1.5 text-sm bg-matrix-accent pilled-active rounded hover:bg-matrix-accent-hover transition-colors font-medium"

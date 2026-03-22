@@ -68,7 +68,7 @@ function SetupScreen({ onComplete }: { onComplete: () => void }) {
 
   return (
     <div className="flex items-center justify-center min-h-[60vh]">
-      <div className="bg-matrix-bg border border-matrix-border rounded-lg p-8 w-full max-w-md">
+      <div className="bg-matrix-bg border border-matrix-border rounded-lg p-6 sm:p-8 w-full max-w-md mx-4">
         <h2 className="text-lg font-semibold text-gray-200 mb-6">{t('setupVault')}</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -128,7 +128,7 @@ function LockScreen({ onUnlock }: { onUnlock: () => void }) {
 
   return (
     <div className="flex items-center justify-center min-h-[60vh]">
-      <div className="bg-matrix-bg border border-matrix-border rounded-lg p-8 w-full max-w-md text-center">
+      <div className="bg-matrix-bg border border-matrix-border rounded-lg p-6 sm:p-8 w-full max-w-md text-center mx-4">
         <div className="text-5xl mb-6 opacity-60">🔒</div>
         <h2 className="text-lg font-semibold text-gray-200 mb-6">{t('unlockVault')}</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -240,49 +240,51 @@ function ImportModal({ onClose }: { onClose: () => void }) {
               </button>
             </div>
             <div className="max-h-64 overflow-auto border border-matrix-border rounded">
-              <table className="w-full text-xs">
-                <thead className="bg-matrix-border/30 sticky top-0">
-                  <tr>
-                    <th className="p-2 text-left text-gray-400"></th>
-                    <th className="p-2 text-left text-gray-400">{t('label')}</th>
-                    <th className="p-2 text-left text-gray-400">{t('domain')}</th>
-                    <th className="p-2 text-left text-gray-400">{t('username')}</th>
-                    <th className="p-2 text-left text-gray-400">{t('confidence')}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {result.parsed.map((entry, i) => (
-                    <tr key={i} className="border-t border-matrix-border">
-                      <td className="p-2">
-                        <input
-                          type="checkbox"
-                          checked={selected.has(i)}
-                          onChange={(e) => {
-                            const next = new Set(selected);
-                            e.target.checked ? next.add(i) : next.delete(i);
-                            setSelected(next);
-                          }}
-                          className="matrix-checkbox"
-                        />
-                      </td>
-                      <td className="p-2 text-gray-200">{entry.label}</td>
-                      <td className="p-2 text-gray-400">{entry.domain || '-'}</td>
-                      <td className="p-2 text-gray-400">{entry.username || '-'}</td>
-                      <td className="p-2">
-                        <span
-                          className={`text-xs ${entry.confidence === 'high' ? 'text-green-400' : entry.confidence === 'medium' ? 'text-yellow-400' : 'text-red-400'}`}
-                        >
-                          {entry.confidence === 'high'
-                            ? t('confidenceHigh')
-                            : entry.confidence === 'medium'
-                              ? t('confidenceMedium')
-                              : t('confidenceLow')}
-                        </span>
-                      </td>
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[600px] text-xs">
+                  <thead className="bg-matrix-border/30 sticky top-0">
+                    <tr>
+                      <th className="p-2 text-left text-gray-400"></th>
+                      <th className="p-2 text-left text-gray-400">{t('label')}</th>
+                      <th className="p-2 text-left text-gray-400">{t('domain')}</th>
+                      <th className="p-2 text-left text-gray-400">{t('username')}</th>
+                      <th className="p-2 text-left text-gray-400">{t('confidence')}</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {result.parsed.map((entry, i) => (
+                      <tr key={i} className="border-t border-matrix-border">
+                        <td className="p-2">
+                          <input
+                            type="checkbox"
+                            checked={selected.has(i)}
+                            onChange={(e) => {
+                              const next = new Set(selected);
+                              e.target.checked ? next.add(i) : next.delete(i);
+                              setSelected(next);
+                            }}
+                            className="matrix-checkbox"
+                          />
+                        </td>
+                        <td className="p-2 text-gray-200">{entry.label}</td>
+                        <td className="p-2 text-gray-400">{entry.domain || '-'}</td>
+                        <td className="p-2 text-gray-400">{entry.username || '-'}</td>
+                        <td className="p-2">
+                          <span
+                            className={`text-xs ${entry.confidence === 'high' ? 'text-green-400' : entry.confidence === 'medium' ? 'text-yellow-400' : 'text-red-400'}`}
+                          >
+                            {entry.confidence === 'high'
+                              ? t('confidenceHigh')
+                              : entry.confidence === 'medium'
+                                ? t('confidenceMedium')
+                                : t('confidenceLow')}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
             <div className="flex gap-2 mt-4">
               <button
@@ -567,7 +569,7 @@ export default function PasswordsView() {
   }
 
   return (
-    <div className="p-4">
+    <div className="p-3 md:p-4">
       <div className="flex items-center justify-between mb-4 gap-2">
         <h1 className="text-lg font-semibold text-gray-200 shrink-0">{t('vault')}</h1>
         <div className="flex gap-2">
@@ -619,7 +621,7 @@ export default function PasswordsView() {
         </div>
       )}
 
-      <div className="bg-matrix-bg border border-matrix-border rounded overflow-hidden">
+      <div className="bg-matrix-bg border border-matrix-border rounded overflow-hidden overflow-x-auto">
         <table className="w-full table-fixed">
           <thead className="bg-matrix-border/30">
             <tr>

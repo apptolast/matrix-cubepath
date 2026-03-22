@@ -194,11 +194,11 @@ export function TaskBoard() {
   };
 
   return (
-    <div className="p-4">
+    <div className="p-3 md:p-4">
       {/* Header */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between mb-4">
         <h1 className="text-lg font-medium text-gray-200">{t('tasks', language)}</h1>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <Dropdown
             value={String(planFilter)}
             onChange={(val) => setPlanFilter(val ? Number(val) : '')}
@@ -206,7 +206,7 @@ export function TaskBoard() {
               { value: '', label: 'All plans' },
               ...(plans || []).map((p) => ({ value: String(p.id), label: p.title })),
             ]}
-            className="w-40"
+            className="w-full sm:w-40"
           />
           <Dropdown
             value={priorityFilter}
@@ -218,13 +218,13 @@ export function TaskBoard() {
               { value: 'high', label: t('high', language) },
               { value: 'urgent', label: t('urgent', language) },
             ]}
-            className="w-36"
+            className="w-full sm:w-36"
           />
         </div>
       </div>
 
       {/* Board */}
-      <div className="grid grid-cols-3 gap-4 w-full">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 w-full">
         {COLUMNS.map((col) => {
           const visibleCount = grouped[col].length;
           const totalCount = totalByCol[col];
@@ -292,14 +292,14 @@ export function TaskBoard() {
                             placeholder="Description (optional)"
                             rows={2}
                           />
-                          <div className="flex gap-2">
+                          <div className="flex flex-col gap-2 sm:flex-row">
                             <Dropdown
                               value={String(editPlanId)}
                               onChange={(val) => setEditPlanId(val ? Number(val) : '')}
                               options={(plans || []).map((p) => ({ value: String(p.id), label: p.title }))}
                               className="flex-1"
                             />
-                            <div className="w-36">
+                            <div className="w-full sm:w-36">
                               <Calendar value={editDeadline} onChange={setEditDeadline} />
                             </div>
                           </div>
@@ -378,8 +378,27 @@ export function TaskBoard() {
                                   );
                                 })()}
                             </div>
+                            {/* Mobile-only status selector */}
+                            <div className="flex gap-1 mt-2 md:hidden">
+                              {COLUMNS.map((s) => (
+                                <button
+                                  key={s}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (task.status !== s) updateTask.mutate({ id: task.id, status: s });
+                                  }}
+                                  className={`text-[10px] px-2 py-0.5 rounded border transition-colors ${
+                                    task.status === s
+                                      ? 'border-matrix-accent/60 bg-matrix-accent/10 text-matrix-accent'
+                                      : 'border-matrix-border/40 text-matrix-muted hover:text-gray-300'
+                                  }`}
+                                >
+                                  {t(columnLabels[s], language)}
+                                </button>
+                              ))}
+                            </div>
                           </div>
-                          <span className="inline-flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <span className="inline-flex items-center gap-1 shrink-0">
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -439,7 +458,7 @@ export function TaskBoard() {
                       placeholder={t('taskDescription', language)}
                       rows={2}
                     />
-                    <div className="flex gap-2">
+                    <div className="flex flex-col gap-2 sm:flex-row">
                       <Dropdown
                         value={String(newPlanId)}
                         onChange={(val) => setNewPlanId(val ? Number(val) : '')}
@@ -449,7 +468,7 @@ export function TaskBoard() {
                         ]}
                         className="flex-1"
                       />
-                      <div className="w-36">
+                      <div className="w-full sm:w-36">
                         <Calendar value={newDeadline} onChange={setNewDeadline} />
                       </div>
                     </div>

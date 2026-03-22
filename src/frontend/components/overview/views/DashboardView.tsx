@@ -66,16 +66,18 @@ export function DashboardView({ mission, objectives, allPlans, allTasks }: ViewP
     <div className="space-y-4">
       {/* Mission Header */}
       <div className="bg-gradient-to-r from-matrix-accent/5 to-transparent border border-matrix-border/50 rounded-lg p-4">
-        <div className="flex items-center gap-4">
-          <ProgressRing value={mission.progress} size={64} stroke={5} />
-          <div className="flex-1 min-w-0">
-            <h3 className="text-sm font-semibold text-gray-200 uppercase tracking-wide">Mission</h3>
-            <p className="text-base text-gray-100 mt-0.5">{mission.title}</p>
-            {mission.description && (
-              <p className="text-xs text-matrix-muted mt-1 line-clamp-2">{mission.description}</p>
-            )}
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+          <div className="flex items-center gap-4 min-w-0">
+            <ProgressRing value={mission.progress} size={64} stroke={5} />
+            <div className="min-w-0">
+              <h3 className="text-sm font-semibold text-gray-200 uppercase tracking-wide">Mission</h3>
+              <p className="text-base text-gray-100 mt-0.5 truncate">{mission.title}</p>
+              {mission.description && (
+                <p className="text-xs text-matrix-muted mt-1 line-clamp-2">{mission.description}</p>
+              )}
+            </div>
           </div>
-          <div className="flex gap-4 text-center">
+          <div className="flex gap-4 text-center sm:ml-auto shrink-0">
             <div>
               <p className="text-lg font-bold text-gray-200">
                 {doneTasks}/{totalTasks}

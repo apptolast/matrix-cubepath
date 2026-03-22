@@ -139,7 +139,7 @@ function CreateIdeaModal({
           placeholder={language === 'es' ? 'Descripcion (opcional)' : 'Description (optional)'}
           rows={3}
         />
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           <div>
             <label className="text-xs text-matrix-muted block mb-1">
               {language === 'es' ? 'Vincular a' : 'Link to'}
@@ -190,7 +190,7 @@ function CreateIdeaModal({
             ]}
           />
         </div>
-        <div className="flex justify-end gap-2">
+        <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <button onClick={onClose} className="px-3 py-1 text-sm text-gray-400 hover:text-gray-300">
             {t('cancel', language)}
           </button>
@@ -476,10 +476,10 @@ export function IdeasView() {
   if (isLoading) return <div className="p-4 text-matrix-muted">{t('loading', language)}</div>;
 
   return (
-    <div className="p-4 h-full overflow-y-auto flex flex-col">
+    <div className="p-3 md:p-4 h-full overflow-y-auto flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
+        <div className="flex items-center gap-2 min-w-0">
           <h1 className="text-lg font-medium text-gray-200">{t('ideas', language)}</h1>
           <button
             onClick={() => setShowHelp(!showHelp)}
@@ -491,20 +491,20 @@ export function IdeasView() {
         </div>
         <button
           onClick={() => setShowCreate(true)}
-          className="px-3 py-1 text-sm bg-matrix-accent/10 text-matrix-accent border border-matrix-accent/30 rounded hover:bg-matrix-accent/20 transition-colors"
+          className="w-full sm:w-auto px-3 py-1 text-sm bg-matrix-accent/10 text-matrix-accent border border-matrix-accent/30 rounded hover:bg-matrix-accent/20 transition-colors"
         >
           + {language === 'es' ? 'Nueva idea' : 'New idea'}
         </button>
       </div>
 
       {/* Kanban */}
-      <div className="flex-1 grid grid-cols-4 gap-3 min-h-0 overflow-hidden">
+      <div className="flex-1 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3 min-h-0 overflow-visible xl:overflow-hidden">
         {columns.map((col) => {
           const colIdeas = ideas.filter((i: Idea) => i.status === col.key);
           return (
             <div
               key={col.key}
-              className={`flex flex-col border-t-2 ${col.color} bg-matrix-bg/50 rounded-md overflow-hidden`}
+              className={`flex flex-col min-h-[260px] border-t-2 ${col.color} bg-matrix-bg/50 rounded-md overflow-hidden`}
             >
               <div className="px-3 py-2 flex items-center justify-between text-sm font-medium text-gray-300 border-b border-matrix-border">
                 <span>{col.label}</span>
@@ -655,7 +655,7 @@ function IdeaCard({
       {/* Evaluation info */}
       {evaluation && evalScores && (
         <div className="mt-2 pt-2 border-t border-matrix-border/50">
-          <div className="grid grid-cols-4 gap-1 mb-1">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-1 mb-1">
             {evalScores.map((s) => (
               <div key={s.key} className="text-center">
                 <span className="text-[9px] text-matrix-muted block">
@@ -819,7 +819,7 @@ function HelpPanel({ language, onClose }: { language: 'en' | 'es'; onClose: () =
         </div>
 
         {/* Stages */}
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-2">
           <div className="bg-matrix-bg rounded p-2 border-t-2 border-gray-600">
             <p className="text-gray-300 font-medium mb-0.5">Pending</p>
             <p>
@@ -925,7 +925,7 @@ function HelpPanel({ language, onClose }: { language: 'en' | 'es'; onClose: () =
         {/* Icons legend */}
         <div>
           <p className="text-gray-300 font-medium mb-1">{es ? 'Iconos de accion' : 'Action icons'}</p>
-          <div className="grid grid-cols-2 gap-x-4 gap-y-0.5 ml-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-0.5 ml-2">
             <span>
               <span className="text-yellow-400">?</span> — {es ? 'Evaluar idea' : 'Evaluate idea'}
             </span>

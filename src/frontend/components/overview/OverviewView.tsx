@@ -62,14 +62,14 @@ export function OverviewView() {
   const { data: missions, isLoading } = useMission();
   const mission = missions?.[0];
 
-  if (isLoading) return <div className="p-4 text-matrix-muted text-sm">{t('loading', language)}</div>;
+  if (isLoading) return <div className="p-3 md:p-4 text-matrix-muted text-sm">{t('loading', language)}</div>;
 
   return (
-    <div className="p-4 space-y-4">
+    <div className="p-3 md:p-4 space-y-4">
       <h1 className="text-lg font-medium text-gray-200">{t('overview', language)}</h1>
 
       {/* Top row: Schema left, side cards right */}
-      <div className="flex gap-4">
+      <div className="flex flex-col xl:flex-row gap-4">
         {/* Left: Strategic Schema + bottom cards */}
         <div className="flex-1 min-w-0 space-y-4">
           <SectionCard title="Strategic Schema" icon="◈">
