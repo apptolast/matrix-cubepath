@@ -73,6 +73,11 @@ function ThemeProvider({ children }: { children: React.ReactNode }) {
 export function App() {
   const [authState, setAuthState] = useState<'checking' | 'authenticated' | 'unauthenticated'>('checking');
 
+  function handleLoginSuccess(isDemo: boolean) {
+    useUiStore.getState().setIsDemo(isDemo);
+    setAuthState('authenticated');
+  }
+
   useEffect(() => {
     fetch('/api/auth/session', { credentials: 'same-origin' })
       .then(async (res) => {
@@ -100,7 +105,7 @@ export function App() {
   if (authState === 'unauthenticated') {
     return (
       <ThemeProvider>
-        <LoginPage onLoginSuccess={() => setAuthState('authenticated')} />
+        <LoginPage onLoginSuccess={handleLoginSuccess} />
       </ThemeProvider>
     );
   }

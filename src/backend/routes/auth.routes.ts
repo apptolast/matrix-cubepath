@@ -16,7 +16,23 @@ const authLimiter = rateLimit({
 });
 
 // Public routes
-authRouter.post('/auth/register', authLimiter, validate({ body: authRegisterBody }), register);
+authRouter.get('/auth/info', (_req, res) => {
+  res.json({ registrationOpen: process.env.ALLOW_REGISTRATION === 'true' });
+});
+
+authRouter.post(
+  '/auth/register',
+  authLimiter,
+  (req, res, next) => {
+    if (process.env.ALLOW_REGISTRATION !== 'true') {
+      res.status(403).json({ error: 'Registration is currently closed' });
+      return;
+    }
+    next();
+  },
+  validate({ body: authRegisterBody }),
+  register,
+);
 authRouter.post('/auth/login', authLimiter, validate({ body: authLoginBody }), login);
 authRouter.post('/auth/logout', logout);
 

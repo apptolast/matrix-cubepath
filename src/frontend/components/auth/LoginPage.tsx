@@ -1,10 +1,10 @@
-import { useState, useRef, FormEvent } from 'react';
+import { useState, useRef, useEffect, FormEvent } from 'react';
 import { PasswordInput } from '../ui/PasswordInput';
 import { useUiStore } from '../../stores/ui.store';
 import { t } from '../../lib/i18n';
 
 interface LoginPageProps {
-  onLoginSuccess: () => void;
+  onLoginSuccess: (isDemo: boolean) => void;
 }
 
 const DEMO_USER = 'demo';
@@ -21,16 +21,16 @@ function getElementCenter(el: Element) {
   return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
 }
 
-async function doLogin(user: string, pass: string): Promise<string | null> {
+async function doLogin(user: string, pass: string): Promise<{ error: string | null; isDemo: boolean }> {
   const res = await fetch('/api/auth/login', {
     method: 'POST',
     credentials: 'same-origin',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ username: user, password: pass }),
   });
-  if (res.ok) return null;
   const data = await res.json().catch(() => ({}));
-  return data.error || null;
+  if (res.ok) return { error: null, isDemo: !!data.isDemo };
+  return { error: data.error || null, isDemo: false };
 }
 
 export function LoginPage({ onLoginSuccess }: LoginPageProps) {
@@ -47,9 +47,18 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
   const formRef = useRef<HTMLFormElement>(null);
   const demoBtnRef = useRef<HTMLButtonElement>(null);
 
+  const [registrationOpen, setRegistrationOpen] = useState(false);
+
   const { theme, setTheme, language, setLanguage } = useUiStore();
   const isRegister = mode === 'register';
   const l = (key: Parameters<typeof t>[0]) => t(key, language);
+
+  useEffect(() => {
+    fetch('/api/auth/info')
+      .then((r) => r.json())
+      .then((data) => setRegistrationOpen(!!data.registrationOpen))
+      .catch(() => {});
+  }, []);
 
   function toggleTheme() {
     setTheme(theme === 'dark' ? 'light' : 'dark');
@@ -84,10 +93,10 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
       });
+      const data = await res.json().catch(() => ({}));
       if (res.ok) {
-        onLoginSuccess();
+        onLoginSuccess(!!data.isDemo);
       } else {
-        const data = await res.json().catch(() => ({}));
         setError(data.error || l(isRegister ? 'registrationFailed' : 'loginFailed'));
       }
     } catch {
@@ -173,9 +182,9 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
     setDemotyping(false);
     setLoading(true);
     try {
-      const err = await doLogin(DEMO_USER, DEMO_PASS);
+      const { error: err, isDemo } = await doLogin(DEMO_USER, DEMO_PASS);
       if (err) setError(err);
-      else onLoginSuccess();
+      else onLoginSuccess(isDemo);
     } catch {
       setError(l('networkError'));
     } finally {
@@ -193,31 +202,33 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
           <p className="text-xs text-matrix-muted mt-1 tracking-wider">{l('appSubtitle')}</p>
         </div>
 
-        {/* Tab toggle */}
-        <div className="relative flex mb-4 border border-matrix-border rounded-lg overflow-hidden">
-          <div
-            className="absolute inset-y-0 w-1/2 bg-matrix-accent rounded-md transition-transform duration-300 ease-out"
-            style={{ transform: mode === 'register' ? 'translateX(100%)' : 'translateX(0)' }}
-          />
-          <button
-            type="button"
-            onClick={() => switchMode('login')}
-            className={`relative flex-1 py-2 text-xs font-medium tracking-wide uppercase transition-colors duration-300 ${
-              mode === 'login' ? 'text-matrix-bg' : 'text-matrix-muted hover:text-matrix-text'
-            }`}
-          >
-            {l('signIn')}
-          </button>
-          <button
-            type="button"
-            onClick={() => switchMode('register')}
-            className={`relative flex-1 py-2 text-xs font-medium tracking-wide uppercase transition-colors duration-300 ${
-              mode === 'register' ? 'text-matrix-bg' : 'text-matrix-muted hover:text-matrix-text'
-            }`}
-          >
-            {l('register')}
-          </button>
-        </div>
+        {/* Tab toggle — only shown when registration is open */}
+        {registrationOpen && (
+          <div className="relative flex mb-4 border border-matrix-border rounded-lg overflow-hidden">
+            <div
+              className="absolute inset-y-0 w-1/2 bg-matrix-accent rounded-md transition-transform duration-300 ease-out"
+              style={{ transform: mode === 'register' ? 'translateX(100%)' : 'translateX(0)' }}
+            />
+            <button
+              type="button"
+              onClick={() => switchMode('login')}
+              className={`relative flex-1 py-2 text-xs font-medium tracking-wide uppercase transition-colors duration-300 ${
+                mode === 'login' ? 'text-matrix-bg' : 'text-matrix-muted hover:text-matrix-text'
+              }`}
+            >
+              {l('signIn')}
+            </button>
+            <button
+              type="button"
+              onClick={() => switchMode('register')}
+              className={`relative flex-1 py-2 text-xs font-medium tracking-wide uppercase transition-colors duration-300 ${
+                mode === 'register' ? 'text-matrix-bg' : 'text-matrix-muted hover:text-matrix-text'
+              }`}
+            >
+              {l('register')}
+            </button>
+          </div>
+        )}
 
         <form
           ref={formRef}

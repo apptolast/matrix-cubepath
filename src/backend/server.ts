@@ -20,6 +20,7 @@ import { externalRouter } from './routes/external.routes';
 import { localSettingsRouter } from './routes/local-settings.routes';
 import { logsRouter } from './routes/logs.routes';
 import { notesRouter } from './routes/notes.routes';
+import { DEMO_USERNAME } from './db/seed-demo';
 
 const app = express();
 app.set('trust proxy', 1);
@@ -86,7 +87,7 @@ app.use('/api', notesRouter);
 // Demo data reset — only allowed for the demo user
 app.post('/api/demo/reset', (req, res) => {
   const username = (req as unknown as { matrixUser?: string }).matrixUser;
-  if (username !== 'demo') {
+  if (username !== DEMO_USERNAME) {
     res.status(403).json({ error: 'Forbidden' });
     return;
   }

@@ -66,7 +66,7 @@ describe('auth.controller', () => {
       const res = mockRes();
       login(mockReq({ username: 'user', password: 'correctpassword' }), res);
       expect(res.cookie).toHaveBeenCalled();
-      expect(res.json).toHaveBeenCalledWith({ ok: true });
+      expect(res.json).toHaveBeenCalledWith({ ok: true, username: 'user', isDemo: false });
     });
   });
 

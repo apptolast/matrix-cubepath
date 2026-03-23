@@ -23,9 +23,14 @@
 - [x] Entry point `src/backend/start.ts` (pure Node.js, no Electron)
 - [x] SQLite database in `DATA_DIR` configurable via env var
 - [x] Dockerfile multi-stage (deps → build → production)
+- [x] Dockerfile hardening: non-root user (`matrix`), `HEALTHCHECK` directive, `docker-entrypoint.sh`
 - [x] `docker-compose.yml` with app container
 - [x] `trust proxy` for reverse proxy compatibility (Traefik)
 - [x] `SECURE_COOKIE` env var for HTTPS-only cookie control
+- [x] Graceful shutdown — `SIGTERM`/`SIGINT` handlers call `server.close()` with 5s timeout fallback
+- [x] LF line endings enforced for shell scripts (`.gitattributes` + Dockerfile `sed` strip)
+- [x] Foreign key indexes on all commonly queried FK columns (`migrate.ts`)
+- [x] Health endpoint (`GET /api/health`) mounted before `requireAuth` for monitoring/load balancer access
 
 ### Deployment ✅
 
@@ -40,8 +45,15 @@
 
 - [x] Demo user with full mock data (`DEMO_USER` env var)
 - [x] Demo data reset on each startup + endpoint `POST /api/demo/reset`
+- [x] Demo reset auth-gated by `req.matrixUser` — returns 403 for non-demo users (no env var dependency at runtime)
+- [x] Demo login button (`$ access --demo`) with animated cursor typing in LoginPage
+- [x] Demo restore button in Settings — calls `/api/demo/reset`, hides danger zone for demo users
+- [x] `DEMO_USERNAME` constant centralized in `seed-demo.ts` — no hardcoded `'demo'` strings
 - [x] Global rate limiter: 300 req/min per IP on all API endpoints
 - [x] Auth rate limiter: 10 req/15min on `/auth/login` and `/auth/register`
+- [x] Registration gating — `ALLOW_REGISTRATION=true` env var required to enable signup (currently disabled); `GET /api/auth/info` exposes flag to frontend
+- [x] HTTP security headers: `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin`
+- [x] Internal error messages hidden in production (generic `Internal server error` in global error handler)
 
 ### Authentication ✅
 
@@ -58,7 +70,8 @@
 ### Backend API ✅
 
 - [x] Full CRUD: missions, objectives, plans, tasks
-- [x] Ideas with evaluation and status pipeline
+- [x] Ideas with evaluation and status pipeline — `totalScore` stored as `real` (float precision)
+- [x] Ideas controller: proper 500 error responses instead of silent empty fallbacks
 - [x] Password vault (encrypted with per-user keys)
 - [x] Projects with GitHub scanner and polymorphic links
 - [x] Activity log with metrics (daily, weekly, streak)
@@ -97,8 +110,8 @@
 - [x] Dev Feed — Hacker News top stories + GitHub trending repos (free APIs, no key required)
 - [x] PasswordsView with CSV/TXT import via `<input type="file">`
 - [x] SettingsView with logs viewer and GitHub config
-- [x] Auth views (login / register)
-- [x] i18n EN/ES
+- [x] Auth views (login / register) with theme and language toggles on login screen
+- [x] i18n EN/ES — all auth strings localized (appSubtitle, signIn, register, error messages)
 - [x] Dark/light theme (Zustand + matchMedia)
 - [x] Hooks: `useActivityMetrics`, `useIdeasPipeline`, `useDeadlines`, `useTasks`
 - [x] Store: `pomodoro.store`, `dialog.store`

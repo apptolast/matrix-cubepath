@@ -97,9 +97,13 @@ Every action is logged automatically. The right panel shows:
 - Pomodoro timer + session tracking
 - Streak counter
 
+### Security
+
+HTTP security headers on all responses (`X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`). Internal error details hidden in production. Registration disabled by default (`ALLOW_REGISTRATION=true` to enable). Graceful server shutdown with timeout fallback.
+
 ### Multi-user
 
-Each user gets their own isolated SQLite database. Register as many accounts as you need.
+Each user gets their own isolated SQLite database. Registration is currently disabled — set `ALLOW_REGISTRATION=true` to enable it.
 
 ### i18n
 
@@ -115,9 +119,9 @@ Fully usable on mobile and tablet with no desktop experience changes. Sidebar co
 
 A live demo is available at **[matrix.stackbp.es](https://matrix.stackbp.es)**
 
-Login with: `demo / demo1234`
+Click the `$ access --demo` button on the login page — it auto-fills demo credentials with an animated cursor and logs you in. You can also enter `demo / demo1234` manually.
 
-The demo account resets automatically on each server restart with pre-populated mock data.
+The demo account comes with pre-populated data (missions, tasks, ideas, passwords). Use the **Restore** button in Settings to reset the demo data at any time. Destructive actions (delete mission, reset database) are hidden for the demo user.
 
 ---
 
@@ -266,6 +270,7 @@ docker compose up -d
 | `PORT`           | —        | Server port (default: `3939`)                        |
 | `NODE_ENV`       | —        | Set to `production` for static file serving          |
 | `SECURE_COOKIE`  | —        | Set to `true` for HTTPS-only cookies (recommended)   |
+| `ALLOW_REGISTRATION` | —   | Set to `true` to enable user registration (disabled by default) |
 | `DEMO_USER`      | —        | Username for the auto-seeded demo account            |
 | `DEMO_PASSWORD`  | —        | Password for the demo account (default: `demo1234`)  |
 
