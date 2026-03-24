@@ -3,7 +3,6 @@ import crypto from 'crypto';
 import { openUserDb } from '../db/user-db';
 import { userDbContext } from '../db/context';
 
-
 const SESSION_SECRET = process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex');
 export const COOKIE_NAME = 'matrix_session';
 
