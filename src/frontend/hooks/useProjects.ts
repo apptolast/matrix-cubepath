@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '../lib/api';
+import { toast } from '../lib/toast';
 
 interface ScanData {
   id: number;
@@ -60,7 +61,11 @@ export function useCreateProject() {
   return useMutation({
     mutationFn: (data: { name: string; path?: string; description?: string; url?: string; tags?: string[] }) =>
       apiFetch('/projects', { method: 'POST', body: JSON.stringify(data) }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['projects'] }),
+    onSuccess: () => {
+      toast.ok('toastCreated');
+      qc.invalidateQueries({ queryKey: ['projects'] });
+    },
+    onError: () => toast.fail(),
   });
 }
 
@@ -80,6 +85,7 @@ export function useUpdateProject() {
       tags?: string[];
     }) => apiFetch(`/projects/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['projects'] }),
+    onError: () => toast.fail(),
   });
 }
 
@@ -87,7 +93,11 @@ export function useDeleteProject() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: number) => apiFetch(`/projects/${id}`, { method: 'DELETE' }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['projects'] }),
+    onSuccess: () => {
+      toast.ok('toastDeleted');
+      qc.invalidateQueries({ queryKey: ['projects'] });
+    },
+    onError: () => toast.fail(),
   });
 }
 
@@ -96,6 +106,7 @@ export function useScanProject() {
   return useMutation({
     mutationFn: (id: number) => apiFetch(`/projects/${id}/scan`, { method: 'POST' }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['projects'] }),
+    onError: () => toast.fail(),
   });
 }
 
@@ -104,5 +115,6 @@ export function useSyncProjectGitHub() {
   return useMutation({
     mutationFn: (id: number) => apiFetch(`/projects/${id}/sync-github`, { method: 'POST' }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['projects'] }),
+    onError: () => toast.fail(),
   });
 }

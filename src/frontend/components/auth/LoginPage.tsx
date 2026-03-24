@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, FormEvent } from 'react';
 import { PasswordInput } from '../ui/PasswordInput';
 import { useUiStore } from '../../stores/ui.store';
 import { t } from '../../lib/i18n';
+import { toast } from '../../lib/toast';
 
 interface LoginPageProps {
   onLoginSuccess: (isDemo: boolean) => void;
@@ -95,6 +96,7 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
       });
       const data = await res.json().catch(() => ({}));
       if (res.ok) {
+        toast.ok('toastLoginSuccess');
         onLoginSuccess(!!data.isDemo);
       } else {
         setError(data.error || l(isRegister ? 'registrationFailed' : 'loginFailed'));

@@ -7,6 +7,7 @@ import { useShortcuts, Shortcut, formatKeyCombo } from '../../hooks/useShortcuts
 import { useUiStore, Theme } from '../../stores/ui.store';
 import { t, LangKey } from '../../lib/i18n';
 import { apiFetch } from '../../lib/api';
+import { toast } from '../../lib/toast';
 
 function SectionCard({ children, className = '' }: { children: React.ReactNode; className?: string }) {
   return (
@@ -521,6 +522,7 @@ export function SettingsView() {
                   if (!ok) return;
                   setDemoRestoring(true);
                   await apiFetch('/demo/reset', { method: 'POST' });
+                  toast.ok('toastDemoRestored');
                   await new Promise((r) => setTimeout(r, 1500));
                   window.location.reload();
                 }}

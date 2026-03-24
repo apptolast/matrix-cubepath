@@ -5,6 +5,7 @@ import { LoginPage } from './components/auth/LoginPage';
 import { ServiceWorkerRegister } from './components/pwa/ServiceWorkerRegister';
 import { InstallPrompt } from './components/pwa/InstallPrompt';
 import { useUiStore, Theme } from './stores/ui.store';
+import { Toaster } from 'sonner';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -67,7 +68,12 @@ function ThemeProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem('matrix-theme', theme);
   }, [theme]);
 
-  return <>{children}</>;
+  return (
+    <>
+      {children}
+      <Toaster position="top-center" theme={theme} richColors />
+    </>
+  );
 }
 
 export function App() {

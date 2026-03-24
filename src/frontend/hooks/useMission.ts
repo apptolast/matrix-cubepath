@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '../lib/api';
+import { toast } from '../lib/toast';
 
 interface Mission {
   id: number;
@@ -23,7 +24,11 @@ export function useCreateMission() {
   return useMutation({
     mutationFn: (data: { title: string; description?: string }) =>
       apiFetch('/mission', { method: 'POST', body: JSON.stringify(data) }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['mission'] }),
+    onSuccess: () => {
+      toast.ok('toastCreated');
+      qc.invalidateQueries({ queryKey: ['mission'] });
+    },
+    onError: () => toast.fail(),
   });
 }
 
@@ -33,6 +38,7 @@ export function useUpdateMission() {
     mutationFn: ({ id, ...data }: { id: number; title?: string; description?: string; status?: string }) =>
       apiFetch(`/mission/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['mission'] }),
+    onError: () => toast.fail(),
   });
 }
 
@@ -41,6 +47,10 @@ export function useDeleteMission() {
   return useMutation({
     mutationFn: ({ id, action }: { id: number; action?: string }) =>
       apiFetch(`/mission/${id}`, { method: 'DELETE', body: JSON.stringify({ action }) }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['mission'] }),
+    onSuccess: () => {
+      toast.ok('toastDeleted');
+      qc.invalidateQueries({ queryKey: ['mission'] });
+    },
+    onError: () => toast.fail(),
   });
 }

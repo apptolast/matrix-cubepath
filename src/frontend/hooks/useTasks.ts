@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '../lib/api';
 import { usePomodoroStore } from '../stores/pomodoro.store';
+import { toast } from '../lib/toast';
 
 export interface Task {
   id: number;
@@ -39,12 +40,14 @@ export function useCreateTask() {
       deadline?: string;
     }) => apiFetch('/tasks', { method: 'POST', body: JSON.stringify(data) }),
     onSuccess: () => {
+      toast.ok('toastCreated');
       qc.invalidateQueries({ queryKey: ['tasks'] });
       qc.invalidateQueries({ queryKey: ['plans'] });
       qc.invalidateQueries({ queryKey: ['objectives'] });
       qc.invalidateQueries({ queryKey: ['mission'] });
       qc.invalidateQueries({ queryKey: ['deadlines'] });
     },
+    onError: () => toast.fail(),
   });
 }
 
@@ -76,6 +79,7 @@ export function useUpdateTask() {
       qc.invalidateQueries({ queryKey: ['deadlines'] });
       qc.invalidateQueries({ queryKey: ['activity', 'metrics'] });
     },
+    onError: () => toast.fail(),
   });
 }
 
@@ -84,11 +88,13 @@ export function useDeleteTask() {
   return useMutation({
     mutationFn: (id: number) => apiFetch(`/tasks/${id}`, { method: 'DELETE' }),
     onSuccess: () => {
+      toast.ok('toastDeleted');
       qc.invalidateQueries({ queryKey: ['tasks'] });
       qc.invalidateQueries({ queryKey: ['plans'] });
       qc.invalidateQueries({ queryKey: ['objectives'] });
       qc.invalidateQueries({ queryKey: ['mission'] });
       qc.invalidateQueries({ queryKey: ['deadlines'] });
     },
+    onError: () => toast.fail(),
   });
 }

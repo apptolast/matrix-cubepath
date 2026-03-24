@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '../lib/api';
+import { toast } from '../lib/toast';
 
 export interface Idea {
   id: number;
@@ -56,8 +57,10 @@ export function useCreateIdea() {
       projectId?: number;
     }) => apiFetch('/ideas', { method: 'POST', body: JSON.stringify(data) }),
     onSuccess: () => {
+      toast.ok('toastCreated');
       qc.invalidateQueries({ queryKey: ['ideas'] });
     },
+    onError: () => toast.fail(),
   });
 }
 
@@ -79,6 +82,7 @@ export function useUpdateIdea() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['ideas'] });
     },
+    onError: () => toast.fail(),
   });
 }
 
@@ -87,8 +91,10 @@ export function useDeleteIdea() {
   return useMutation({
     mutationFn: (id: number) => apiFetch(`/ideas/${id}`, { method: 'DELETE' }),
     onSuccess: () => {
+      toast.ok('toastDeleted');
       qc.invalidateQueries({ queryKey: ['ideas'] });
     },
+    onError: () => toast.fail(),
   });
 }
 

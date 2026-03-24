@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '../lib/api';
+import { toast } from '../lib/toast';
 
 export interface Objective {
   id: number;
@@ -27,9 +28,11 @@ export function useCreateObjective() {
     mutationFn: (data: { missionId: number; title: string; description?: string }) =>
       apiFetch('/objectives', { method: 'POST', body: JSON.stringify(data) }),
     onSuccess: () => {
+      toast.ok('toastCreated');
       qc.invalidateQueries({ queryKey: ['objectives'] });
       qc.invalidateQueries({ queryKey: ['mission'] });
     },
+    onError: () => toast.fail(),
   });
 }
 
@@ -42,6 +45,7 @@ export function useUpdateObjective() {
       qc.invalidateQueries({ queryKey: ['objectives'] });
       qc.invalidateQueries({ queryKey: ['mission'] });
     },
+    onError: () => toast.fail(),
   });
 }
 
@@ -51,8 +55,10 @@ export function useDeleteObjective() {
     mutationFn: ({ id, action, newParentId }: { id: number; action?: string; newParentId?: number }) =>
       apiFetch(`/objectives/${id}`, { method: 'DELETE', body: JSON.stringify({ action, newParentId }) }),
     onSuccess: () => {
+      toast.ok('toastDeleted');
       qc.invalidateQueries({ queryKey: ['objectives'] });
       qc.invalidateQueries({ queryKey: ['mission'] });
     },
+    onError: () => toast.fail(),
   });
 }

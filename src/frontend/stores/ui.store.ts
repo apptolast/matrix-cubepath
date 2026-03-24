@@ -28,7 +28,7 @@ export const useUiStore = create<UiState>((set) => ({
   activeTab: 'overview',
   sidebarCollapsed: false,
   sidebarOpen: false,
-  language: 'en',
+  language: navigator.language.startsWith('es') ? 'es' : 'en',
   theme: 'dark',
   quickCreateModal: { type: null },
   deadlinesHidden: false,

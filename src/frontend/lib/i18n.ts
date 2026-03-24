@@ -222,6 +222,15 @@ const dict = {
     loginFailed: 'Login failed',
     registrationFailed: 'Registration failed',
     networkError: 'Network error — please try again',
+    // Toasts
+    toastCreated: 'Created successfully',
+    toastUpdated: 'Updated successfully',
+    toastDeleted: 'Deleted successfully',
+    toastSaved: 'Saved successfully',
+    toastError: 'Something went wrong',
+    toastLoginSuccess: 'Welcome back',
+    toastLogout: 'Logged out',
+    toastDemoRestored: 'Demo data restored',
   },
   es: {
     overview: 'Resumen',
@@ -446,6 +455,15 @@ const dict = {
     loginFailed: 'Error al iniciar sesión',
     registrationFailed: 'Error al registrarse',
     networkError: 'Error de red — inténtalo de nuevo',
+    // Toasts
+    toastCreated: 'Creado exitosamente',
+    toastUpdated: 'Actualizado exitosamente',
+    toastDeleted: 'Eliminado exitosamente',
+    toastSaved: 'Guardado exitosamente',
+    toastError: 'Algo salió mal',
+    toastLoginSuccess: 'Bienvenido de nuevo',
+    toastLogout: 'Sesión cerrada',
+    toastDemoRestored: 'Datos demo restaurados',
   },
 } as const;
 
