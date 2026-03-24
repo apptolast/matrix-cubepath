@@ -64,6 +64,7 @@ if (process.env.NODE_ENV !== 'production') {
 // Public routes (no auth required)
 app.use('/api', authRouter);
 app.use('/api', healthRouter);
+app.use('/api', externalRouter);
 
 // All other API routes require authentication
 app.use('/api', requireAuth);
@@ -79,14 +80,13 @@ app.use('/api', ideasRouter);
 app.use('/api', activityRouter);
 app.use('/api', statsRouter);
 app.use('/api', passwordsRouter);
-app.use('/api', externalRouter);
 app.use('/api', localSettingsRouter);
 app.use('/api', logsRouter);
 app.use('/api', notesRouter);
 
 // Demo data reset — only allowed for the demo user
 app.post('/api/demo/reset', (req, res) => {
-  const username = (req as unknown as { matrixUser?: string }).matrixUser;
+  const username = req.matrixUser;
   if (username !== DEMO_USERNAME) {
     res.status(403).json({ error: 'Forbidden' });
     return;

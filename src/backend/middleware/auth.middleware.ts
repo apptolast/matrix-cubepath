@@ -3,9 +3,6 @@ import crypto from 'crypto';
 import { openUserDb } from '../db/user-db';
 import { userDbContext } from '../db/context';
 
-type AuthenticatedRequest = Request & {
-  matrixUser?: string;
-};
 
 const SESSION_SECRET = process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex');
 export const COOKIE_NAME = 'matrix_session';
@@ -36,7 +33,6 @@ export function createSessionToken(username: string): string {
 }
 
 export function requireAuth(req: Request, res: Response, next: NextFunction): void {
-  const authReq = req as AuthenticatedRequest;
   const token = req.cookies?.[COOKIE_NAME];
   if (!token) {
     res.status(401).json({ error: 'Unauthorized' });
@@ -55,7 +51,7 @@ export function requireAuth(req: Request, res: Response, next: NextFunction): vo
     return;
   }
   // Open (or reuse cached) user DB and run the rest of the request inside its context
-  authReq.matrixUser = username;
+  req.matrixUser = username;
   const userDb = openUserDb(username);
   userDbContext.run(userDb, next);
 }

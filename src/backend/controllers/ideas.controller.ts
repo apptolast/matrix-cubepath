@@ -73,8 +73,7 @@ export const ideasController = {
 
   getEvaluation(req: Request, res: Response) {
     const evaluation = ideasRepo.findEvaluation(Number(req.params.id));
-    if (!evaluation) return res.status(404).json({ error: 'No evaluation found' });
-    res.json(evaluation);
+    res.json(evaluation ?? null);
   },
 
   decide(req: Request, res: Response) {

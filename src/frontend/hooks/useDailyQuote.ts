@@ -45,7 +45,7 @@ export function useDailyQuote() {
 
     // Always try to fetch fresh quote from backend first
     try {
-      const data = await apiFetch<DailyQuote>('/external/daily-quote');
+      const data = await apiFetch<DailyQuote>(`/external/daily-quote${forceRefresh ? '?refresh=1' : ''}`);
       setQuote(data);
       setIsLoading(false);
 

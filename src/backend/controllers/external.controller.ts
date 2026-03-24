@@ -98,9 +98,10 @@ async function fetchQuoteFromAPI(): Promise<Quote | null> {
 }
 
 export const externalController = {
-  async getDailyQuote(_req: Request, res: Response) {
-    // Return cached quote if still valid
-    if (cachedQuote && Date.now() - cachedQuote.fetchedAt < QUOTE_CACHE_TTL) {
+  async getDailyQuote(req: Request, res: Response) {
+    const forceRefresh = req.query.refresh === '1';
+    // Return cached quote if still valid (unless force refresh)
+    if (!forceRefresh && cachedQuote && Date.now() - cachedQuote.fetchedAt < QUOTE_CACHE_TTL) {
       return res.json(cachedQuote.data);
     }
 

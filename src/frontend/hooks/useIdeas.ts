@@ -114,9 +114,9 @@ export function useEvaluateIdea() {
 }
 
 export function useIdeaEvaluation(ideaId: number | null) {
-  return useQuery<IdeaEvaluation>({
+  return useQuery<IdeaEvaluation | null>({
     queryKey: ['evaluation', ideaId],
-    queryFn: () => apiFetch(`/ideas/${ideaId}/evaluation`),
+    queryFn: () => apiFetch<IdeaEvaluation | null>(`/ideas/${ideaId}/evaluation`),
     enabled: ideaId !== null,
     retry: false,
   });
