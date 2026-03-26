@@ -555,9 +555,15 @@ export function SettingsView() {
                   <p className="text-xs text-matrix-muted mt-0.5">{t('deleteMissionDesc' as LangKey, language)}</p>
                 </div>
                 <button
-                  onClick={() => {
+                  onClick={async () => {
                     if (!passwordStatus?.isSetup) {
-                      alert(t('deleteMissionNoVault' as LangKey, language));
+                      const goToVault = await confirm({
+                        title: t('deleteMission' as LangKey, language),
+                        description: t('deleteMissionNoVault' as LangKey, language),
+                        confirmLabel: language === 'es' ? 'Ir al Vault' : 'Go to Vault',
+                        cancelLabel: t('cancel', language),
+                      });
+                      if (goToVault) useUiStore.getState().setActiveTab('passwords');
                       return;
                     }
                     setShowDeleteMission(true);

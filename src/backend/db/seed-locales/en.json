@@ -1,6 +1,6 @@
 {
   "missionTitle": "Launch Matrix to Production (CubePath Hackathon 2026)",
-  "missionDesc": "Build and ship Matrix — a self-hosted productivity platform — to CubePath VPS for the CubePath Hackathon 2026. Mission: from zero to production in under 30 days.",
+  "missionDesc": "Build and ship Matrix — a self-hosted productivity platform — to CubePath VPS for the CubePath Hackathon 2026. Mission: from zero to production in under 15 days.",
 
   "obj1Title": "Backend API & Auth",
   "obj1Desc": "Secure Express API with per-user SQLite and session auth.",

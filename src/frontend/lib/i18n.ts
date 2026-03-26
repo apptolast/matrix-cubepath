@@ -155,7 +155,7 @@ const dict = {
     deleteMission: 'Delete Mission',
     deleteMissionDesc: 'Deletes the mission and all its objectives, plans, and tasks permanently.',
     deleteMissionWarning: 'This action is irreversible. Enter your vault password to confirm.',
-    deleteMissionNoVault: 'You must set up the vault before you can delete a mission.',
+    deleteMissionNoVault: 'You must set up a password before you can delete a mission.',
     missionDeleted: 'Mission deleted successfully',
     // Right Panel
     dailyFocus: 'Daily Focus',
@@ -411,7 +411,7 @@ const dict = {
     deleteMission: 'Eliminar Misión',
     deleteMissionDesc: 'Elimina la misión y todos sus objetivos, planes y tareas permanentemente.',
     deleteMissionWarning: 'Esta acción es irreversible. Ingresa tu contraseña del vault para confirmar.',
-    deleteMissionNoVault: 'Debes configurar el vault antes de poder eliminar una misión.',
+    deleteMissionNoVault: 'Debes configurar la contraseña antes de poder eliminar una misión.',
     missionDeleted: 'Misión eliminada exitosamente',
     // Right Panel
     dailyFocus: 'Enfoque diario',

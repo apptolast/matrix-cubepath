@@ -1,6 +1,6 @@
 {
   "missionTitle": "Desplegar Matrix a Producción (CubePath Hackathon 2026)",
-  "missionDesc": "Construir y lanzar Matrix — una plataforma de productividad autoalojada — en CubePath VPS para el CubePath Hackathon 2026. Misión: de cero a producción en menos de 30 días.",
+  "missionDesc": "Construir y lanzar Matrix — una plataforma de productividad autoalojada — en CubePath VPS para el CubePath Hackathon 2026. Misión: de cero a producción en menos de 15 días.",
 
   "obj1Title": "Backend API y Auth",
   "obj1Desc": "API Express segura con SQLite por usuario y autenticación por sesión.",
