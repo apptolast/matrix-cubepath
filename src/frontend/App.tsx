@@ -5,6 +5,7 @@ import { LoginPage } from './components/auth/LoginPage';
 import { ServiceWorkerRegister } from './components/pwa/ServiceWorkerRegister';
 import { InstallPrompt } from './components/pwa/InstallPrompt';
 import { useUiStore, Theme } from './stores/ui.store';
+import { useSettings } from './hooks/useSettings';
 import { Toaster } from 'sonner';
 
 const queryClient = new QueryClient({
@@ -76,6 +77,25 @@ function ThemeProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
+/**
+ * Hydrates Zustand store (language, theme) from backend settings once after login.
+ * This ensures the UI matches whatever language/theme the user last saved,
+ * regardless of browser locale or localStorage state.
+ */
+function SettingsHydrator() {
+  const { data: settings } = useSettings();
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
+    if (!settings || hydrated) return;
+    const lang = settings.language;
+    if (lang === 'en' || lang === 'es') useUiStore.getState().setLanguage(lang);
+    setHydrated(true);
+  }, [settings, hydrated]);
+
+  return null;
+}
+
 export function App() {
   const [authState, setAuthState] = useState<'checking' | 'authenticated' | 'unauthenticated'>('checking');
 
@@ -119,6 +139,7 @@ export function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
+        <SettingsHydrator />
         <AppShell />
         <ServiceWorkerRegister />
         <InstallPrompt />

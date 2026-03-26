@@ -16,7 +16,7 @@ initAuthDb();
 // Seed demo user if DEMO_USER env var is set
 if (process.env.DEMO_USER) {
   const { seedDemoUser } = require('./db/seed-demo') as typeof import('./db/seed-demo');
-  seedDemoUser();
+  seedDemoUser('es');
 }
 
 const server = expressApp.listen(API_PORT, () => {

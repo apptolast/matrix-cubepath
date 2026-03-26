@@ -71,7 +71,7 @@ export function DashboardView({ mission, objectives, allPlans, allTasks }: ViewP
             <ProgressRing value={mission.progress} size={64} stroke={5} />
             <div className="min-w-0">
               <h3 className="text-sm font-semibold text-gray-200 uppercase tracking-wide">Mission</h3>
-              <p className="text-base text-gray-100 mt-0.5 truncate">{mission.title}</p>
+              <p className="text-base text-gray-100 mt-0.5 truncate uppercase">{mission.title}</p>
               {mission.description && (
                 <p className="text-xs text-matrix-muted mt-1 line-clamp-2">{mission.description}</p>
               )}
@@ -281,7 +281,7 @@ export function DashboardView({ mission, objectives, allPlans, allTasks }: ViewP
           )}
           <InlineAdd
             label="plan"
-            placeholder="Plan title..."
+            placeholder={t('planTitle' as LangKey, language)}
             onAdd={(title) => createPlan.mutate({ objectiveId: selectedObj, title })}
           />
         </>
@@ -341,7 +341,7 @@ export function DashboardView({ mission, objectives, allPlans, allTasks }: ViewP
           </div>
           <InlineAdd
             label="task"
-            placeholder="Task title..."
+            placeholder={t('taskTitle' as LangKey, language)}
             onAdd={(title) => createTask.mutate({ planId: selectedPlan, title })}
           />
         </div>

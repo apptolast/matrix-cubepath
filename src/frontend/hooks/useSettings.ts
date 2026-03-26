@@ -1,5 +1,9 @@
+import { useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast as sonner } from 'sonner';
 import { apiFetch } from '../lib/api';
+import { t } from '../lib/i18n';
+import { useUiStore } from '../stores/ui.store';
 
 interface GitHubStatus {
   configured: boolean;
@@ -24,6 +28,45 @@ export function useUpdateSetting() {
       qc.invalidateQueries({ queryKey: ['github-status'] });
     },
   });
+}
+
+/**
+ * Centralised language switch: updates store, persists to backend,
+ * re-seeds demo DB if needed, and invalidates all queries so data refreshes
+ * without a full page reload. Shows a toast during the operation.
+ *
+ * Returns a function that accepts an optional target language.
+ * Without argument it toggles; with argument it switches to that language.
+ */
+export function useLanguageSwitch() {
+  const qc = useQueryClient();
+  const updateSetting = useUpdateSetting();
+  const { language, setLanguage, isDemo, setSwitchingLanguage } = useUiStore();
+
+  return useCallback(
+    (target?: 'en' | 'es') => {
+      const next = target ?? (language === 'en' ? 'es' : 'en');
+      if (next === language) return;
+
+      const toastId = sonner.loading(t('toastLangSwitching', next));
+      if (isDemo) setSwitchingLanguage(true);
+      setLanguage(next);
+
+      updateSetting
+        .mutateAsync({ key: 'language', value: next })
+        .then(async () => {
+          if (isDemo) await qc.invalidateQueries();
+          setSwitchingLanguage(false);
+          sonner.success(t('toastLangDone', next), { id: toastId });
+        })
+        .catch(() => {
+          setSwitchingLanguage(false);
+          setLanguage(language);
+          sonner.error(t('toastError', language), { id: toastId });
+        });
+    },
+    [language, isDemo, setLanguage, setSwitchingLanguage, updateSetting, qc],
+  );
 }
 
 export function useGitHubStatus() {

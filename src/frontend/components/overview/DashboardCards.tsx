@@ -191,7 +191,7 @@ export function QuickCaptureCard({ language }: { language: 'en' | 'es' }) {
         <input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          placeholder={mode === 'idea' ? 'Idea title...' : t('taskTitle' as LangKey, language)}
+          placeholder={mode === 'idea' ? t('ideaTitle' as LangKey, language) : t('taskTitle' as LangKey, language)}
           className={inputCls}
           onKeyDown={(e) => e.key === 'Enter' && handleSave()}
         />
@@ -199,7 +199,7 @@ export function QuickCaptureCard({ language }: { language: 'en' | 'es' }) {
           <ResizableTextarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="Description (optional)..."
+            placeholder={t('descriptionOptional' as LangKey, language)}
             rows={2}
           />
         )}
@@ -280,9 +280,7 @@ export function FocusQueueCard({ language }: { language: 'en' | 'es' }) {
   return (
     <SectionCard title={language === 'es' ? 'Cola de enfoque' : 'Focus Queue'} icon="▸">
       {focusTasks.length === 0 ? (
-        <p className="text-xs text-matrix-muted py-4 text-center">
-          {language === 'es' ? 'Sin tareas pendientes' : 'All clear!'}
-        </p>
+        <p className="text-xs text-matrix-muted py-4 text-center">{t('allClear' as LangKey, language)}</p>
       ) : (
         <div className="space-y-1 max-h-64 overflow-y-auto pr-4">
           {focusTasks.map((task) => (
@@ -391,7 +389,9 @@ export function UpcomingDeadlinesCard({ language }: { language: 'en' | 'es' }) {
 
   return (
     <SectionCard title={language === 'es' ? 'Próximos vencimientos' : 'Upcoming Deadlines'} icon="⏰">
-      {!hasReal && <p className="text-[10px] text-matrix-muted/50 mb-2 italic">Sample data</p>}
+      {!hasReal && (
+        <p className="text-[10px] text-matrix-muted/50 mb-2 italic">{t('sampleData' as LangKey, language)}</p>
+      )}
       <div className="space-y-1.5">
         {items.map((item, i) => (
           <div key={i} className="flex items-center gap-2 text-xs">

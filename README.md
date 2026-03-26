@@ -1,10 +1,10 @@
 # Matrix — Sistema de Gestión de Proyectos
 
-<p align="center">
+<p align="left">
   Matrix es una plataforma full-stack de productividad pensada para desarrolladores que manejan múltiples proyectos a la vez. Conecta tu misión de alto nivel con las tareas del día a día a través de una jerarquía clara (<strong>Mission → Objectives → Plans → Tasks</strong>), sincroniza tus repos de GitHub, evalúa ideas antes de comprometerte con ellas, almacena contraseñas de forma segura y te ofrece métricas, rachas de tareas ejecutadas y una vista de enfoque diario para que nada se pierda.
 </p>
 
-<p align="center">
+<p align="left">
   <strong>Define tu misión. Divídela en objetivos. Planifica. Ejecuta las tareas para cada plan. Controla cada proyecto, captura cada idea y guarda tus credenciales de forma segura — todo desde un dashboard self-hosted.</strong>
 </p>
 
@@ -105,9 +105,9 @@ Cada acción se registra automáticamente. El panel lateral muestra:
 
 Cada usuario tiene su propia base de datos SQLite aislada — los datos de un usuario nunca se mezclan con los de otro. Headers HTTP de seguridad en todas las respuestas. Detalles de errores internos ocultos en producción. Apagado graceful del servidor con timeout de respaldo. El registro de nuevos usuarios se controla por variable de entorno.
 
-### i18n
+### i18n — Sistema Bilingüe Completo (EN/ES)
 
-Inglés y español soportados. Detecta automáticamente el idioma del navegador. La preferencia se almacena por usuario.
+Inglés y español soportados en toda la aplicación — tanto la interfaz como los datos de demostración. Al cambiar de idioma, el sistema re-genera todos los datos demo (misiones, tareas, ideas, proyectos, contraseñas) en el idioma seleccionado sin recargar la página. La preferencia se persiste por usuario en el backend y se restaura automáticamente al iniciar sesión. Botón de cambio rápido disponible en Overview, Settings y LoginPage.
 
 ### Responsive
 

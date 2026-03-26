@@ -4,6 +4,11 @@
  *
  * Safe to call multiple times: wipes and re-creates all demo data.
  * Activated at startup when DEMO_USER env var is set (default: "demo").
+ *
+ * Architecture:
+ *   - Locale strings   → seed-locales/{en,es}.json
+ *   - Structural data   → seed-data.ts
+ *   - Seeding logic     → this file
  */
 
 import fs from 'fs';
@@ -16,8 +21,29 @@ import { runMigrations } from './migrate';
 import { encrypt, deriveEncryptionKey, generateEncSalt } from '../engines/crypto';
 import { logger } from '../lib/logger';
 
+import enLocale from './seed-locales/en.json';
+import esLocale from './seed-locales/es.json';
+import type { SeedLocale } from './seed-data';
+import {
+  SEED_OBJECTIVES,
+  SEED_PLANS,
+  SEED_TASKS,
+  SEED_PROJECTS,
+  SEED_PROJECT_LINKS,
+  SEED_IDEAS,
+  SEED_EVALUATIONS,
+  SEED_ACTIVITIES,
+  SEED_PASSWORDS,
+} from './seed-data';
+
 export const DEMO_USERNAME = process.env.DEMO_USER || 'demo';
 export const DEMO_PASSWORD = process.env.DEMO_PASSWORD || 'demo1234';
+
+export type SeedLang = 'en' | 'es';
+
+const locales: Record<SeedLang, SeedLocale> = { en: enLocale, es: esLocale };
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
 
 function encryptDemo(plain: string): string {
   const salt = generateEncSalt();
@@ -35,13 +61,22 @@ function ds(offsetDays = 0): string {
   return dt(offsetDays).split('T')[0];
 }
 
-// Fixed deadline dates (hackathon window)
-const D3 = '2026-04-03';
-const D4 = '2026-04-04';
-const D5 = '2026-04-05';
-const D6 = '2026-04-06';
+function ins(db: Database.Database, table: string, cols: string[], vals: unknown[]): number {
+  const placeholders = cols.map(() => '?').join(', ');
+  const result = db.prepare(`INSERT INTO ${table} (${cols.join(', ')}) VALUES (${placeholders})`).run(...vals);
+  return result.lastInsertRowid as number;
+}
 
-export function seedDemoUser(): void {
+/** Resolve a deadline offset: number → computed date string, string → literal, null → null */
+function deadline(offset: number | string | null): string | null {
+  if (offset === null) return null;
+  if (typeof offset === 'string') return offset;
+  return ds(offset);
+}
+
+// ── Seed entry point ─────────────────────────────────────────────────────────
+
+export function seedDemoUser(lang: SeedLang = 'es'): void {
   // 1. Ensure demo user exists in auth.db
   if (!userExists(DEMO_USERNAME)) {
     createUser(DEMO_USERNAME, DEMO_PASSWORD);
@@ -68,878 +103,180 @@ export function seedDemoUser(): void {
   const db = drizzle(sqlite, { schema });
   userDbContext.run(db, () => runMigrations());
 
-  // 4. Seed raw data directly via better-sqlite3 for simplicity
-  populate(sqlite);
+  // 4. Seed raw data directly via better-sqlite3
+  populate(sqlite, lang);
   sqlite.close();
 
-  // 5. Re-open via the normal cache so subsequent requests work
+  // 5. Re-open via the pool so subsequent requests can use it
   openUserDb(DEMO_USERNAME);
-
-  logger.info('seed-demo', `Demo user "${DEMO_USERNAME}" seeded`);
+  logger.info('seed', `Demo user "${DEMO_USERNAME}" seeded (${lang})`);
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// ── Populate ─────────────────────────────────────────────────────────────────
 
-function ins(db: Database.Database, table: string, cols: string[], vals: unknown[]): number {
-  const placeholders = cols.map(() => '?').join(', ');
-  const result = db.prepare(`INSERT INTO ${table} (${cols.join(', ')}) VALUES (${placeholders})`).run(...vals);
-  return result.lastInsertRowid as number;
-}
+function populate(db: Database.Database, lang: SeedLang): void {
+  const L = locales[lang];
 
-// ── Data ──────────────────────────────────────────────────────────────────────
-
-function populate(db: Database.Database): void {
   // Mission
   const missionId = ins(
     db,
     'mission',
     ['title', 'description', 'status', 'created_at', 'updated_at'],
-    [
-      'Launch Matrix to Production',
-      'Build and ship Matrix — a self-hosted productivity platform — to CubePath VPS for the CubePath Hackathon 2026. Mission: from zero to production in under 30 days.',
-      'in_progress',
-      dt(-20),
-      dt(-1),
-    ],
+    [L.missionTitle, L.missionDesc, 'in_progress', dt(-20), dt(-1)],
   );
 
   // Objectives
-  const obj1 = ins(
-    db,
-    'objectives',
-    ['mission_id', 'title', 'description', 'sort_order', 'status', 'created_at', 'updated_at'],
-    [
-      missionId,
-      'Backend API & Auth',
-      'Secure Express API with per-user SQLite and session auth.',
-      0,
-      'completed',
-      dt(-18),
-      dt(-5),
-    ],
-  );
-  const obj2 = ins(
-    db,
-    'objectives',
-    ['mission_id', 'title', 'description', 'sort_order', 'status', 'created_at', 'updated_at'],
-    [missionId, 'Frontend UI', 'React SPA: tasks, ideas, passwords, settings.', 1, 'in_progress', dt(-15), dt(-1)],
-  );
-  const obj3 = ins(
-    db,
-    'objectives',
-    ['mission_id', 'title', 'description', 'sort_order', 'status', 'created_at', 'updated_at'],
-    [
-      missionId,
-      'Deploy to CubePath',
-      'Deploy to CubePath VPS via Dokploy 1-Click App. Traefik handles auto HTTPS. Compete in CubePath Hackathon 2026.',
-      2,
-      'in_progress',
-      dt(-10),
-      dt(-1),
-    ],
-  );
-  const obj4 = ins(
-    db,
-    'objectives',
-    ['mission_id', 'title', 'description', 'sort_order', 'status', 'created_at', 'updated_at'],
-    [
-      missionId,
-      'Mobile & PWA',
-      'Responsive design for mobile browsers + PWA install prompt with offline caching.',
-      3,
-      'completed',
-      dt(-6),
-      dt(-1),
-    ],
+  const objIds = SEED_OBJECTIVES.map((o) =>
+    ins(
+      db,
+      'objectives',
+      ['mission_id', 'title', 'description', 'sort_order', 'status', 'created_at', 'updated_at'],
+      [missionId, L[o.titleKey], L[o.descKey], o.sortOrder, o.status, dt(o.createdOffset), dt(o.updatedOffset)],
+    ),
   );
 
   // Plans
-  const plan1 = ins(
-    db,
-    'plans',
-    ['objective_id', 'title', 'description', 'sort_order', 'status', 'deadline', 'created_at', 'updated_at'],
-    [
-      obj1,
-      'Database Architecture',
-      'Per-user SQLite schema with Drizzle ORM.',
-      0,
-      'completed',
-      ds(-10),
-      dt(-18),
-      dt(-12),
-    ],
-  );
-  const plan2 = ins(
-    db,
-    'plans',
-    ['objective_id', 'title', 'description', 'sort_order', 'status', 'deadline', 'created_at', 'updated_at'],
-    [
-      obj1,
-      'Auth System',
-      'scrypt + HMAC tokens, rate limiting, timing-safe comparisons.',
-      1,
-      'completed',
-      ds(-8),
-      dt(-14),
-      dt(-6),
-    ],
-  );
-  const plan3 = ins(
-    db,
-    'plans',
-    ['objective_id', 'title', 'description', 'sort_order', 'status', 'deadline', 'created_at', 'updated_at'],
-    [
-      obj2,
-      'Task Board',
-      'Kanban with priorities, deadlines and calendar picker.',
-      0,
-      'in_progress',
-      D4,
-      dt(-12),
-      dt(-1),
-    ],
-  );
-  const plan4 = ins(
-    db,
-    'plans',
-    ['objective_id', 'title', 'description', 'sort_order', 'status', 'deadline', 'created_at', 'updated_at'],
-    [
-      obj2,
-      'Ideas Pipeline',
-      'Capture ideas with evaluation scores and funnel view.',
-      1,
-      'in_progress',
-      D5,
-      dt(-8),
-      dt(-1),
-    ],
-  );
-  const plan5 = ins(
-    db,
-    'plans',
-    ['objective_id', 'title', 'description', 'sort_order', 'status', 'deadline', 'created_at', 'updated_at'],
-    [
-      obj3,
-      'Docker & Dokploy',
-      'Multi-stage Dockerfile + Dokploy 1-Click App on CubePath VPS.',
-      0,
-      'completed',
-      ds(-3),
-      dt(-7),
-      dt(-2),
-    ],
-  );
-  const plan6 = ins(
-    db,
-    'plans',
-    ['objective_id', 'title', 'description', 'sort_order', 'status', 'deadline', 'created_at', 'updated_at'],
-    [
-      obj3,
-      'CI/CD Pipeline',
-      'GitHub Actions typecheck + Dokploy auto-deploy on push to main.',
-      1,
-      'in_progress',
-      D6,
-      dt(-5),
-      dt(-1),
-    ],
-  );
-  const plan7 = ins(
-    db,
-    'plans',
-    ['objective_id', 'title', 'description', 'sort_order', 'status', 'deadline', 'created_at', 'updated_at'],
-    [
-      obj4,
-      'Responsive Design',
-      'Mobile-first layout: sidebar overlay, stacked kanban, adaptive modals.',
-      0,
-      'completed',
-      ds(-2),
-      dt(-5),
-      dt(-1),
-    ],
-  );
-  const plan8 = ins(
-    db,
-    'plans',
-    ['objective_id', 'title', 'description', 'sort_order', 'status', 'deadline', 'created_at', 'updated_at'],
-    [
-      obj4,
-      'PWA Support',
-      'Service worker, web manifest, install prompt and offline caching via Workbox.',
-      1,
-      'completed',
-      ds(-1),
-      dt(-3),
-      dt(-1),
-    ],
+  const planIds = SEED_PLANS.map((p) =>
+    ins(
+      db,
+      'plans',
+      ['objective_id', 'title', 'description', 'sort_order', 'status', 'deadline', 'created_at', 'updated_at'],
+      [
+        objIds[p.objectiveIdx],
+        L[p.titleKey],
+        L[p.descKey],
+        p.sortOrder,
+        p.status,
+        deadline(p.deadlineOffset),
+        dt(p.createdOffset),
+        dt(p.updatedOffset),
+      ],
+    ),
   );
 
   // Tasks
-  type TaskRow = [number, string, string | null, string, string, number, string | null, string | null, string, string];
-  const tasks: TaskRow[] = [
-    // plan1 - completed
-    [
-      plan1,
-      'Design mission hierarchy schema',
-      'mission → objectives → plans → tasks',
-      'done',
-      'high',
-      0,
-      ds(-16),
-      dt(-16),
-      dt(-18),
-      dt(-16),
-    ],
-    [plan1, 'Implement Drizzle ORM migrations', null, 'done', 'medium', 1, ds(-14), dt(-14), dt(-17), dt(-14)],
-    [
-      plan1,
-      'Enable WAL mode + foreign keys',
-      'Better concurrent read performance',
-      'done',
-      'medium',
-      2,
-      ds(-13),
-      dt(-13),
-      dt(-16),
-      dt(-13),
-    ],
-    // plan2 - completed
-    [
-      plan2,
-      'Implement scrypt password hashing',
-      'crypto.scryptSync, 64-byte key',
-      'done',
-      'urgent',
-      0,
-      ds(-12),
-      dt(-10),
-      dt(-14),
-      dt(-10),
-    ],
-    [
-      plan2,
-      'Build HMAC session tokens',
-      'httpOnly + secure cookies',
-      'done',
-      'high',
-      1,
-      ds(-10),
-      dt(-9),
-      dt(-13),
-      dt(-9),
-    ],
-    [
-      plan2,
-      'Rate limiting on auth routes',
-      '10 attempts / 15 min per IP',
-      'done',
-      'high',
-      2,
-      ds(-8),
-      dt(-7),
-      dt(-12),
-      dt(-7),
-    ],
-    [
-      plan2,
-      'Prevent timing attacks on login',
-      'Always run hash for unknown users',
-      'done',
-      'medium',
-      3,
-      null,
-      dt(-6),
-      dt(-11),
-      dt(-6),
-    ],
-    // plan3 - in progress
-    [plan3, 'Kanban columns (pending / in_progress / done)', null, 'done', 'high', 0, ds(-2), dt(-5), dt(-12), dt(-5)],
-    [
-      plan3,
-      'Priority dots with cycle on click',
-      'low → medium → high → urgent',
-      'done',
-      'medium',
-      1,
-      null,
-      dt(-3),
-      dt(-10),
-      dt(-3),
-    ],
-    [
-      plan3,
-      'Deadline badge with color coding',
-      'Red=overdue, amber=today, green=soon',
-      'in_progress',
-      'high',
-      2,
-      D3,
-      null,
-      dt(-8),
-      dt(-1),
-    ],
-    [plan3, 'Calendar date picker integration', null, 'in_progress', 'medium', 3, D4, null, dt(-6), dt(-1)],
-    [plan3, 'Drag and drop between columns', null, 'pending', 'low', 4, D6, null, dt(-4), dt(-4)],
-    [
-      plan3,
-      'Dev Feed widget — Hacker News + GitHub trending via free APIs',
-      null,
-      'pending',
-      'medium',
-      5,
-      D5,
-      null,
-      dt(-3),
-      dt(-3),
-    ],
-    [
-      plan3,
-      'Daily Thought widget — ZenQuotes API with local fallback',
-      null,
-      'done',
-      'low',
-      6,
-      D5,
-      dt(-1),
-      dt(-3),
-      dt(-1),
-    ],
-    // plan4 - in progress
-    [plan4, 'Idea capture form with target linking', null, 'done', 'high', 0, ds(-1), dt(-2), dt(-8), dt(-2)],
-    [
-      plan4,
-      'Evaluation scores UI',
-      'alignment, impact, cost, risk sliders',
-      'in_progress',
-      'high',
-      1,
-      D4,
-      null,
-      dt(-6),
-      dt(-1),
-    ],
-    [
-      plan4,
-      'Funnel view by status',
-      'pending → evaluated → approved/rejected',
-      'pending',
-      'medium',
-      2,
-      D5,
-      null,
-      dt(-5),
-      dt(-5),
-    ],
-    // plan5 - completed (Docker & Dokploy)
-    [plan5, 'Multi-stage Dockerfile', 'deps → builder → production', 'done', 'high', 0, ds(-5), dt(-4), dt(-7), dt(-4)],
-    [plan5, 'Set up Dokploy on CubePath VPS via 1-Click App', null, 'done', 'high', 1, ds(-4), dt(-3), dt(-6), dt(-3)],
-    [
-      plan5,
-      'Configure Traefik domain + auto HTTPS',
-      "matrix.stackbp.es with Let's Encrypt",
-      'done',
-      'high',
-      2,
-      ds(-4),
-      dt(-3),
-      dt(-6),
-      dt(-3),
-    ],
-    [
-      plan5,
-      'Add DATA_DIR volume for persistent SQLite',
-      'matrix_data Docker volume',
-      'done',
-      'medium',
-      3,
-      ds(-3),
-      dt(-2),
-      dt(-5),
-      dt(-2),
-    ],
-    // plan6 - in progress (CI/CD)
-    [plan6, 'CI workflow — typecheck on PR', null, 'done', 'medium', 0, null, dt(-1), dt(-5), dt(-1)],
-    [
-      plan6,
-      'Configure Dokploy auto-deploy on push to main',
-      'No SSH keys needed — Dokploy pulls from GitHub',
-      'done',
-      'high',
-      1,
-      D3,
-      dt(-2),
-      dt(-4),
-      dt(-2),
-    ],
-    [
-      plan6,
-      'Configure SECURE_COOKIE and SESSION_SECRET in Dokploy',
-      null,
-      'in_progress',
-      'urgent',
-      2,
-      D5,
-      null,
-      dt(-3),
-      dt(-1),
-    ],
-    [
-      plan6,
-      'Add trust proxy for Traefik reverse proxy',
-      'app.set("trust proxy", 1)',
-      'pending',
-      'high',
-      3,
-      D6,
-      null,
-      dt(-2),
-      dt(-2),
-    ],
-    // plan7 - completed (Responsive Design)
-    [
-      plan7,
-      'Sidebar overlay with hamburger button on mobile',
-      'Fixed overlay + backdrop click to close',
-      'done',
-      'high',
-      0,
-      ds(-3),
-      dt(-2),
-      dt(-5),
-      dt(-2),
-    ],
-    [
-      plan7,
-      'Kanban columns stack on mobile',
-      'grid-cols-1 md:grid-cols-2 xl:grid-cols-3',
-      'done',
-      'medium',
-      1,
-      ds(-2),
-      dt(-2),
-      dt(-4),
-      dt(-2),
-    ],
-    [
-      plan7,
-      'Inline task status selector for mobile',
-      'Replaces drag-and-drop on touch devices',
-      'done',
-      'medium',
-      2,
-      ds(-2),
-      dt(-1),
-      dt(-3),
-      dt(-1),
-    ],
-    [
-      plan7,
-      'Adapt modals and views for small screens',
-      'Passwords table, ideas, settings',
-      'done',
-      'low',
-      3,
-      ds(-1),
-      dt(-1),
-      dt(-3),
-      dt(-1),
-    ],
-    // plan8 - completed (PWA)
-    [plan8, 'Add vite-plugin-pwa with Workbox', null, 'done', 'high', 0, ds(-2), dt(-2), dt(-3), dt(-2)],
-    [plan8, 'Web manifest with icons and theme color', null, 'done', 'medium', 1, ds(-1), dt(-1), dt(-2), dt(-1)],
-    [plan8, 'Offline caching strategy for static assets', null, 'done', 'medium', 2, ds(-1), dt(-1), dt(-2), dt(-1)],
-    [plan8, 'Install prompt banner in app header', null, 'done', 'low', 3, ds(-1), dt(-1), dt(-2), dt(-1)],
-  ];
-
   const taskStmt = db.prepare(
     `INSERT INTO tasks (plan_id, title, description, status, priority, sort_order, deadline, completed_at, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
   );
-  for (const t of tasks) taskStmt.run(...t);
+  for (const t of SEED_TASKS) {
+    taskStmt.run(
+      planIds[t.planIdx],
+      L[t.titleKey],
+      t.descKey ? L[t.descKey] : null,
+      t.status,
+      t.priority,
+      t.sortOrder,
+      deadline(t.deadlineOffset),
+      t.completedOffset !== null ? dt(t.completedOffset) : null,
+      dt(t.createdOffset),
+      dt(t.updatedOffset),
+    );
+  }
 
   // Projects
-  const proj1 = ins(
-    db,
-    'projects',
-    ['name', 'path', 'description', 'url', 'status', 'tags', 'created_at', 'updated_at'],
-    [
-      'matrix-cubepath',
-      null,
-      'Full-stack productivity platform. Submitted to CubePath Hackathon 2026. Live at matrix.stackbp.es.',
-      'bpstack/matrix-cubepath',
-      'active',
-      JSON.stringify(['typescript', 'react', 'sqlite', 'docker', 'dokploy']),
-      dt(-20),
-      dt(-1),
-    ],
-  );
-  const proj2 = ins(
-    db,
-    'projects',
-    ['name', 'path', 'description', 'url', 'status', 'tags', 'created_at', 'updated_at'],
-    [
-      'matrix',
-      null,
-      'Original Electron desktop version — migrated to web for CubePath deployment.',
-      'bpstack/matrix',
-      'archived',
-      JSON.stringify(['electron', 'typescript', 'react']),
-      dt(-90),
-      dt(-15),
-    ],
-  );
-  ins(
-    db,
-    'projects',
-    ['name', 'path', 'description', 'url', 'status', 'tags', 'created_at', 'updated_at'],
-    [
-      'weather-bp',
-      null,
-      'OpenMeteo Weather Buddy.',
-      'bpstack/weather-bp',
-      'active',
-      JSON.stringify(['typescript', 'openmeteo']),
-      dt(-120),
-      dt(-20),
-    ],
+  const projIds = SEED_PROJECTS.map((p) =>
+    ins(
+      db,
+      'projects',
+      ['name', 'path', 'description', 'url', 'status', 'tags', 'created_at', 'updated_at'],
+      [
+        L[p.nameKey],
+        null,
+        L[p.descKey],
+        p.url,
+        p.status,
+        JSON.stringify(p.tags),
+        dt(p.createdOffset),
+        dt(p.updatedOffset),
+      ],
+    ),
   );
 
   // Project links
   const linkStmt = db.prepare(
     `INSERT INTO project_links (project_id, linkable_type, linkable_id, created_at) VALUES (?, ?, ?, ?)`,
   );
-  linkStmt.run(proj1, 'mission', missionId, dt(-19));
-  linkStmt.run(proj1, 'objective', obj3, dt(-10));
-  linkStmt.run(proj1, 'objective', obj4, dt(-6));
-  linkStmt.run(proj2, 'objective', obj2, dt(-12));
+  for (const pl of SEED_PROJECT_LINKS) {
+    const targetId = pl.targetIdx === 'mission' ? missionId : objIds[pl.targetIdx];
+    linkStmt.run(projIds[pl.projectIdx], pl.linkableType, targetId, dt(pl.createdOffset));
+  }
 
   // Ideas
-  type IdeaRow = [string, string | null, string, string | null, number | null, number | null, string, string];
-  const ideas: IdeaRow[] = [
-    [
-      'Add AI-powered task suggestions',
-      'Use Claude API to suggest next actions based on current objectives and activity.',
-      'approved',
-      'objective',
-      obj2,
-      proj1,
-      dt(-14),
-      dt(-5),
-    ],
-    [
-      'Recurring tasks',
-      'Allow tasks to repeat daily/weekly/monthly with auto-reset.',
-      'evaluated',
-      'objective',
-      obj2,
-      null,
-      dt(-10),
-      dt(-3),
-    ],
-    [
-      'Mobile PWA mode',
-      'Mobile users judging the hackathon — PWA makes first impression count. Service worker + manifest for offline-capable experience.',
-      'approved',
-      'objective',
-      obj4,
-      proj1,
-      dt(-7),
-      dt(-3),
-    ],
-    [
-      'Team workspaces',
-      'Multiple users sharing a mission — invite via link.',
-      'rejected',
-      null,
-      null,
-      null,
-      dt(-12),
-      dt(-4),
-    ],
-    [
-      'Export data as JSON/CSV',
-      'Full export of all user data for backup or migration. Backend GET /api/export endpoint + download button in Settings.',
-      'pending',
-      'objective',
-      obj2,
-      proj1,
-      dt(-5),
-      dt(-5),
-    ],
-    [
-      'Task time tracking',
-      'Start/stop timer per task. Track time spent per plan and objective. Show totals in the dashboard.',
-      'pending',
-      'objective',
-      obj2,
-      null,
-      dt(-4),
-      dt(-4),
-    ],
-    [
-      'Notification sounds',
-      'Audio feedback on task completion, pomodoro end, and deadline alerts. Opt-in toggle in Settings.',
-      'pending',
-      'objective',
-      obj2,
-      null,
-      dt(-3),
-      dt(-3),
-    ],
-    [
-      'Bulk task operations',
-      'Select multiple tasks to move status, change priority, or delete in one action.',
-      'pending',
-      'objective',
-      obj2,
-      proj1,
-      dt(-6),
-      dt(-6),
-    ],
-    [
-      'Activity heatmap (GitHub-style)',
-      'Daily contribution grid in Overview built from activity_log. Visual streak and productivity pattern.',
-      'pending',
-      'objective',
-      obj2,
-      proj1,
-      dt(-8),
-      dt(-8),
-    ],
-    [
-      'Dark/light theme auto-scheduling',
-      'Switch theme automatically based on time of day (e.g. light 8am–8pm). Configured in Settings.',
-      'pending',
-      null,
-      null,
-      null,
-      dt(-2),
-      dt(-2),
-    ],
-    [
-      'Pomodoro timer in RightPanel',
-      'Visible countdown tied to the current in-progress task.',
-      'approved',
-      'objective',
-      obj2,
-      proj1,
-      dt(-8),
-      dt(-2),
-    ],
-    [
-      'Calendar view for deadlines',
-      'Monthly calendar showing all task and plan deadlines.',
-      'evaluated',
-      'objective',
-      obj2,
-      null,
-      dt(-6),
-      dt(-2),
-    ],
-    [
-      'Migrate from Electron to web app',
-      'Drop Electron, run as pure Node.js web app. Enables multi-user and cloud deployment on CubePath VPS.',
-      'approved',
-      'objective',
-      obj3,
-      proj1,
-      dt(-25),
-      dt(-18),
-    ],
-    [
-      'Deploy demo user with seed data',
-      'Pre-populate demo account so hackathon judges can explore all features without registering.',
-      'approved',
-      'objective',
-      obj3,
-      proj1,
-      dt(-9),
-      dt(-4),
-    ],
-  ];
-
   const ideaIds: number[] = [];
-  for (const i of ideas)
+  for (const idea of SEED_IDEAS) {
     ideaIds.push(
       ins(
         db,
         'ideas',
         ['title', 'description', 'status', 'target_type', 'target_id', 'project_id', 'created_at', 'updated_at'],
-        i,
+        [
+          L[idea.titleKey],
+          L[idea.descKey],
+          idea.status,
+          idea.targetType,
+          idea.targetObjIdx !== null ? objIds[idea.targetObjIdx] : null,
+          idea.projectIdx !== null ? projIds[idea.projectIdx] : null,
+          dt(idea.createdOffset),
+          dt(idea.updatedOffset),
+        ],
       ),
     );
+  }
 
   // Idea evaluations
-  type EvalRow = [number, number, number, number, number, number, string, string, string | null, string];
-  const evals: EvalRow[] = [
-    [
-      ideaIds[0],
-      9,
-      8,
-      5,
-      4,
-      78,
-      'Strong alignment with mission. High impact, manageable cost. Schedule post-MVP.',
-      'approved',
-      dt(-5),
-      dt(-10),
-    ],
-    [ideaIds[1], 7, 7, 6, 3, 72, 'Adds schema complexity. Good feature for v1.1.', 'pending', null, dt(-8)],
-    [
-      ideaIds[2],
-      8,
-      9,
-      8,
-      2,
-      85,
-      'Hackathon judges will test on mobile. High visibility, already implemented.',
-      'approved',
-      dt(-3),
-      dt(-6),
-    ],
-    [ideaIds[3], 4, 9, 2, 8, 45, 'Multi-tenancy complexity too high for hackathon scope.', 'rejected', dt(-4), dt(-9)],
-    [ideaIds[5], 10, 7, 8, 2, 82, 'Already in RightPanel. High alignment, quick win.', 'approved', dt(-2), dt(-6)],
-    [ideaIds[6], 8, 6, 6, 3, 69, 'Useful but non-critical. Post-launch candidate.', 'pending', null, dt(-4)],
-    [
-      ideaIds[7],
-      10,
-      10,
-      7,
-      3,
-      95,
-      'Essential for CubePath deployment and hackathon. Removes native dependency completely.',
-      'approved',
-      dt(-18),
-      dt(-24),
-    ],
-    [
-      ideaIds[8],
-      9,
-      8,
-      9,
-      1,
-      88,
-      'Critical for hackathon judging experience. Low risk, already implemented.',
-      'approved',
-      dt(-4),
-      dt(-8),
-    ],
-  ];
-
   const evalStmt = db.prepare(
     `INSERT INTO idea_evaluations (idea_id, alignment_score, impact_score, cost_score, risk_score, total_score, reasoning, decision, decided_at, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
   );
-  for (const e of evals) evalStmt.run(...e);
+  for (const e of SEED_EVALUATIONS) {
+    evalStmt.run(
+      ideaIds[e.ideaIdx],
+      e.alignment,
+      e.impact,
+      e.cost,
+      e.risk,
+      e.total,
+      L[e.reasoningKey],
+      e.decision,
+      e.decidedOffset !== null ? dt(e.decidedOffset) : null,
+      dt(e.createdOffset),
+    );
+  }
 
   // Activity log
-  const act = db.prepare(
+  const actStmt = db.prepare(
     `INSERT INTO activity_log (action, entity_type, entity_id, description, created_at) VALUES (?, ?, ?, ?, ?)`,
   );
-  act.run('created', 'mission', missionId, 'Created mission: Launch Matrix to Production', dt(-20));
-  act.run('created', 'objective', obj1, 'Created objective: Backend API & Auth', dt(-18));
-  act.run('created', 'objective', obj2, 'Created objective: Frontend UI', dt(-15));
-  act.run('completed', 'task', 1, 'Completed task: Design mission hierarchy schema', dt(-16));
-  act.run('completed', 'task', 2, 'Completed task: Implement Drizzle ORM migrations', dt(-14));
-  act.run('completed', 'task', 4, 'Completed task: Implement scrypt password hashing', dt(-10));
-  act.run('completed', 'task', 5, 'Completed task: Build HMAC session tokens', dt(-9));
-  act.run('completed', 'task', 6, 'Completed task: Rate limiting on auth routes', dt(-7));
-  act.run('created', 'objective', obj3, 'Created objective: Deploy to CubePath', dt(-10));
-  act.run('created', 'idea', ideaIds[0], 'Created idea: Add AI-powered task suggestions', dt(-14));
-  act.run('created', 'idea', ideaIds[5], 'Created idea: Pomodoro timer in RightPanel', dt(-8));
-  act.run('completed', 'task', 8, 'Completed task: Kanban columns', dt(-5));
-  act.run('completed', 'task', 9, 'Completed task: Priority dots with cycle on click', dt(-3));
-  act.run('completed', 'task', 16, 'Completed task: Multi-stage Dockerfile', dt(-4));
-  act.run('completed', 'task', 17, 'Completed task: Set up Dokploy on CubePath VPS', dt(-3));
-  act.run('completed', 'task', 18, 'Completed task: Configure Traefik + auto HTTPS', dt(-3));
-  act.run('completed', 'task', 19, 'Completed task: DATA_DIR volume for persistent SQLite', dt(-2));
-  act.run('completed', 'task', 20, 'Completed task: CI workflow — typecheck on PR', dt(-2));
-  act.run('completed', 'task', 21, 'Completed task: Dokploy auto-deploy on push to main', dt(-2));
-  act.run('created', 'objective', obj4, 'Created objective: Mobile & PWA', dt(-6));
-  act.run('completed', 'task', 24, 'Completed task: Sidebar overlay on mobile', dt(-2));
-  act.run('completed', 'task', 28, 'Completed task: Add vite-plugin-pwa', dt(-1));
-  act.run('created', 'idea', ideaIds[4], 'Created idea: Export data as JSON/CSV', dt(-5));
-  act.run('completed', 'task', 29, 'Completed task: Web manifest with icons', dt(-1));
+  for (const a of SEED_ACTIVITIES) {
+    let entityId: number;
+    const ref = a.entityRef;
+    if (ref.type === 'mission') entityId = missionId;
+    else if (ref.type === 'objective') entityId = objIds[ref.idx];
+    else if (ref.type === 'idea') entityId = ideaIds[ref.idx];
+    else entityId = ref.n; // task — 1-based row number
+    actStmt.run(a.action, a.entityType, entityId, L[a.descKey], dt(a.createdOffset));
+  }
 
   // Settings
-  const set = db.prepare(`INSERT OR REPLACE INTO settings (key, value, updated_at) VALUES (?, ?, ?)`);
-  set.run('language', 'en', dt(-20));
-  set.run('theme', 'dark', dt(-20));
-  set.run('deadlineAlerts', 'true', dt(-10));
+  const setStmt = db.prepare(`INSERT OR REPLACE INTO settings (key, value, updated_at) VALUES (?, ?, ?)`);
+  setStmt.run('language', lang, dt(-20));
+  setStmt.run('theme', 'dark', dt(-20));
+  setStmt.run('deadlineAlerts', 'true', dt(-10));
 
   // Passwords (encrypted with demo-vault master password — all data is fictional)
-  type PwRow = [string, string | null, string | null, string, string, number, string | null, string, string];
-  const pws: PwRow[] = [
-    [
-      'GitHub',
-      'github.com',
-      'dz_dev',
-      encryptDemo('gh_pat_demo_1234'),
-      'development',
-      1,
-      'Personal GitHub account',
-      dt(-30),
-      dt(-5),
-    ],
-    [
-      'CubePath VPS',
-      'cubepath.com',
-      'admin',
-      encryptDemo('cubepath_demo!'),
-      'server',
-      1,
-      'CubePath VPS — hackathon instance',
-      dt(-10),
-      dt(-2),
-    ],
-    [
-      'Dokploy',
-      'dokploy.example.com',
-      'admin',
-      encryptDemo('dokploy_demo_pass'),
-      'server',
-      1,
-      'Deployment dashboard — manages Docker containers',
-      dt(-10),
-      dt(-2),
-    ],
-    [
-      'Vercel',
-      'vercel.com',
-      'dz@example.com',
-      encryptDemo('vercel_demo_xyz'),
-      'development',
-      0,
-      null,
-      dt(-25),
-      dt(-10),
-    ],
-    [
-      'Linear',
-      'linear.app',
-      'dz@example.com',
-      encryptDemo('linear_pw_demo'),
-      'productivity',
-      0,
-      'Project tracking',
-      dt(-20),
-      dt(-8),
-    ],
-    [
-      'Namecheap',
-      'namecheap.com',
-      'devuser',
-      encryptDemo('namecheap_demo_pw'),
-      'server',
-      0,
-      'Domain registrar',
-      dt(-30),
-      dt(-15),
-    ],
-    ['Figma', 'figma.com', 'dz@example.com', encryptDemo('figma_demo_pass'), 'design', 0, null, dt(-15), dt(-15)],
-  ];
-
   const pwStmt = db.prepare(
     `INSERT INTO passwords (label, domain, username, encrypted_password, category, favorite, notes, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
   );
-  for (const p of pws) pwStmt.run(...p);
+  for (const p of SEED_PASSWORDS) {
+    pwStmt.run(
+      p.labelKey ? L[p.labelKey] : p.label,
+      p.domain,
+      p.username,
+      encryptDemo(p.plainPassword),
+      p.category,
+      p.favorite,
+      p.notesKey ? L[p.notesKey] : null,
+      dt(p.createdOffset),
+      dt(p.updatedOffset),
+    );
+  }
 }

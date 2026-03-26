@@ -189,7 +189,7 @@ export function StrategicSchemaSetup() {
             <input
               value={missionTitle}
               onChange={(e) => setMissionTitle(e.target.value)}
-              placeholder="Your strategic mission..."
+              placeholder={t('yourStrategicMission', language)}
               className={inputCls}
               autoFocus
             />
@@ -201,7 +201,7 @@ export function StrategicSchemaSetup() {
             <ResizableTextarea
               value={missionDesc}
               onChange={(e) => setMissionDesc(e.target.value)}
-              placeholder="What does this mission aim to achieve?"
+              placeholder={t('missionAimToAchieve', language)}
             />
           </div>
         </div>
@@ -231,7 +231,7 @@ export function StrategicSchemaSetup() {
                     next[i] = { ...next[i], description: e.target.value };
                     setObjectiveInputs(next);
                   }}
-                  placeholder="Description (optional)..."
+                  placeholder={t('descriptionOptional', language)}
                 />
               </div>
               {objectiveInputs.length > 1 && (

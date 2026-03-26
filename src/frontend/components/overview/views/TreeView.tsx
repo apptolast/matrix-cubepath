@@ -90,11 +90,11 @@ export function TreeView({
             <ResizableTextarea
               value={mission.description || ''}
               onChange={(e) => updateMission.mutate({ id: mission.id, description: e.target.value || undefined })}
-              placeholder="Description (optional)..."
+              placeholder={t('descriptionOptional' as LangKey, language)}
             />
           </div>
         ) : (
-          <span className="text-sm font-medium text-gray-200">{mission.title}</span>
+          <span className="text-sm font-medium text-gray-200 uppercase">{mission.title}</span>
         )}
         <div className="flex items-center gap-2">
           <span className="text-xs font-mono text-matrix-muted">{mission.progress}%</span>
@@ -166,7 +166,7 @@ export function TreeView({
                           });
                           setEditing(null);
                         }}
-                        placeholder="Description (optional)..."
+                        placeholder={t('descriptionOptional' as LangKey, language)}
                       />
                       <button
                         onClick={() => {
@@ -250,7 +250,7 @@ export function TreeView({
                                       [planKey]: { ...d[planKey], description: e.target.value },
                                     }))
                                   }
-                                  placeholder="Description (optional)..."
+                                  placeholder={t('descriptionOptional' as LangKey, language)}
                                 />
                                 <div className="flex gap-2">
                                   <button
@@ -363,7 +363,7 @@ export function TreeView({
                                   <input
                                     value={newTaskTitle}
                                     onChange={(e) => setNewTaskTitle(e.target.value)}
-                                    placeholder="Task..."
+                                    placeholder={t('taskPlaceholder' as LangKey, language)}
                                     autoFocus
                                     className="w-full bg-transparent border border-matrix-border/50 rounded px-2 py-1.5 text-base text-gray-200 placeholder-gray-600 focus:outline-none focus:border-matrix-accent/40"
                                   />
@@ -418,14 +418,14 @@ export function TreeView({
                         <input
                           value={newPlanTitle}
                           onChange={(e) => setNewPlanTitle(e.target.value)}
-                          placeholder="Plan..."
+                          placeholder={t('planPlaceholder' as LangKey, language)}
                           autoFocus
                           className="w-full bg-transparent border border-matrix-border/50 rounded px-2 py-1.5 text-base text-gray-200 placeholder-gray-600 focus:outline-none focus:border-matrix-accent/40"
                         />
                         <ResizableTextarea
                           value={newPlanDesc}
                           onChange={(e) => setNewPlanDesc(e.target.value)}
-                          placeholder="Description (optional)..."
+                          placeholder={t('descriptionOptional' as LangKey, language)}
                         />
                         <div className="flex gap-2">
                           <button type="submit" className="text-xs text-matrix-accent hover:text-matrix-accent-hover">
@@ -477,14 +477,14 @@ export function TreeView({
             <input
               value={newObjTitle}
               onChange={(e) => setNewObjTitle(e.target.value)}
-              placeholder="Objective..."
+              placeholder={t('objectivePlaceholder' as LangKey, language)}
               autoFocus
               className="w-full bg-transparent border border-matrix-border/50 rounded px-2 py-1.5 text-base text-gray-200 placeholder-gray-600 focus:outline-none focus:border-matrix-accent/40"
             />
             <ResizableTextarea
               value={newObjDesc}
               onChange={(e) => setNewObjDesc(e.target.value)}
-              placeholder="Description (optional)..."
+              placeholder={t('descriptionOptional' as LangKey, language)}
             />
             <div className="flex gap-2">
               <button type="submit" className="text-xs text-matrix-accent hover:text-matrix-accent-hover">

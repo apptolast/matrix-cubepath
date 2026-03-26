@@ -113,7 +113,9 @@ export function WeeklyHeatmapCard({ language }: { language: 'en' | 'es' }) {
 
   return (
     <SectionCard title={language === 'es' ? 'Actividad semanal' : 'Activity Heatmap'} icon="▦">
-      {!hasData && <p className="text-[10px] text-matrix-muted/50 mb-2 italic">Sample data</p>}
+      {!hasData && (
+        <p className="text-[10px] text-matrix-muted/50 mb-2 italic">{t('sampleData' as LangKey, language)}</p>
+      )}
       <div className="space-y-1">
         {displayGrid.map((week, wi) => (
           <div key={wi} className="flex gap-1">

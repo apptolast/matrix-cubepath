@@ -17,22 +17,23 @@ import {
   ParseResult,
 } from '../../hooks/usePasswords';
 import { apiFetch } from '../../lib/api';
-import { t } from '../../lib/i18n';
+import { t, LangKey } from '../../lib/i18n';
+import { useUiStore } from '../../stores/ui.store';
 import { Dropdown } from '../ui/Dropdown';
 import { Modal } from '../ui/Modal';
 import { ResizableTextarea } from '../ui/ResizableTextarea';
 
-const CATEGORY_LABELS: Record<string, { en: string; es: string }> = {
-  email: { en: 'Email', es: 'Email' },
-  social: { en: 'Social', es: 'Social' },
-  dev: { en: 'Dev', es: 'Dev' },
-  finance: { en: 'Finance', es: 'Finanzas' },
-  gaming: { en: 'Gaming', es: 'Gaming' },
-  work: { en: 'Work', es: 'Trabajo' },
-  other: { en: 'Other', es: 'Otros' },
-};
-
 const CATEGORIES = ['email', 'social', 'dev', 'finance', 'gaming', 'work', 'other'];
+
+const CAT_KEY_MAP: Record<string, LangKey> = {
+  email: 'catEmail',
+  social: 'catSocial',
+  dev: 'catDev',
+  finance: 'catFinance',
+  gaming: 'catGaming',
+  work: 'catWork',
+  other: 'catOther',
+};
 
 // Consistent button styles matching the rest of the app
 const BTN_PRIMARY =
@@ -42,11 +43,13 @@ const BTN_SECONDARY =
 const BTN_PRIMARY_WIDE =
   'w-full py-2 text-sm bg-matrix-accent/10 text-matrix-accent border border-matrix-accent/30 rounded hover:bg-matrix-accent/20 transition-colors font-medium disabled:opacity-40 disabled:cursor-not-allowed';
 
-function getCategoryLabel(cat: string): string {
-  return CATEGORY_LABELS[cat]?.en || cat;
+function getCategoryLabel(cat: string, lang: 'en' | 'es' = 'en'): string {
+  const key = CAT_KEY_MAP[cat];
+  return key ? t(key, lang) : cat;
 }
 
 function SetupScreen({ onComplete }: { onComplete: () => void }) {
+  const { language } = useUiStore();
   const setup = useSetupMaster();
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
@@ -58,7 +61,7 @@ function SetupScreen({ onComplete }: { onComplete: () => void }) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (password !== confirm) {
-      setError(t('passwordsDontMatch'));
+      setError(t('passwordsDontMatch', language));
       return;
     }
     setError('');
@@ -69,10 +72,10 @@ function SetupScreen({ onComplete }: { onComplete: () => void }) {
   return (
     <div className="flex items-center justify-center min-h-[60vh]">
       <div className="bg-matrix-bg border border-matrix-border rounded-lg p-6 sm:p-8 w-full max-w-md mx-4">
-        <h2 className="text-lg font-semibold text-gray-200 mb-6">{t('setupVault')}</h2>
+        <h2 className="text-lg font-semibold text-gray-200 mb-6">{t('setupVault', language)}</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs text-gray-400 mb-1">{t('masterPassword')}</label>
+            <label className="block text-xs text-gray-400 mb-1">{t('masterPassword', language)}</label>
             <input
               type="password"
               value={password}
@@ -90,7 +93,7 @@ function SetupScreen({ onComplete }: { onComplete: () => void }) {
             )}
           </div>
           <div>
-            <label className="block text-xs text-gray-400 mb-1">{t('confirmPassword')}</label>
+            <label className="block text-xs text-gray-400 mb-1">{t('confirmPassword', language)}</label>
             <input
               type="password"
               value={confirm}
@@ -100,9 +103,9 @@ function SetupScreen({ onComplete }: { onComplete: () => void }) {
             />
           </div>
           {error && <p className="text-red-400 text-xs">{error}</p>}
-          <p className="text-xs text-matrix-muted">{t('vaultWarning')}</p>
+          <p className="text-xs text-matrix-muted">{t('vaultWarning', language)}</p>
           <button type="submit" disabled={!canSubmit} className={BTN_PRIMARY_WIDE}>
-            {t('setupVault')}
+            {t('setupVault', language)}
           </button>
         </form>
       </div>
@@ -111,6 +114,7 @@ function SetupScreen({ onComplete }: { onComplete: () => void }) {
 }
 
 function LockScreen({ onUnlock }: { onUnlock: () => void }) {
+  const { language } = useUiStore();
   const unlock = useUnlockVault();
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -121,7 +125,7 @@ function LockScreen({ onUnlock }: { onUnlock: () => void }) {
       await unlock.mutateAsync(password);
       onUnlock();
     } catch {
-      setError(t('incorrectPassword'));
+      setError(t('incorrectPassword', language));
       setTimeout(() => setError(''), 3000);
     }
   };
@@ -130,19 +134,19 @@ function LockScreen({ onUnlock }: { onUnlock: () => void }) {
     <div className="flex items-center justify-center min-h-[60vh]">
       <div className="bg-matrix-bg border border-matrix-border rounded-lg p-6 sm:p-8 w-full max-w-md text-center mx-4">
         <div className="text-5xl mb-6 opacity-60">🔒</div>
-        <h2 className="text-lg font-semibold text-gray-200 mb-6">{t('unlockVault')}</h2>
+        <h2 className="text-lg font-semibold text-gray-200 mb-6">{t('unlockVault', language)}</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="w-full bg-matrix-bg border border-matrix-border rounded px-3 py-1.5 text-sm text-gray-200 focus:outline-none focus:border-matrix-accent/50"
-            placeholder={t('masterPassword')}
+            placeholder={t('masterPassword', language)}
             autoFocus
           />
           {error && <p className="text-red-400 text-xs">{error}</p>}
           <button type="submit" disabled={!password || unlock.isPending} className={BTN_PRIMARY_WIDE}>
-            {t('unlock')}
+            {t('unlock', language)}
           </button>
         </form>
       </div>
@@ -151,6 +155,7 @@ function LockScreen({ onUnlock }: { onUnlock: () => void }) {
 }
 
 function ImportModal({ onClose }: { onClose: () => void }) {
+  const { language } = useUiStore();
   const parseImport = useParseImport();
   const confirmImport = useConfirmImport();
   const [step, setStep] = useState<'select' | 'parsing' | 'preview' | 'confirm'>('select');
@@ -203,18 +208,18 @@ function ImportModal({ onClose }: { onClose: () => void }) {
   };
 
   return (
-    <Modal title={t('importPasswords')} onClose={onClose} maxWidth="max-w-2xl">
+    <Modal title={t('importPasswords', language)} onClose={onClose} maxWidth="max-w-2xl">
       <div className="max-h-[70vh] overflow-auto">
         {step === 'select' && (
           <>
-            <p className="text-xs text-matrix-muted mb-4">{t('importNote')}</p>
+            <p className="text-xs text-matrix-muted mb-4">{t('importNote', language)}</p>
             <input ref={fileInputRef} type="file" accept=".csv,.txt" onChange={handleFileChange} className="hidden" />
             <div className="flex gap-2">
               <button onClick={handleSelect} className={BTN_PRIMARY}>
-                📁 {t('selectFile')}
+                📁 {t('selectFile', language)}
               </button>
               <button onClick={onClose} className={BTN_SECONDARY}>
-                {t('cancel')}
+                {t('cancel', language)}
               </button>
             </div>
           </>
@@ -222,21 +227,22 @@ function ImportModal({ onClose }: { onClose: () => void }) {
         {step === 'parsing' && (
           <div className="text-center py-8">
             <div className="animate-spin text-3xl mb-4">⏳</div>
-            <p className="text-xs text-gray-400">{t('parsing')}</p>
+            <p className="text-xs text-gray-400">{t('parsing', language)}</p>
           </div>
         )}
         {step === 'preview' && result && (
           <>
-            <h3 className="text-sm font-semibold text-gray-200 mb-2">{t('importPreview')}</h3>
+            <h3 className="text-sm font-semibold text-gray-200 mb-2">{t('importPreview', language)}</h3>
             <p className="text-xs text-matrix-muted mb-4">
-              {result.parsed.length} {t('linesMatched')} · {result.unmatched.length} {t('linesUnmatched')}
+              {result.parsed.length} {t('linesMatched', language)} · {result.unmatched.length}{' '}
+              {t('linesUnmatched', language)}
             </p>
             <div className="flex gap-2 mb-4">
               <button onClick={() => toggleAll(true)} className="text-xs text-matrix-accent hover:underline">
-                {t('selectAll')}
+                {t('selectAll', language)}
               </button>
               <button onClick={() => toggleAll(false)} className="text-xs text-matrix-muted hover:underline">
-                {t('selectNone')}
+                {t('selectNone', language)}
               </button>
             </div>
             <div className="max-h-64 overflow-auto border border-matrix-border rounded">
@@ -245,10 +251,10 @@ function ImportModal({ onClose }: { onClose: () => void }) {
                   <thead className="bg-matrix-border/30 sticky top-0">
                     <tr>
                       <th className="p-2 text-left text-gray-400"></th>
-                      <th className="p-2 text-left text-gray-400">{t('label')}</th>
-                      <th className="p-2 text-left text-gray-400">{t('domain')}</th>
-                      <th className="p-2 text-left text-gray-400">{t('username')}</th>
-                      <th className="p-2 text-left text-gray-400">{t('confidence')}</th>
+                      <th className="p-2 text-left text-gray-400">{t('label', language)}</th>
+                      <th className="p-2 text-left text-gray-400">{t('domain', language)}</th>
+                      <th className="p-2 text-left text-gray-400">{t('username', language)}</th>
+                      <th className="p-2 text-left text-gray-400">{t('confidence', language)}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -274,10 +280,10 @@ function ImportModal({ onClose }: { onClose: () => void }) {
                             className={`text-xs ${entry.confidence === 'high' ? 'text-green-400' : entry.confidence === 'medium' ? 'text-yellow-400' : 'text-red-400'}`}
                           >
                             {entry.confidence === 'high'
-                              ? t('confidenceHigh')
+                              ? t('confidenceHigh', language)
                               : entry.confidence === 'medium'
-                                ? t('confidenceMedium')
-                                : t('confidenceLow')}
+                                ? t('confidenceMedium', language)
+                                : t('confidenceLow', language)}
                           </span>
                         </td>
                       </tr>
@@ -292,22 +298,23 @@ function ImportModal({ onClose }: { onClose: () => void }) {
                 disabled={selected.size === 0 || confirmImport.isPending}
                 className={BTN_PRIMARY}
               >
-                {t('confirmImport')} ({selected.size})
+                {t('confirmImport', language)} ({selected.size})
               </button>
               <button onClick={onClose} className={BTN_SECONDARY}>
-                {t('cancel')}
+                {t('cancel', language)}
               </button>
             </div>
           </>
         )}
         {step === 'confirm' && imported && (
           <>
-            <h3 className="text-sm font-semibold text-gray-200 mb-4">{t('importComplete')}</h3>
+            <h3 className="text-sm font-semibold text-gray-200 mb-4">{t('importComplete', language)}</h3>
             <p className="text-xs text-gray-300">
-              ✓ {imported.inserted} {t('imported')} · {imported.skippedDuplicates} {t('duplicatesSkipped')}
+              ✓ {imported.inserted} {t('imported', language)} · {imported.skippedDuplicates}{' '}
+              {t('duplicatesSkipped', language)}
             </p>
             <button onClick={onClose} className={`mt-4 ${BTN_PRIMARY}`}>
-              {t('done')}
+              {t('done', language)}
             </button>
           </>
         )}
@@ -317,6 +324,7 @@ function ImportModal({ onClose }: { onClose: () => void }) {
 }
 
 function EditModal({ entryId, onClose }: { entryId: number | null; onClose: () => void }) {
+  const { language, isDemo } = useUiStore();
   const isEditing = entryId !== null;
   const { data: entry, isLoading, isError } = usePasswordById(entryId);
   const create = useCreatePassword();
@@ -352,7 +360,7 @@ function EditModal({ entryId, onClose }: { entryId: number | null; onClose: () =
       }
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save');
+      setError(err instanceof Error ? err.message : t('failedToSave', language));
     }
   };
 
@@ -361,45 +369,43 @@ function EditModal({ entryId, onClose }: { entryId: number | null; onClose: () =
 
   if (isEditing && isLoading) {
     return (
-      <Modal title="Loading..." onClose={onClose}>
-        <p className="text-sm text-gray-400">Loading...</p>
+      <Modal title={t('loading', language)} onClose={onClose}>
+        <p className="text-sm text-gray-400">{t('loading', language)}</p>
       </Modal>
     );
   }
 
   if (isEditing && isError) {
     return (
-      <Modal title="Failed to decrypt entry" onClose={onClose}>
-        <p className="text-xs text-gray-400 mb-4">
-          This entry may have been encrypted with a different master password or the data is corrupted.
-        </p>
+      <Modal title={t(isDemo ? 'demoPasswordTitle' : 'failedToDecryptEntry', language)} onClose={onClose}>
+        <p className="text-xs text-gray-400 mb-4">{t(isDemo ? 'demoPasswordDesc' : 'decryptErrorDesc', language)}</p>
         <button onClick={onClose} className={BTN_SECONDARY}>
-          {t('cancel')}
+          {t('cancel', language)}
         </button>
       </Modal>
     );
   }
 
   return (
-    <Modal title={isEditing ? t('editPassword') : t('newPassword')} onClose={onClose}>
+    <Modal title={isEditing ? t('editPassword', language) : t('newPassword', language)} onClose={onClose}>
       <form onSubmit={handleSubmit} className="space-y-3">
         <input
           value={label}
           onChange={(e) => setLabel(e.target.value)}
-          placeholder={t('label')}
+          placeholder={t('label', language)}
           className={inputClass}
           required
         />
         <input
           value={domain}
           onChange={(e) => setDomain(e.target.value)}
-          placeholder={t('domain')}
+          placeholder={t('domain', language)}
           className={inputClass}
         />
         <input
           value={username}
           onChange={(e) => setUsername(e.target.value)}
-          placeholder={t('username')}
+          placeholder={t('username', language)}
           className={inputClass}
         />
         <div className="flex gap-2">
@@ -407,7 +413,7 @@ function EditModal({ entryId, onClose }: { entryId: number | null; onClose: () =
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             type={showPassword ? 'text' : 'password'}
-            placeholder={t('password')}
+            placeholder={t('password', language)}
             className={`flex-1 ${inputClass}`}
             required
           />
@@ -416,15 +422,20 @@ function EditModal({ entryId, onClose }: { entryId: number | null; onClose: () =
             onClick={() => setShowPassword(!showPassword)}
             className="text-xs text-gray-400 hover:text-gray-200 px-2"
           >
-            {showPassword ? t('hidePassword') : t('showPassword')}
+            {showPassword ? t('hidePassword', language) : t('showPassword', language)}
           </button>
         </div>
         <Dropdown
           value={category}
           onChange={setCategory}
-          options={CATEGORIES.map((c) => ({ value: c, label: getCategoryLabel(c) }))}
+          options={CATEGORIES.map((c) => ({ value: c, label: getCategoryLabel(c, language) }))}
         />
-        <ResizableTextarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder={t('notes')} rows={3} />
+        <ResizableTextarea
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          placeholder={t('notes', language)}
+          rows={3}
+        />
         {error && <p className="text-xs text-red-400">{error}</p>}
         <div className="flex gap-2">
           <button
@@ -432,10 +443,10 @@ function EditModal({ entryId, onClose }: { entryId: number | null; onClose: () =
             disabled={create.isPending || update.isPending}
             className={`flex-1 ${BTN_PRIMARY_WIDE}`}
           >
-            {t('save')}
+            {t('save', language)}
           </button>
           <button type="button" onClick={onClose} className={BTN_SECONDARY}>
-            {t('cancel')}
+            {t('cancel', language)}
           </button>
         </div>
       </form>
@@ -444,6 +455,7 @@ function EditModal({ entryId, onClose }: { entryId: number | null; onClose: () =
 }
 
 export default function PasswordsView() {
+  const { language } = useUiStore();
   const { data: status, refetch } = usePasswordStatus();
   const isUnlocked = status?.isUnlocked ?? false;
   const { data: passwords, refetch: refetchList } = usePasswords(undefined, undefined, isUnlocked);
@@ -510,7 +522,7 @@ export default function PasswordsView() {
     if (selectedIds.size === 0) return;
     const count = selectedIds.size;
     const ok = await confirm({
-      title: `Delete ${count} password${count > 1 ? 's' : ''}?`,
+      title: `${t('delete', language)} ${count} ${t('passwordsCount', language)}?`,
       danger: true,
     });
     if (!ok) return;
@@ -571,16 +583,16 @@ export default function PasswordsView() {
   return (
     <div className="p-3 md:p-4">
       <div className="flex items-center justify-between mb-4 gap-2">
-        <h1 className="text-lg font-semibold text-gray-200 shrink-0">{t('vault')}</h1>
+        <h1 className="text-lg font-semibold text-gray-200 shrink-0">{t('vault', language)}</h1>
         <div className="flex gap-2">
           <button onClick={handleLock} className={BTN_SECONDARY}>
-            🔒 <span className="hidden sm:inline">{t('lock')}</span>
+            🔒 <span className="hidden sm:inline">{t('lock', language)}</span>
           </button>
           <button onClick={() => setEditTarget('new')} className={BTN_PRIMARY}>
-            + <span className="hidden sm:inline">{t('newPassword')}</span>
+            + <span className="hidden sm:inline">{t('newPassword', language)}</span>
           </button>
           <button onClick={() => setShowImport(true)} className={BTN_SECONDARY}>
-            ↑ <span className="hidden sm:inline">{t('import')}</span>
+            ↑ <span className="hidden sm:inline">{t('import', language)}</span>
           </button>
         </div>
       </div>
@@ -589,34 +601,36 @@ export default function PasswordsView() {
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder={`🔍 ${t('search')}...`}
+          placeholder={`🔍 ${t('search', language)}...`}
           className="flex-1 min-w-0 bg-matrix-bg border border-matrix-border rounded px-3 py-1.5 text-sm text-gray-200 placeholder-matrix-muted focus:outline-none focus:border-matrix-accent/50"
         />
         <Dropdown
           value={category}
           onChange={setCategory}
           options={[
-            { value: 'all', label: t('allCategories') },
-            ...CATEGORIES.map((c) => ({ value: c, label: getCategoryLabel(c) })),
+            { value: 'all', label: t('allCategories', language) },
+            ...CATEGORIES.map((c) => ({ value: c, label: getCategoryLabel(c, language) })),
           ]}
         />
       </div>
 
       {someSelected && (
         <div className="flex items-center gap-3 mb-3 px-3 py-2 bg-matrix-border/30 border border-matrix-border rounded text-xs">
-          <span className="text-gray-300">{selectedIds.size} selected</span>
+          <span className="text-gray-300">
+            {selectedIds.size} {t('selectedLabel', language)}
+          </span>
           <button
             onClick={handleBulkDelete}
             disabled={bulkDelete.isPending}
             className="text-red-400 hover:text-red-300 transition-colors disabled:opacity-40"
           >
-            🗑 Delete selected
+            🗑 {t('deleteSelected', language)}
           </button>
           <button
             onClick={() => setSelectedIds(new Set())}
             className="text-gray-400 hover:text-gray-200 transition-colors"
           >
-            Clear
+            {t('clearSelection', language)}
           </button>
         </div>
       )}
@@ -632,19 +646,19 @@ export default function PasswordsView() {
                 ★
               </th>
               <th className="p-2.5 text-left text-[10px] font-medium text-gray-500 uppercase tracking-wider">
-                {t('label')}
+                {t('label', language)}
               </th>
               <th className="p-2.5 text-left text-[10px] font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">
-                {t('domain')}
+                {t('domain', language)}
               </th>
               <th className="p-2.5 text-left text-[10px] font-medium text-gray-500 uppercase tracking-wider hidden xl:table-cell">
-                {t('username')}
+                {t('username', language)}
               </th>
               <th className="p-2.5 text-left text-[10px] font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell w-24">
-                {t('password')}
+                {t('password', language)}
               </th>
               <th className="p-2.5 text-left text-[10px] font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell w-20">
-                {t('category')}
+                {t('category', language)}
               </th>
               <th className="p-2.5 w-28 sm:w-36"></th>
             </tr>
@@ -692,37 +706,39 @@ export default function PasswordsView() {
                     <span className="text-xs text-gray-500">••••••••</span>
                   )}
                 </td>
-                <td className="p-2.5 text-xs text-gray-500 hidden lg:table-cell">{getCategoryLabel(p.category)}</td>
+                <td className="p-2.5 text-xs text-gray-500 hidden lg:table-cell">
+                  {getCategoryLabel(p.category, language)}
+                </td>
                 <td className="p-2.5">
                   <div className="flex gap-0.5 justify-end">
                     <button
                       onClick={() => handleReveal(p.id)}
                       className="p-1 text-gray-500 hover:text-gray-200 text-sm"
-                      title={t('showPassword')}
+                      title={t('showPassword', language)}
                     >
                       👁
                     </button>
                     <button
                       onClick={() => handleCopy(p.id)}
                       className="p-1 text-gray-500 hover:text-gray-200 text-sm"
-                      title={t('copyPassword')}
+                      title={t('copyPassword', language)}
                     >
                       {copied === p.id ? <span className="text-green-400 text-xs">✓</span> : '📋'}
                     </button>
                     <button
                       onClick={() => setEditTarget(p.id)}
                       className="p-1 text-gray-500 hover:text-gray-200 text-sm"
-                      title={t('edit')}
+                      title={t('edit', language)}
                     >
                       ✏️
                     </button>
                     <button
                       onClick={async () => {
-                        const ok = await confirm({ title: t('confirmDelete'), danger: true });
+                        const ok = await confirm({ title: t('confirmDelete', language), danger: true });
                         if (ok) deletePwd.mutate(p.id);
                       }}
                       className="p-1 text-gray-500 hover:text-red-400 text-sm"
-                      title={t('delete')}
+                      title={t('delete', language)}
                     >
                       🗑
                     </button>
@@ -733,7 +749,7 @@ export default function PasswordsView() {
             {(!filtered || filtered.length === 0) && (
               <tr>
                 <td colSpan={8} className="p-8 text-center text-xs text-gray-500">
-                  {t('noPasswords')}
+                  {t('noPasswords', language)}
                 </td>
               </tr>
             )}
@@ -742,7 +758,7 @@ export default function PasswordsView() {
       </div>
 
       <p className="mt-2 text-[10px] text-matrix-muted">
-        {passwords?.length || 0} {t('passwordsCount')}
+        {passwords?.length || 0} {t('passwordsCount', language)}
       </p>
 
       {showImport && (

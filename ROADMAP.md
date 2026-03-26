@@ -123,6 +123,19 @@
 - [x] `ci.yml`: TypeScript typecheck on every push/PR to `main`
 - [x] ~~`release.yml`: SSH deploy to VPS~~ — removed in favor of Dokploy auto-deploy
 
+### Bilingual i18n System (EN/ES) with Demo Data Seeding ✅
+
+- [x] **Seed data architecture refactored** — all translatable demo content extracted from `seed-demo.ts` into a declarative data layer (`seed-data.ts`) + JSON locale files (`seed-locales/en.json`, `seed-locales/es.json`). Structural data (statuses, priorities, scores, dates, sort orders) lives in TypeScript interfaces; human-readable text lives in locale JSON keyed by `SeedLocaleKey`.
+- [x] **Language-aware demo re-seeding** — when the demo user changes language via Settings, the backend (`settings.controller.ts`) detects the `language` key update, checks if the user is the demo account, and calls `seedDemoUser(lang)` which drops and re-inserts all demo data (missions, objectives, plans, tasks, ideas, evaluations, projects, links, passwords, activity log, daily notes) using the selected locale. This means demo data is fully translated, not just the UI.
+- [x] **`useLanguageSwitch()` hook** — centralised language switch logic: updates Zustand store → persists to backend → triggers demo re-seed if applicable → invalidates all React Query caches so every component refreshes with new data — all without a page reload. Shows loading/success/error toasts during the operation.
+- [x] **`SettingsHydrator` component** — on login, reads persisted `language` and `theme` from backend settings and hydrates the Zustand store, ensuring the UI matches the user's last saved preferences regardless of browser locale or localStorage state.
+- [x] **Skeleton loading state** — new `OverviewSkeleton` component shown during language switch to prevent flash of stale content while demo data is being re-seeded and queries are invalidating.
+- [x] **`switchingLanguage` flag in UI store** — boolean flag set during the async language switch operation; `OverviewView` renders the skeleton when true, cards when false.
+- [x] **Language toggle button in Overview header** — globe icon + `EN`/`ES` label, disabled during switch. Also available in Settings and LoginPage.
+- [x] **New i18n keys** — added `strategicSchema`, `ideaTitle`, `descriptionOptional`, `objectivePlaceholder`, `planPlaceholder`, `taskPlaceholder`, `planTitle`, `yourStrategicMission`, `missionAimToAchieve`, `sampleData`, `allClear`, `toastLangSwitching`, `toastLangDone` in both EN and ES.
+- [x] **Remaining hardcoded strings localised** — `StrategicSchemaSetup` placeholders, `inline-forms` placeholders, `DashboardCards` labels, `ChartCards` labels, `TreeView`/`RoadmapView`/`DashboardView` headings all now use `t()`.
+- [x] **Default language changed** — store default set to `'es'` (Spanish) instead of browser detection, since `SettingsHydrator` overrides with the user's persisted preference on login.
+
 ### Hackathon Requirements ✅
 
 - [x] README.md with description, demo link, and deployment instructions

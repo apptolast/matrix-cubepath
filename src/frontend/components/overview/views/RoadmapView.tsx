@@ -52,7 +52,7 @@ export function RoadmapView({ mission, objectives, allPlans, allTasks }: ViewPro
         <ProgressRing value={mission.progress} size={40} stroke={3} />
         <div className="flex-1 min-w-0">
           <p className="text-[10px] text-matrix-accent uppercase tracking-wider font-semibold">Mission</p>
-          <p className="text-sm text-gray-200 font-medium">{mission.title}</p>
+          <p className="text-sm text-gray-200 font-medium uppercase">{mission.title}</p>
         </div>
       </div>
 
@@ -249,7 +249,7 @@ export function RoadmapView({ mission, objectives, allPlans, allTasks }: ViewPro
                                 })}
                                 <InlineAdd
                                   label="task"
-                                  placeholder="Task..."
+                                  placeholder={t('taskPlaceholder' as LangKey, language)}
                                   onAdd={(title) => createTask.mutate({ planId: plan.id, title })}
                                 />
                               </div>
@@ -259,7 +259,7 @@ export function RoadmapView({ mission, objectives, allPlans, allTasks }: ViewPro
                       })}
                       <InlineAdd
                         label="plan"
-                        placeholder="Plan..."
+                        placeholder={t('planPlaceholder' as LangKey, language)}
                         onAdd={(title) => createPlan.mutate({ objectiveId: obj.id, title })}
                       />
                     </div>

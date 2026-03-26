@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { inlineCls } from './primitives';
 import { ResizableTextarea } from '../ui/ResizableTextarea';
+import { useUiStore } from '../../stores/ui.store';
+import { t } from '../../lib/i18n';
 
 // ── InlineEdit ──────────────────────────────────────────────────────────────
 
@@ -105,6 +107,7 @@ export function InlineAddObjective({
   missionId: number;
   onCreate: (data: { missionId: number; title: string; description?: string }) => void;
 }) {
+  const { language } = useUiStore();
   const [active, setActive] = useState(false);
   const [title, setTitle] = useState('');
   const [desc, setDesc] = useState('');
@@ -139,14 +142,14 @@ export function InlineAddObjective({
       <input
         value={title}
         onChange={(e) => setTitle(e.target.value)}
-        placeholder="Objective..."
+        placeholder={t('objectivePlaceholder', language)}
         autoFocus
         className="w-full bg-transparent border border-matrix-border/50 rounded px-2 py-1.5 text-base text-gray-200 placeholder-gray-600 focus:outline-none focus:border-matrix-accent/40"
       />
       <ResizableTextarea
         value={desc}
         onChange={(e) => setDesc(e.target.value)}
-        placeholder="Description (optional)..."
+        placeholder={t('descriptionOptional', language)}
       />
       <div className="flex gap-2">
         <button type="submit" className="text-xs text-matrix-accent hover:text-matrix-accent-hover">

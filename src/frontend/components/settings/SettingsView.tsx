@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useDialogStore } from '../../stores/dialog.store';
-import { useSettings, useUpdateSetting, useGitHubStatus } from '../../hooks/useSettings';
+import { useSettings, useUpdateSetting, useGitHubStatus, useLanguageSwitch } from '../../hooks/useSettings';
 import { usePasswordStatus, useChangeMasterPassword, useUnlockVault, useLockVault } from '../../hooks/usePasswords';
 import { useMission, useDeleteMission } from '../../hooks/useMission';
 import { useShortcuts, Shortcut, formatKeyCombo } from '../../hooks/useShortcuts';
@@ -38,10 +38,11 @@ function SettingRow({ label, children, last = false }: { label: string; children
 }
 
 export function SettingsView() {
-  const { language, setLanguage, theme, setTheme, isDemo } = useUiStore();
+  const { language, theme, setTheme, isDemo } = useUiStore();
   const { data: settings } = useSettings();
   const { data: githubStatus, refetch: refetchGitHubStatus } = useGitHubStatus();
   const updateSetting = useUpdateSetting();
+  const switchLanguage = useLanguageSwitch();
   const { shortcuts, updateShortcuts, resetToDefaults } = useShortcuts();
   const { confirm } = useDialogStore();
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
@@ -117,10 +118,7 @@ export function SettingsView() {
   const [deleteMissionError, setDeleteMissionError] = useState('');
   const [deleteMissionSuccess, setDeleteMissionSuccess] = useState(false);
 
-  const handleLanguageChange = (lang: 'en' | 'es') => {
-    setLanguage(lang);
-    updateSetting.mutate({ key: 'language', value: lang });
-  };
+  const handleLanguageChange = (lang: 'en' | 'es') => switchLanguage(lang);
 
   const handleThemeChange = (newTheme: Theme) => {
     setTheme(newTheme);
@@ -521,7 +519,7 @@ export function SettingsView() {
                   });
                   if (!ok) return;
                   setDemoRestoring(true);
-                  await apiFetch('/demo/reset', { method: 'POST' });
+                  await apiFetch('/demo/reset', { method: 'POST', body: JSON.stringify({ language }) });
                   toast.ok('toastDemoRestored');
                   await new Promise((r) => setTimeout(r, 1500));
                   window.location.reload();

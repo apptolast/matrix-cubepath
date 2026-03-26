@@ -12,6 +12,7 @@ interface UiState {
   quickCreateModal: { type: 'task' | 'idea' | null };
   deadlinesHidden: boolean;
   isDemo: boolean;
+  switchingLanguage: boolean;
   setActiveTab: (tab: Tab) => void;
   toggleSidebar: () => void;
   openSidebar: () => void;
@@ -22,17 +23,19 @@ interface UiState {
   closeQuickCreate: () => void;
   toggleDeadlinesHidden: () => void;
   setIsDemo: (isDemo: boolean) => void;
+  setSwitchingLanguage: (v: boolean) => void;
 }
 
 export const useUiStore = create<UiState>((set) => ({
   activeTab: 'overview',
   sidebarCollapsed: false,
   sidebarOpen: false,
-  language: navigator.language.startsWith('es') ? 'es' : 'en',
+  language: 'es',
   theme: 'dark',
   quickCreateModal: { type: null },
   deadlinesHidden: false,
   isDemo: false,
+  switchingLanguage: false,
   setActiveTab: (tab) => set({ activeTab: tab }),
   toggleSidebar: () => set((s) => ({ sidebarCollapsed: !s.sidebarCollapsed })),
   openSidebar: () => set({ sidebarOpen: true }),
@@ -43,4 +46,5 @@ export const useUiStore = create<UiState>((set) => ({
   closeQuickCreate: () => set({ quickCreateModal: { type: null } }),
   toggleDeadlinesHidden: () => set((s) => ({ deadlinesHidden: !s.deadlinesHidden })),
   setIsDemo: (isDemo) => set({ isDemo }),
+  setSwitchingLanguage: (switchingLanguage) => set({ switchingLanguage }),
 }));

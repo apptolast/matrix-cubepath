@@ -332,7 +332,7 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
           <button
             type="button"
             onClick={toggleTheme}
-            className="p-1 text-matrix-muted/40 hover:text-matrix-muted transition-colors"
+            className="p-1 text-matrix-muted hover:text-matrix-text transition-colors"
             aria-label="Toggle theme"
           >
             {theme === 'dark' ? (
@@ -357,7 +357,7 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
           <button
             type="button"
             onClick={toggleLanguage}
-            className="p-1 text-[10px] font-mono text-matrix-muted/40 hover:text-matrix-muted tracking-wider uppercase transition-colors leading-none"
+            className="p-1 text-[10px] font-mono text-matrix-muted hover:text-matrix-text tracking-wider uppercase transition-colors leading-none"
           >
             {language === 'en' ? 'es' : 'en'}
           </button>

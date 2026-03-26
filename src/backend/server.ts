@@ -93,7 +93,8 @@ app.post('/api/demo/reset', (req, res) => {
   }
   try {
     const { seedDemoUser } = require('./db/seed-demo') as typeof import('./db/seed-demo');
-    seedDemoUser();
+    const lang = (req.body?.language === 'es' ? 'es' : 'en') as import('./db/seed-demo').SeedLang;
+    seedDemoUser(lang);
     res.json({ ok: true });
   } catch (err) {
     res.status(500).json({ error: String(err) });

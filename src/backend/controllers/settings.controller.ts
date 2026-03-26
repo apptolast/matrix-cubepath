@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import { settingsRepo } from '../repositories/settings.repository';
 import { fetchGitHubUser } from '../engines/github-scanner';
+import { DEMO_USERNAME, seedDemoUser } from '../db/seed-demo';
+import type { SeedLang } from '../db/seed-demo';
 
 export const settingsController = {
   getAll(_req: Request, res: Response) {
@@ -15,6 +17,15 @@ export const settingsController = {
 
   upsert(req: Request, res: Response) {
     const s = settingsRepo.upsert(req.params.key, req.body.value);
+
+    // Re-seed demo data when demo user changes language
+    if (req.params.key === 'language' && req.matrixUser === DEMO_USERNAME) {
+      const lang = req.body.value as SeedLang;
+      if (lang === 'en' || lang === 'es') {
+        seedDemoUser(lang);
+      }
+    }
+
     res.json(s);
   },
 
