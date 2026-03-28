@@ -8,6 +8,25 @@ import { useUiStore, Theme } from '../../stores/ui.store';
 import { t, LangKey } from '../../lib/i18n';
 import { apiFetch } from '../../lib/api';
 import { toast } from '../../lib/toast';
+import { ResizableTextarea } from '../ui/ResizableTextarea';
+
+function formatLogTimestamps(content: string): string {
+  return content.replace(/\[(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})\.\d+Z\]/g, (_, iso) => {
+    const date = new Date(iso + 'Z');
+    const parts = new Intl.DateTimeFormat('es-ES', {
+      timeZone: 'Europe/Madrid',
+      day: '2-digit',
+      month: '2-digit',
+      year: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false,
+    }).formatToParts(date);
+    const get = (type: string) => parts.find((p) => p.type === type)?.value ?? '??';
+    return `[${get('day')}/${get('month')}/${get('year')} ${get('hour')}:${get('minute')}:${get('second')}]`;
+  });
+}
 
 function SectionCard({ children, className = '' }: { children: React.ReactNode; className?: string }) {
   return (
@@ -485,9 +504,12 @@ export function SettingsView() {
             }
           />
           <div className="p-3">
-            <pre className="h-28 overflow-y-auto text-xs text-matrix-muted bg-matrix-bg rounded-md p-3 font-mono leading-relaxed">
-              {logContent || (language === 'es' ? 'Sin logs' : 'No logs')}
-            </pre>
+            <ResizableTextarea
+              readOnly
+              rows={6}
+              value={formatLogTimestamps(logContent) || (language === 'es' ? 'Sin logs' : 'No logs')}
+              className="text-xs text-matrix-muted bg-matrix-bg font-mono leading-relaxed"
+            />
             <p className="text-xs text-matrix-muted/60 mt-2 font-mono">{logPath}</p>
           </div>
         </SectionCard>
