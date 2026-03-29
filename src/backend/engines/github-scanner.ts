@@ -46,7 +46,7 @@ interface GitHubTree {
   tree?: Array<{ path?: string }>;
 }
 
-export function normalizeGitHubRepo(input: string, defaultOwner?: string): string {
+export function normalizeGitHubRepo(input: string): string {
   const raw = input.trim();
   if (!raw) throw new Error('GitHub repository is required');
 
@@ -57,9 +57,6 @@ export function normalizeGitHubRepo(input: string, defaultOwner?: string): strin
 
   const shortMatch = cleaned.match(/^([^/]+)\/([^/]+)$/);
   if (shortMatch) return `${shortMatch[1]}/${shortMatch[2]}`;
-
-  const repoOnlyMatch = cleaned.match(/^[A-Za-z0-9._-]+$/);
-  if (repoOnlyMatch && defaultOwner) return `${defaultOwner}/${cleaned}`;
 
   throw new Error('Invalid GitHub repository format');
 }

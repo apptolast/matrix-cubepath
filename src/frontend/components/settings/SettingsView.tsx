@@ -69,7 +69,6 @@ export function SettingsView() {
   const [recordingAction, setRecordingAction] = useState<string | null>(null);
   const [hasChanges, setHasChanges] = useState(false);
   const [githubToken, setGithubToken] = useState('');
-  const [githubDefaultOwner, setGithubDefaultOwner] = useState('');
   const [logContent, setLogContent] = useState('');
   const [logPath, setLogPath] = useState('');
 
@@ -80,7 +79,6 @@ export function SettingsView() {
 
   useEffect(() => {
     setGithubToken(settings?.['github_token'] || '');
-    setGithubDefaultOwner(settings?.['github_default_owner'] || '');
   }, [settings]);
 
   const handleKeyRecord = useCallback(
@@ -272,26 +270,6 @@ export function SettingsView() {
                     refetchGitHubStatus();
                   }}
                   className="px-3 py-2 bg-matrix-accent/20 text-matrix-accent rounded hover:bg-matrix-accent/30 transition-colors text-sm shrink-0"
-                >
-                  {t('githubSave', language)}
-                </button>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <div className="text-xs text-matrix-muted">{t('githubDefaultOwner', language)}</div>
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                <input
-                  value={githubDefaultOwner}
-                  onChange={(e) => setGithubDefaultOwner(e.target.value)}
-                  placeholder="bpstack"
-                  className="flex-1 px-3 py-2 bg-matrix-bg border border-matrix-border rounded text-sm text-gray-200 placeholder-matrix-muted focus:border-matrix-accent focus:outline-none"
-                />
-                <button
-                  onClick={() =>
-                    updateSetting.mutate({ key: 'github_default_owner', value: githubDefaultOwner.trim() })
-                  }
-                  className="px-3 py-2 bg-matrix-bg border border-matrix-border rounded text-gray-300 hover:bg-matrix-surface transition-colors text-sm shrink-0"
                 >
                   {t('githubSave', language)}
                 </button>

@@ -69,10 +69,9 @@ export const projectsController = {
   create(req: Request, res: Response) {
     const { tags, path: rawPath, url: rawUrl, ...rest } = req.body;
     const storedPath = rawPath ? toRelativePath(rawPath) : rawPath;
-    const defaultOwner = settingsRepo.findByKey('github_default_owner')?.value;
     let normalizedUrl: string | undefined;
     try {
-      normalizedUrl = rawUrl ? normalizeGitHubRepo(rawUrl, defaultOwner) : undefined;
+      normalizedUrl = rawUrl ? normalizeGitHubRepo(rawUrl) : undefined;
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Invalid GitHub repository format';
       return res.status(400).json({ error: message });
@@ -135,9 +134,8 @@ export const projectsController = {
     if (tags !== undefined) data.tags = JSON.stringify(tags);
     if (rawPath !== undefined) data.path = toRelativePath(rawPath);
     if (rawUrl !== undefined) {
-      const defaultOwner = settingsRepo.findByKey('github_default_owner')?.value;
       try {
-        data.url = rawUrl ? normalizeGitHubRepo(rawUrl, defaultOwner) : rawUrl;
+        data.url = rawUrl ? normalizeGitHubRepo(rawUrl) : rawUrl;
       } catch (err: unknown) {
         const message = err instanceof Error ? err.message : 'Invalid GitHub repository format';
         return res.status(400).json({ error: message });
