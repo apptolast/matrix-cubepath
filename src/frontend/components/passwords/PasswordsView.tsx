@@ -114,7 +114,7 @@ function SetupScreen({ onComplete }: { onComplete: () => void }) {
 }
 
 function LockScreen({ onUnlock }: { onUnlock: () => void }) {
-  const { language } = useUiStore();
+  const { language, isDemo } = useUiStore();
   const unlock = useUnlockVault();
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -135,6 +135,11 @@ function LockScreen({ onUnlock }: { onUnlock: () => void }) {
       <div className="bg-matrix-bg border border-matrix-border rounded-lg p-6 sm:p-8 w-full max-w-md text-center mx-4">
         <div className="text-5xl mb-6 opacity-60">🔒</div>
         <h2 className="text-lg font-semibold text-gray-200 mb-6">{t('unlockVault', language)}</h2>
+        {isDemo && (
+          <div className="mb-4 px-3 py-2 bg-matrix-accent/5 border border-matrix-accent/20 rounded-lg text-xs text-matrix-muted text-left">
+            🔑 {t('demoVaultHint', language)}
+          </div>
+        )}
         <form onSubmit={handleSubmit} className="space-y-4">
           <input
             type="password"

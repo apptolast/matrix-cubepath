@@ -16,6 +16,7 @@ import { ideasRouter } from './routes/ideas.routes';
 import { activityRouter } from './routes/activity.routes';
 import { statsRouter } from './routes/stats.routes';
 import { passwordsRouter } from './routes/passwords.routes';
+import { startStatusPolling } from './controllers/stats.controller';
 import { externalRouter } from './routes/external.routes';
 import { localSettingsRouter } from './routes/local-settings.routes';
 import { logsRouter } from './routes/logs.routes';
@@ -116,5 +117,7 @@ app.use((err: unknown, _req: express.Request, res: express.Response, _next: expr
   logger.error('api', message);
   res.status(500).json({ error: 'Internal server error' });
 });
+
+startStatusPolling();
 
 export { app as expressApp };

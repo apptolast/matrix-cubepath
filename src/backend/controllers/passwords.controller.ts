@@ -15,10 +15,10 @@ import {
   isLegacyAuth,
 } from '../engines/crypto';
 import { parseImportContent } from '../engines/import-parser';
+import { DEMO_USERNAME } from '../db/seed-demo';
 
 let encryptionKey: Buffer | null = null;
 let inactivityTimer: ReturnType<typeof setTimeout> | null = null;
-const INACTIVITY_TIMEOUT_MS = 5 * 60 * 1000;
 
 // Rate limiting for unlock attempts
 let failedAttempts = 0;
@@ -30,9 +30,14 @@ const IMPORT_MAX_SIZE = 10 * 1024 * 1024; // 10 MB
 
 function resetInactivityTimer() {
   if (inactivityTimer) clearTimeout(inactivityTimer);
-  if (encryptionKey) {
-    inactivityTimer = setTimeout(() => lockVault(), INACTIVITY_TIMEOUT_MS);
-  }
+  if (!encryptionKey) return;
+  const setting = settingsRepo.findByKey('vault_auto_lock');
+  const value = setting?.value ?? '5';
+  if (value === 'never') return;
+  // Supported values: '5' → 5 min, '30' → 30 min. Any other value defaults to 5 min.
+  // If adding new values, update this line and the UI options in SettingsView.tsx.
+  const ms = value === '30' ? 30 * 60 * 1000 : 5 * 60 * 1000;
+  inactivityTimer = setTimeout(() => lockVault(), ms);
 }
 
 function lockVault() {
@@ -395,6 +400,9 @@ export const passwordsController = {
   },
 
   async changeMasterPassword(req: Request, res: Response) {
+    if (req.matrixUser === DEMO_USERNAME) {
+      return res.status(403).json({ error: 'Cannot change vault password on demo account' });
+    }
     if (!encryptionKey) return res.status(401).json({ error: 'Vault is locked' });
     if (!checkRateLimit(res)) return;
     resetInactivityTimer();
@@ -462,4 +470,13 @@ export const passwordsController = {
   generatePassword() {
     return generateSecurePassword(16);
   },
+
+  applyAutoLock(_req: Request, res: Response) {
+    resetInactivityTimer();
+    res.json({ ok: true });
+  },
 };
+
+export function getEncryptionKey(): Buffer | null {
+  return encryptionKey;
+}

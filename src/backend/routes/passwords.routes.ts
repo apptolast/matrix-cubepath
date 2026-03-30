@@ -17,6 +17,7 @@ router.get('/passwords/status', passwordsController.isSetup);
 router.post('/passwords/setup', validate({ body: passwordMasterBody }), passwordsController.setup);
 router.post('/passwords/unlock', validate({ body: passwordMasterBody }), passwordsController.unlock);
 router.post('/passwords/lock', passwordsController.lock);
+router.post('/passwords/apply-auto-lock', passwordsController.applyAutoLock);
 
 router.post(
   '/passwords/import/parse',

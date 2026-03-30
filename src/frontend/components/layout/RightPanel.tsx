@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useSystemStatus, useWakeService } from '../../hooks/useSystemStatus';
 import { Tab, useUiStore } from '../../stores/ui.store';
 import { usePomodoroStore } from '../../stores/pomodoro.store';
 import { t, LangKey } from '../../lib/i18n';
@@ -795,26 +796,176 @@ function DependenciesHealth() {
   );
 }
 
+const statusDot: Record<string, string> = {
+  online: 'bg-green-400',
+  sleeping: 'bg-amber-400',
+  offline: 'bg-red-400',
+  not_configured: 'bg-gray-500',
+};
+
+function fmtDate(iso: string | null | undefined): string {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return `${d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} ${d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}`;
+}
+
+const DEMO_RENDER = [
+  { name: 'API Backend', url: 'https://api.demo.onrender.com', status: 'online' as const, responseTime: 234 },
+  { name: 'Worker', url: 'https://worker.demo.onrender.com', status: 'sleeping' as const, responseTime: null },
+  { name: 'Scheduler', url: 'https://scheduler.demo.onrender.com', status: 'online' as const, responseTime: 412 },
+];
+
+const DEMO_DATABASES = [
+  { name: 'PostgreSQL', type: 'postgres', status: 'online' as const },
+  { name: 'MySQL Analytics', type: 'mysql', status: 'online' as const },
+  { name: 'MongoDB Dev', type: 'mongodb', status: 'offline' as const },
+];
+
 function SystemStatus() {
-  const { language } = useUiStore();
-  const items = [
-    { label: t('apiServer', language), status: t('online', language), color: 'bg-green-400' },
-    { label: t('database', language), status: t('healthy', language), color: 'bg-green-400' },
-    { label: t('sync', language), status: t('localOnly', language), color: 'bg-amber-400' },
-    { label: t('backups', language), status: t('notConfigured', language), color: 'bg-gray-500' },
-  ];
+  const { language, isDemo } = useUiStore();
+  const { data, isLoading } = useSystemStatus();
+  const wakeService = useWakeService();
+  const [wakingUrl, setWakingUrl] = useState<string | null>(null);
+  const [showInfoModal, setShowInfoModal] = useState(false);
+
+  const renderServices = isDemo ? DEMO_RENDER : (data?.render ?? []);
+  const dbServices = isDemo ? DEMO_DATABASES : (data?.databases ?? []);
+  const vaultLocked = isDemo ? false : (data?.vaultLocked ?? false);
+
+  const handleWake = (url: string) => {
+    setWakingUrl(url);
+    wakeService.mutate(url, { onSettled: () => setWakingUrl(null) });
+  };
+
   return (
-    <PanelCard title={t('systemStatus', language)} icon="⚙">
-      <div className="space-y-1.5">
-        {items.map((item, i) => (
-          <div key={i} className="flex items-center gap-2 text-xs">
-            <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${item.color}`} />
-            <span className="text-gray-400 flex-1">{item.label}</span>
-            <span className="text-[10px] text-matrix-muted">{item.status}</span>
+    <>
+      <PanelCard title={t('systemStatus', language)} icon="⚙">
+        {isLoading && !isDemo ? (
+          <p className="text-[11px] text-matrix-muted">{t('loading', language)}</p>
+        ) : (
+          <div className="space-y-2">
+            {/* API */}
+            <div className="flex items-center gap-2 text-xs">
+              <span className="w-1.5 h-1.5 rounded-full shrink-0 bg-green-400" />
+              <span className="text-gray-400 flex-1">{t('apiServer', language)}</span>
+              <span className="text-[10px] text-matrix-muted">{t('online', language)}</span>
+            </div>
+
+            {/* Vault locked */}
+            {vaultLocked && (
+              <p className="text-[10px] text-matrix-muted italic">{t('vaultRequiredForServices', language)}</p>
+            )}
+
+            {/* External Services header with info icon */}
+            {(renderServices.length > 0 || dbServices.length > 0) && (
+              <div className="border-t border-matrix-border/30 pt-1.5 flex items-center justify-between">
+                <p className="text-[10px] text-matrix-muted uppercase tracking-wider">{t('externalServices', language)}</p>
+                <button
+                  onClick={() => setShowInfoModal(true)}
+                  className="w-4 h-4 flex items-center justify-center rounded-full border border-matrix-border/60 text-[9px] text-matrix-muted hover:text-gray-300 hover:border-matrix-muted/60 transition-colors shrink-0"
+                  title={t('externalServicesInfoTitle', language)}
+                >
+                  i
+                </button>
+              </div>
+            )}
+
+            {/* Render Backends */}
+            {renderServices.length > 0 && (
+              <div className="space-y-1.5">
+                <p className="text-[10px] text-matrix-muted/70 uppercase tracking-wider">{t('renderBackends', language)}</p>
+                {renderServices.map((svc, i) => (
+                  <div key={i} className="flex items-center gap-2 text-xs">
+                    <span
+                      className={`w-1.5 h-1.5 rounded-full shrink-0 ${statusDot[svc.status]}`}
+                      title={svc.responseTime != null ? `${svc.responseTime}ms` : undefined}
+                    />
+                    <span className="text-gray-400 flex-1 truncate">{svc.name}</span>
+                    {svc.status !== 'online' ? (
+                      isDemo ? (
+                        <span className="text-[10px] text-amber-400">{t('sleeping', language)}</span>
+                      ) : (
+                        <button
+                          onClick={() => handleWake(svc.url)}
+                          disabled={wakingUrl === svc.url}
+                          className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 transition-colors disabled:opacity-50"
+                        >
+                          {wakingUrl === svc.url ? t('waking', language) : t('wake', language)}
+                        </button>
+                      )
+                    ) : (
+                      <span className="text-[10px] text-green-400">
+                        {t('online', language)}{svc.responseTime != null ? ` ${svc.responseTime}ms` : ''}
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Databases */}
+            {dbServices.length > 0 && (
+              <div className="space-y-1.5">
+                <p className="text-[10px] text-matrix-muted/70 uppercase tracking-wider">{t('aivenDatabases', language)}</p>
+                {dbServices.map((db, i) => (
+                  <div key={i} className="flex items-center gap-2 text-xs">
+                    <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${statusDot[db.status]}`} />
+                    <span className="text-gray-400 flex-1 truncate">{db.name}</span>
+                    <span className={`text-[10px] ${db.status === 'online' ? 'text-green-400' : 'text-red-400'}`}>
+                      {t(db.status as 'online' | 'offline', language)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Checked at */}
+            {(data?.checkedAt || isDemo) && (
+              <div className="border-t border-matrix-border/30 pt-1.5 text-[10px] text-matrix-muted text-right">
+                {t('checkedAt', language)}: {isDemo ? fmtDate(new Date().toISOString()) : fmtDate(data?.checkedAt)}
+              </div>
+            )}
           </div>
-        ))}
-      </div>
-    </PanelCard>
+        )}
+      </PanelCard>
+
+      {/* Info Modal */}
+      {showInfoModal && (
+        <div
+          className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4"
+          onClick={() => setShowInfoModal(false)}
+        >
+          <div
+            className="bg-matrix-surface border border-matrix-border rounded-xl p-5 w-full max-w-sm shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-semibold text-gray-200">{t('externalServices', language)}</h3>
+              <button
+                onClick={() => setShowInfoModal(false)}
+                className="text-matrix-muted hover:text-gray-300 transition-colors text-sm"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="space-y-3 text-xs text-gray-400 leading-relaxed">
+              <p>{t('externalServicesInfoDesc', language)}</p>
+              <div>
+                <p className="font-medium text-gray-300 mb-1">{t('renderBackends', language)}</p>
+                <p>{t('externalServicesRenderDesc', language)}</p>
+              </div>
+              <div>
+                <p className="font-medium text-gray-300 mb-1">{t('aivenDatabases', language)}</p>
+                <p>{t('externalServicesDbDesc', language)}</p>
+              </div>
+              <p className="text-matrix-muted border-t border-matrix-border/40 pt-2 text-[10px]">
+                {t('externalServicesHowTo', language)}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 

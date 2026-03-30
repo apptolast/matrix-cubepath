@@ -3,6 +3,8 @@ import { settingsRepo } from '../repositories/settings.repository';
 import { fetchGitHubUser } from '../engines/github-scanner';
 import { DEMO_USERNAME, seedDemoUser } from '../db/seed-demo';
 import type { SeedLang } from '../db/seed-demo';
+import { encrypt, decrypt, isEncrypted } from '../engines/crypto';
+import { getEncryptionKey } from './passwords.controller';
 
 export const settingsController = {
   getAll(_req: Request, res: Response) {
@@ -46,5 +48,26 @@ export const settingsController = {
     } catch {
       res.json({ configured: true, connected: false });
     }
+  },
+
+  getServices(_req: Request, res: Response) {
+    const key = getEncryptionKey();
+    if (!key) return res.status(401).json({ error: 'Vault is locked', vaultRequired: true });
+    const stored = settingsRepo.findByKey('external_services');
+    if (!stored) return res.json({ render: [], databases: [] });
+    try {
+      const json = isEncrypted(stored.value) ? decrypt(stored.value, key) : stored.value;
+      return res.json(JSON.parse(json));
+    } catch {
+      return res.json({ render: [], databases: [] });
+    }
+  },
+
+  setServices(req: Request, res: Response) {
+    const key = getEncryptionKey();
+    if (!key) return res.status(401).json({ error: 'Vault is locked', vaultRequired: true });
+    const json = JSON.stringify(req.body);
+    settingsRepo.upsert('external_services', encrypt(json, key));
+    res.json({ ok: true });
   },
 };

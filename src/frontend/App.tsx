@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AppShell } from './components/layout/AppShell';
 import { LoginPage } from './components/auth/LoginPage';
+import { ResetPasswordPage } from './components/auth/ResetPasswordPage';
 import { ServiceWorkerRegister } from './components/pwa/ServiceWorkerRegister';
 import { InstallPrompt } from './components/pwa/InstallPrompt';
 import { useUiStore, Theme } from './stores/ui.store';
@@ -98,6 +99,10 @@ function SettingsHydrator() {
 
 export function App() {
   const [authState, setAuthState] = useState<'checking' | 'authenticated' | 'unauthenticated'>('checking');
+  const [resetToken, setResetToken] = useState<string | null>(() => {
+    if (window.location.pathname !== '/reset-password') return null;
+    return new URLSearchParams(window.location.search).get('token');
+  });
 
   function handleLoginSuccess(isDemo: boolean) {
     useUiStore.getState().setIsDemo(isDemo);
@@ -124,6 +129,21 @@ export function App() {
         <div className="min-h-screen bg-matrix-bg flex items-center justify-center">
           <span className="text-matrix-muted text-sm tracking-wider">…</span>
         </div>
+      </ThemeProvider>
+    );
+  }
+
+  if (resetToken) {
+    return (
+      <ThemeProvider>
+        <ResetPasswordPage
+          token={resetToken}
+          onDone={() => {
+            window.history.replaceState(null, '', '/');
+            setResetToken(null);
+            setAuthState('unauthenticated');
+          }}
+        />
       </ThemeProvider>
     );
   }

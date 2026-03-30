@@ -2,6 +2,7 @@ import { initAuthDb } from './db/auth-db';
 import { expressApp } from './server';
 import { API_PORT } from './config/constants';
 import { logger } from './lib/logger';
+import { stopStatusPolling } from './controllers/stats.controller';
 
 process.on('uncaughtException', (err) => {
   logger.error('main', 'Uncaught exception', { stack: err.stack });
@@ -25,6 +26,7 @@ const server = expressApp.listen(API_PORT, () => {
 
 function gracefulShutdown(signal: string) {
   logger.info('main', `${signal} received, shutting down`);
+  stopStatusPolling();
   server.close(() => {
     logger.info('main', 'Server closed');
     process.exit(0);

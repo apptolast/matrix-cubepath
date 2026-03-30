@@ -63,9 +63,39 @@
 - [x] Auth middleware on all protected routes (`requireAuth`)
 - [x] Per-user database context via `AsyncLocalStorage` (multi-user isolation)
 - [x] Rate limiting on `/auth/login` and `/auth/register` (10 attempts / 15 min)
-- [x] Max password length 128 chars (prevents hash DoS)
 - [x] Timing-safe comparison — always runs hash for unknown users
 - [x] Client-side validation in LoginPage before fetch
+- [x] **Auth upgrade — email as primary login identifier** (username optional, preserved as DB path key for backwards compatibility)
+- [x] Auto-migration on startup: old `username-only` schema → `email + username` via SQL transaction (`auth-db.ts`)
+- [x] `POST /auth/forgot-password` — always returns 200 (anti-enumeration), generates SHA-256 hashed token, 1h expiry, single-use
+- [x] `POST /auth/reset-password` — consumes token, rehashes password with new salt via DB transaction
+- [x] `sendPasswordResetEmail` via nodemailer SMTP (optional). Without SMTP → reset URL logged at INFO level (visible in Dokploy log panel)
+- [x] `ResetPasswordPage` — SPA route `/reset-password?token=...` detected in `App.tsx`, no page reload
+- [x] Dedicated rate limiter for password reset: 5 attempts / hour
+- [x] `password_reset_tokens` table with `ON DELETE CASCADE`, purged on startup (tokens older than 24h)
+- [x] Updated validation: username 3-20 chars `[a-z0-9_]` only, password 8-20 chars + special character (Zod backend + frontend)
+
+### Password Vault — Hardening & Auto-lock ✅
+
+- [x] Auto-lock configurable at runtime: `vault_auto_lock` setting read on each `resetInactivityTimer()` call — supports 5 min / 30 min / never
+- [x] `POST /passwords/apply-auto-lock` — endpoint to refresh the inactivity timer when the setting changes
+- [x] `changeMasterPassword` blocked for demo user (403)
+- [x] Demo vault pre-configured during seed with `DEMO_PASSWORD` — visitors can unlock immediately with `demo1234`
+- [x] Vault hint shown in LockScreen and Settings when `isDemo === true`
+
+### System Status & External Services ✅
+
+- [x] `GET /api/stats/system-status` — HTTP HEAD ping to Render backends (sleeping detection: 503 or >5s response), TCP check to external databases (MySQL/PostgreSQL). 2-min cache with lock-state invalidation. Fallback to cache on error.
+- [x] `POST /api/stats/wake-service` — sends GET request with 30s timeout to wake sleeping Render services
+- [x] `GET /api/settings/services` + `PUT /api/settings/services` — external services config stored encrypted with vault key (requires vault unlocked)
+- [x] Background auto-poll every 10 min (`startStatusPolling` / `stopStatusPolling` integrated with graceful shutdown)
+- [x] RightPanel System Status section consumes real API data; demo account uses static mock data
+- [x] SettingsView — External Services section: expandable CRUD for Render backends and DB connection strings
+
+### Database Backup ✅
+
+- [x] `GET /api/db/download` — streams user's SQLite file via `res.download()`. Blocked for demo (403).
+- [x] `BackupInfo` modal in SettingsView with details about the backup and vault encryption
 
 ### Backend API ✅
 

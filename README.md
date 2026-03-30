@@ -85,7 +85,7 @@ Captura ideas en bruto, puntúalas en varias dimensiones (alineamiento, impacto,
 
 ### Password Vault
 
-Almacenamiento cifrado de contraseñas con categorías, notas y búsqueda.
+Almacenamiento cifrado de contraseñas con categorías, notas y búsqueda. Auto-lock configurable (5 min / 30 min / nunca). La cuenta demo viene con el vault pre-configurado y desbloqueable con `demo1234`.
 
 ### Daily Notes
 
@@ -100,6 +100,18 @@ Cada acción se registra automáticamente. El panel lateral muestra:
 - Distribución del pipeline de ideas
 - Temporizador Pomodoro + seguimiento de sesiones
 - Contador de rachas
+
+### Autenticación y Recuperación de Contraseña
+
+Login y registro con email. Recuperación de contraseña vía email (Resend/SMTP). Sin SMTP configurado, el link de reset aparece en los logs del servidor (panel de Dokploy) — útil para instancias self-hosted sin proveedor de email.
+
+### System Status
+
+Monitoriza el estado de tus servicios externos directamente desde el panel lateral. Ping HTTP a backends (Render y similares) con detección de servicios dormidos, y check TCP a bases de datos externas (MySQL/PostgreSQL). Los servicios sleeping se pueden despertar con un clic. Configuración cifrada con la clave del vault.
+
+### Backup
+
+Descarga tu base de datos SQLite personal directamente desde Settings — un único archivo con todas tus misiones, tareas, ideas, proyectos, notas y contraseñas cifradas.
 
 ### Seguridad y Multi-usuario
 

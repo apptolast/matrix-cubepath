@@ -14,11 +14,11 @@
 import fs from 'fs';
 import path from 'path';
 import Database from 'better-sqlite3';
-import { createUser, userExists } from './auth-db';
+import { createUser, userExists, deleteUserByEmail } from './auth-db';
 import { getUserDbPath, closeUserDb, openUserDb } from './user-db';
 import { userDbContext } from './context';
 import { runMigrations } from './migrate';
-import { encrypt, deriveEncryptionKey, generateEncSalt } from '../engines/crypto';
+import { encrypt, deriveEncryptionKey, generateEncSalt, deriveAuthHash } from '../engines/crypto';
 import { logger } from '../lib/logger';
 
 import enLocale from './seed-locales/en.json';
@@ -37,6 +37,7 @@ import {
 } from './seed-data';
 
 export const DEMO_USERNAME = process.env.DEMO_USER || 'demo';
+export const DEMO_EMAIL = process.env.DEMO_EMAIL || 'demo@demo.stackbp';
 export const DEMO_PASSWORD = process.env.DEMO_PASSWORD || 'demo1234';
 
 export type SeedLang = 'en' | 'es';
@@ -45,10 +46,12 @@ const locales: Record<SeedLang, SeedLocale> = { en: enLocale, es: esLocale };
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
+// Vault key is set once per seed call and reused for all passwords
+let _demoVaultKey: Buffer | null = null;
+function setDemoVaultKey(key: Buffer) { _demoVaultKey = key; }
 function encryptDemo(plain: string): string {
-  const salt = generateEncSalt();
-  const key = deriveEncryptionKey('demo-vault', salt);
-  return `${salt}:${encrypt(plain, key)}`;
+  if (!_demoVaultKey) throw new Error('Demo vault key not initialised');
+  return encrypt(plain, _demoVaultKey);
 }
 
 function dt(offsetDays = 0): string {
@@ -76,13 +79,21 @@ function deadline(offset: number | string | null): string | null {
 
 // ── Seed entry point ─────────────────────────────────────────────────────────
 
+// Known legacy demo emails that should be removed on startup to avoid orphaned logins
+const LEGACY_DEMO_EMAILS = ['demo@demo.local'];
+
 export function seedDemoUser(lang: SeedLang = 'es'): void {
-  // 1. Ensure demo user exists in auth.db
-  if (!userExists(DEMO_USERNAME)) {
-    createUser(DEMO_USERNAME, DEMO_PASSWORD);
+  // 1. Clean up any legacy demo email rows (e.g. after email address changes)
+  for (const old of LEGACY_DEMO_EMAILS) {
+    if (old !== DEMO_EMAIL) deleteUserByEmail(old);
   }
 
-  // 2. Wipe demo DB file so we start completely fresh
+  // 2. Ensure demo user exists in auth.db
+  if (!userExists(DEMO_EMAIL)) {
+    createUser(DEMO_EMAIL, DEMO_USERNAME, DEMO_PASSWORD);
+  }
+
+  // 3. Wipe demo DB file so we start completely fresh
   closeUserDb(DEMO_USERNAME);
   const dbPath = getUserDbPath(DEMO_USERNAME);
   for (const suffix of ['', '-wal', '-shm']) {
@@ -256,13 +267,22 @@ function populate(db: Database.Database, lang: SeedLang): void {
     actStmt.run(a.action, a.entityType, entityId, L[a.descKey], dt(a.createdOffset));
   }
 
-  // Settings
+  // Settings + Vault setup
   const setStmt = db.prepare(`INSERT OR REPLACE INTO settings (key, value, updated_at) VALUES (?, ?, ?)`);
   setStmt.run('language', lang, dt(-20));
   setStmt.run('theme', 'dark', dt(-20));
   setStmt.run('deadlineAlerts', 'true', dt(-10));
 
-  // Passwords (encrypted with demo-vault master password — all data is fictional)
+  // Pre-configure vault with DEMO_PASSWORD so any visitor can unlock it
+  const encSalt = generateEncSalt();
+  const vaultKey = deriveEncryptionKey(DEMO_PASSWORD, encSalt);
+  setDemoVaultKey(vaultKey);
+  const authResult = deriveAuthHash(DEMO_PASSWORD);
+  setStmt.run('passwords_auth_hash', authResult.hash, dt(-20));
+  setStmt.run('passwords_salt_auth', authResult.salt, dt(-20));
+  setStmt.run('passwords_salt_enc', encSalt, dt(-20));
+
+  // Passwords (encrypted with DEMO_PASSWORD vault key)
   const pwStmt = db.prepare(
     `INSERT INTO passwords (label, domain, username, encrypted_password, category, favorite, notes, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
   );
