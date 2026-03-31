@@ -1,13 +1,6 @@
 import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
-import {
-  register,
-  login,
-  logout,
-  checkSession,
-  forgotPassword,
-  resetPassword,
-} from '../controllers/auth.controller';
+import { register, login, logout, checkSession, forgotPassword, resetPassword } from '../controllers/auth.controller';
 import { requireAuth } from '../middleware/auth.middleware';
 import { validate } from '../middleware/validate.middleware';
 import {
@@ -58,19 +51,9 @@ authRouter.post(
 authRouter.post('/auth/login', authLimiter, validate({ body: authLoginBody }), login);
 authRouter.post('/auth/logout', logout);
 
-authRouter.post(
-  '/auth/forgot-password',
-  resetLimiter,
-  validate({ body: authForgotPasswordBody }),
-  forgotPassword,
-);
+authRouter.post('/auth/forgot-password', resetLimiter, validate({ body: authForgotPasswordBody }), forgotPassword);
 
-authRouter.post(
-  '/auth/reset-password',
-  resetLimiter,
-  validate({ body: authResetPasswordBody }),
-  resetPassword,
-);
+authRouter.post('/auth/reset-password', resetLimiter, validate({ body: authResetPasswordBody }), resetPassword);
 
 // Protected — client polls this to verify session is still valid
 authRouter.get('/auth/session', requireAuth, checkSession);

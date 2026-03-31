@@ -32,7 +32,10 @@ export function ResetPasswordPage({ token, onDone }: ResetPasswordPageProps) {
     e.preventDefault();
     setError('');
     const validationError = validate();
-    if (validationError) { setError(validationError); return; }
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
 
     setLoading(true);
     try {
@@ -46,9 +49,9 @@ export function ResetPasswordPage({ token, onDone }: ResetPasswordPageProps) {
       if (res.ok) {
         setSuccess(true);
       } else {
-        setError(data.error === 'Invalid or expired reset token'
-          ? l('resetTokenInvalid')
-          : data.error || l('networkError'));
+        setError(
+          data.error === 'Invalid or expired reset token' ? l('resetTokenInvalid') : data.error || l('networkError'),
+        );
       }
     } catch {
       setError(l('networkError'));
@@ -97,7 +100,10 @@ export function ResetPasswordPage({ token, onDone }: ResetPasswordPageProps) {
             </div>
 
             <div>
-              <label htmlFor="confirm-password" className="block text-xs text-matrix-muted mb-1 tracking-wide uppercase">
+              <label
+                htmlFor="confirm-password"
+                className="block text-xs text-matrix-muted mb-1 tracking-wide uppercase"
+              >
                 {l('confirmPassword')}
               </label>
               <PasswordInput
@@ -110,9 +116,7 @@ export function ResetPasswordPage({ token, onDone }: ResetPasswordPageProps) {
               />
             </div>
 
-            {error && (
-              <p className="text-xs text-red-400 text-center">{error}</p>
-            )}
+            {error && <p className="text-xs text-red-400 text-center">{error}</p>}
 
             <button
               type="submit"

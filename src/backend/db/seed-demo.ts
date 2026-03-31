@@ -48,7 +48,9 @@ const locales: Record<SeedLang, SeedLocale> = { en: enLocale, es: esLocale };
 
 // Vault key is set once per seed call and reused for all passwords
 let _demoVaultKey: Buffer | null = null;
-function setDemoVaultKey(key: Buffer) { _demoVaultKey = key; }
+function setDemoVaultKey(key: Buffer) {
+  _demoVaultKey = key;
+}
 function encryptDemo(plain: string): string {
   if (!_demoVaultKey) throw new Error('Demo vault key not initialised');
   return encrypt(plain, _demoVaultKey);

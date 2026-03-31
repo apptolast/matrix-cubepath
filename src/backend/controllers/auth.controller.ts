@@ -1,12 +1,5 @@
 import { Request, Response } from 'express';
-import {
-  createUser,
-  verifyUser,
-  userExists,
-  getUserByEmail,
-  createResetToken,
-  consumeResetToken,
-} from '../db/auth-db';
+import { createUser, verifyUser, userExists, getUserByEmail, createResetToken, consumeResetToken } from '../db/auth-db';
 import { createSessionToken, COOKIE_NAME } from '../middleware/auth.middleware';
 import { sendPasswordResetEmail } from '../lib/mailer';
 import { logger } from '../lib/logger';

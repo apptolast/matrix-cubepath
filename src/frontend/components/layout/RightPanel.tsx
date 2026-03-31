@@ -859,7 +859,9 @@ function SystemStatus() {
             {/* External Services header with info icon */}
             {(renderServices.length > 0 || dbServices.length > 0) && (
               <div className="border-t border-matrix-border/30 pt-1.5 flex items-center justify-between">
-                <p className="text-[10px] text-matrix-muted uppercase tracking-wider">{t('externalServices', language)}</p>
+                <p className="text-[10px] text-matrix-muted uppercase tracking-wider">
+                  {t('externalServices', language)}
+                </p>
                 <button
                   onClick={() => setShowInfoModal(true)}
                   className="w-4 h-4 flex items-center justify-center rounded-full border border-matrix-border/60 text-[9px] text-matrix-muted hover:text-gray-300 hover:border-matrix-muted/60 transition-colors shrink-0"
@@ -873,7 +875,9 @@ function SystemStatus() {
             {/* Render Backends */}
             {renderServices.length > 0 && (
               <div className="space-y-1.5">
-                <p className="text-[10px] text-matrix-muted/70 uppercase tracking-wider">{t('renderBackends', language)}</p>
+                <p className="text-[10px] text-matrix-muted/70 uppercase tracking-wider">
+                  {t('renderBackends', language)}
+                </p>
                 {renderServices.map((svc, i) => (
                   <div key={i} className="flex items-center gap-2 text-xs">
                     <span
@@ -895,7 +899,8 @@ function SystemStatus() {
                       )
                     ) : (
                       <span className="text-[10px] text-green-400">
-                        {t('online', language)}{svc.responseTime != null ? ` ${svc.responseTime}ms` : ''}
+                        {t('online', language)}
+                        {svc.responseTime != null ? ` ${svc.responseTime}ms` : ''}
                       </span>
                     )}
                   </div>
@@ -906,7 +911,9 @@ function SystemStatus() {
             {/* Databases */}
             {dbServices.length > 0 && (
               <div className="space-y-1.5">
-                <p className="text-[10px] text-matrix-muted/70 uppercase tracking-wider">{t('aivenDatabases', language)}</p>
+                <p className="text-[10px] text-matrix-muted/70 uppercase tracking-wider">
+                  {t('aivenDatabases', language)}
+                </p>
                 {dbServices.map((db, i) => (
                   <div key={i} className="flex items-center gap-2 text-xs">
                     <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${statusDot[db.status]}`} />

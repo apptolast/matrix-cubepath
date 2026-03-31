@@ -307,7 +307,7 @@ export function SettingsView() {
                           </div>
                           <div className="flex-1" />
                           <button
-                            onClick={() => isDemo ? setShowDemoVaultNotice(true) : setShowChangePassword(true)}
+                            onClick={() => (isDemo ? setShowDemoVaultNotice(true) : setShowChangePassword(true))}
                             className="px-3 py-1.5 rounded-md text-xs text-gray-400 hover:text-gray-200 hover:bg-matrix-bg transition-colors"
                           >
                             {t('changeMasterPassword', language)}
@@ -344,9 +344,7 @@ export function SettingsView() {
                     </div>
                     {unlockError && <p className="text-xs text-matrix-danger mt-2">{unlockError}</p>}
                     {isDemo && (
-                      <p className="text-xs text-matrix-muted mt-2">
-                        🔑 {t('demoVaultHint' as LangKey, language)}
-                      </p>
+                      <p className="text-xs text-matrix-muted mt-2">🔑 {t('demoVaultHint' as LangKey, language)}</p>
                     )}
 
                     {/* Auto-lock */}
@@ -1038,24 +1036,38 @@ export function SettingsView() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-matrix-surface border border-matrix-border rounded-xl p-5 sm:p-6 w-full max-w-md shadow-xl">
             <div className="flex items-center gap-2 mb-4">
-              <svg className="w-4 h-4 text-matrix-accent shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 2.625c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125m16.5 2.625c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125" />
+              <svg
+                className="w-4 h-4 text-matrix-accent shrink-0"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={1.5}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 2.625c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125m16.5 2.625c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125"
+                />
               </svg>
-              <h3 className="text-sm font-semibold text-gray-200">
-                {t('backupInfoTitle' as LangKey, language)}
-              </h3>
+              <h3 className="text-sm font-semibold text-gray-200">{t('backupInfoTitle' as LangKey, language)}</h3>
             </div>
             <div className="space-y-3">
-              <p className="text-xs text-gray-400 leading-relaxed">
-                {t('backupInfoBody' as LangKey, language)}
-              </p>
+              <p className="text-xs text-gray-400 leading-relaxed">{t('backupInfoBody' as LangKey, language)}</p>
               <div className="bg-matrix-bg border border-matrix-border/50 rounded-lg px-3 py-2.5 flex gap-2">
-                <svg className="w-3.5 h-3.5 text-matrix-success shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                <svg
+                  className="w-3.5 h-3.5 text-matrix-success shrink-0 mt-0.5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"
+                  />
                 </svg>
-                <p className="text-xs text-gray-400 leading-relaxed">
-                  {t('backupInfoVault' as LangKey, language)}
-                </p>
+                <p className="text-xs text-gray-400 leading-relaxed">{t('backupInfoVault' as LangKey, language)}</p>
               </div>
               {isDemo && (
                 <div className="bg-matrix-accent/5 border border-matrix-accent/20 rounded-lg px-3 py-2.5">
@@ -1085,9 +1097,7 @@ export function SettingsView() {
               <span className="text-lg">🔑</span>
               <h3 className="text-sm font-semibold text-gray-200">{t('changeMasterPassword', language)}</h3>
             </div>
-            <p className="text-xs text-gray-400 leading-relaxed mb-5">
-              {t('demoVaultCannotChange', language)}
-            </p>
+            <p className="text-xs text-gray-400 leading-relaxed mb-5">{t('demoVaultCannotChange', language)}</p>
             <button
               onClick={() => setShowDemoVaultNotice(false)}
               className="w-full px-4 py-2 text-sm bg-matrix-accent pilled-active rounded-md hover:bg-matrix-accent-hover transition-colors"

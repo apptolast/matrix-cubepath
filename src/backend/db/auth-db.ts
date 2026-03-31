@@ -21,14 +21,19 @@ export function initAuthDb(): void {
   authDb.pragma('foreign_keys = ON');
 
   // Detect if we need to migrate from the old username-only schema
-  const tableExists = (authDb
-    .prepare(`SELECT COUNT(*) as cnt FROM sqlite_master WHERE type='table' AND name='users'`)
-    .get() as { cnt: number }).cnt > 0;
+  const tableExists =
+    (
+      authDb.prepare(`SELECT COUNT(*) as cnt FROM sqlite_master WHERE type='table' AND name='users'`).get() as {
+        cnt: number;
+      }
+    ).cnt > 0;
 
   const hasEmailCol = tableExists
-    ? (authDb
-        .prepare(`SELECT COUNT(*) as cnt FROM pragma_table_info('users') WHERE name='email'`)
-        .get() as { cnt: number }).cnt > 0
+    ? (
+        authDb.prepare(`SELECT COUNT(*) as cnt FROM pragma_table_info('users') WHERE name='email'`).get() as {
+          cnt: number;
+        }
+      ).cnt > 0
     : false;
 
   if (tableExists && !hasEmailCol) {
@@ -106,9 +111,9 @@ export function createUser(email: string, username: string | null, password: str
 
 /** Returns true if the email + password combination is valid. */
 export function verifyUser(email: string, password: string): boolean {
-  const user = db()
-    .prepare(`SELECT password_hash, salt FROM users WHERE email = ? COLLATE NOCASE`)
-    .get(email) as { password_hash: string; salt: string } | undefined;
+  const user = db().prepare(`SELECT password_hash, salt FROM users WHERE email = ? COLLATE NOCASE`).get(email) as
+    | { password_hash: string; salt: string }
+    | undefined;
 
   if (!user) {
     // Always run the hash to prevent timing-based user enumeration
@@ -121,9 +126,7 @@ export function verifyUser(email: string, password: string): boolean {
 }
 
 export function userExists(email: string): boolean {
-  return !!db()
-    .prepare(`SELECT id FROM users WHERE email = ? COLLATE NOCASE`)
-    .get(email);
+  return !!db().prepare(`SELECT id FROM users WHERE email = ? COLLATE NOCASE`).get(email);
 }
 
 /** Removes any users whose email matches the given address (case-insensitive). */
@@ -131,12 +134,10 @@ export function deleteUserByEmail(email: string): void {
   db().prepare(`DELETE FROM users WHERE email = ? COLLATE NOCASE`).run(email);
 }
 
-export function getUserByEmail(
-  email: string,
-): { id: number; email: string; username: string | null } | undefined {
-  return db()
-    .prepare(`SELECT id, email, username FROM users WHERE email = ? COLLATE NOCASE`)
-    .get(email) as { id: number; email: string; username: string | null } | undefined;
+export function getUserByEmail(email: string): { id: number; email: string; username: string | null } | undefined {
+  return db().prepare(`SELECT id, email, username FROM users WHERE email = ? COLLATE NOCASE`).get(email) as
+    | { id: number; email: string; username: string | null }
+    | undefined;
 }
 
 // ── Password reset ────────────────────────────────────────────────────────────
@@ -172,12 +173,8 @@ export function consumeResetToken(rawToken: string, newPassword: string): boolea
   const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
 
   const row = db()
-    .prepare(
-      `SELECT id, user_id, expires_at, used FROM password_reset_tokens WHERE token_hash = ?`,
-    )
-    .get(tokenHash) as
-    | { id: number; user_id: number; expires_at: string; used: number }
-    | undefined;
+    .prepare(`SELECT id, user_id, expires_at, used FROM password_reset_tokens WHERE token_hash = ?`)
+    .get(tokenHash) as { id: number; user_id: number; expires_at: string; used: number } | undefined;
 
   if (!row || row.used || new Date(row.expires_at) < new Date()) return false;
 
@@ -185,12 +182,8 @@ export function consumeResetToken(rawToken: string, newPassword: string): boolea
   const hash = hashPassword(newPassword, salt);
 
   db().transaction(() => {
-    db()
-      .prepare(`UPDATE users SET password_hash = ?, salt = ? WHERE id = ?`)
-      .run(hash, salt, row.user_id);
-    db()
-      .prepare(`UPDATE password_reset_tokens SET used = 1 WHERE id = ?`)
-      .run(row.id);
+    db().prepare(`UPDATE users SET password_hash = ?, salt = ? WHERE id = ?`).run(hash, salt, row.user_id);
+    db().prepare(`UPDATE password_reset_tokens SET used = 1 WHERE id = ?`).run(row.id);
   })();
 
   return true;

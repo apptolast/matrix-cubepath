@@ -215,8 +215,10 @@ const dict = {
     externalServices: 'External Services',
     externalServicesInfoTitle: 'About External Services',
     externalServicesInfoDesc: 'Monitor external services and databases from the System Status panel.',
-    externalServicesRenderDesc: 'Any external API or web service URL you want to track. The system pings it and shows status (online / sleeping / offline) and response time.',
-    externalServicesDbDesc: 'MySQL or PostgreSQL connection string (e.g. postgres://user:pass@host:5432/db). Checks if the database is reachable. Works with Aiven, Railway, Render, Cloud SQL and others.',
+    externalServicesRenderDesc:
+      'Any external API or web service URL you want to track. The system pings it and shows status (online / sleeping / offline) and response time.',
+    externalServicesDbDesc:
+      'MySQL or PostgreSQL connection string (e.g. postgres://user:pass@host:5432/db). Checks if the database is reachable. Works with Aiven, Railway, Render, Cloud SQL and others.',
     externalServicesHowTo: 'Settings → External Services. Vault must be unlocked.',
     renderBackends: 'Render Backends',
     aivenDatabases: 'Databases',
@@ -289,9 +291,12 @@ const dict = {
     usernamePlaceholder: 'a-z, 0-9, _ (3–20 chars)',
     passwordPlaceholder: '8-20 chars, include special char',
     backupInfoTitle: 'Database Backup',
-    backupInfoBody: 'The backup feature lets you download your personal SQLite database — a single file containing all your missions, tasks, ideas, projects, notes and encrypted passwords. You can use it as a local backup or to migrate to another instance. Only available on real accounts.',
-    backupInfoVault: 'Your vault passwords are encrypted with your master password, which is never stored anywhere. The downloaded file is safe even without additional protection.',
-    backupInfoDemo: 'You\'re using the demo account. The download is disabled — all data here is sample data and resets automatically.',
+    backupInfoBody:
+      'The backup feature lets you download your personal SQLite database — a single file containing all your missions, tasks, ideas, projects, notes and encrypted passwords. You can use it as a local backup or to migrate to another instance. Only available on real accounts.',
+    backupInfoVault:
+      'Your vault passwords are encrypted with your master password, which is never stored anywhere. The downloaded file is safe even without additional protection.',
+    backupInfoDemo:
+      "You're using the demo account. The download is disabled — all data here is sample data and resets automatically.",
     gotIt: 'Got it',
     // Toasts
     toastCreated: 'Created successfully',
@@ -522,8 +527,10 @@ const dict = {
     externalServices: 'Servicios externos',
     externalServicesInfoTitle: 'Sobre los Servicios Externos',
     externalServicesInfoDesc: 'Monitoriza servicios externos y bases de datos desde el panel System Status.',
-    externalServicesRenderDesc: 'Cualquier URL de API o servicio web que quieras rastrear. El sistema hace ping y muestra el estado (online / dormido / offline) y el tiempo de respuesta.',
-    externalServicesDbDesc: 'Connection string MySQL o PostgreSQL (ej: postgres://user:pass@host:5432/db). Verifica si la base de datos es accesible. Compatible con Aiven, Railway, Render, Cloud SQL y otros.',
+    externalServicesRenderDesc:
+      'Cualquier URL de API o servicio web que quieras rastrear. El sistema hace ping y muestra el estado (online / dormido / offline) y el tiempo de respuesta.',
+    externalServicesDbDesc:
+      'Connection string MySQL o PostgreSQL (ej: postgres://user:pass@host:5432/db). Verifica si la base de datos es accesible. Compatible con Aiven, Railway, Render, Cloud SQL y otros.',
     externalServicesHowTo: 'Configuración → Servicios Externos. Requiere el vault desbloqueado.',
     renderBackends: 'Backends Render',
     aivenDatabases: 'Bases de datos',
@@ -596,9 +603,12 @@ const dict = {
     usernamePlaceholder: 'a-z, 0-9, _ (3-20 chars)',
     passwordPlaceholder: '8-20 caracteres, incluye carácter especial',
     backupInfoTitle: 'Copia de seguridad',
-    backupInfoBody: 'Esta función te permite descargar tu base de datos SQLite personal — un único archivo que contiene todas tus misiones, tareas, ideas, proyectos, notas y contraseñas cifradas. Puedes usarlo como backup local o para migrar a otra instancia. Solo disponible en cuentas reales.',
-    backupInfoVault: 'Las contraseñas de tu vault están cifradas con tu master password, que nunca se almacena en ningún sitio. El archivo descargado es seguro incluso sin protección adicional.',
-    backupInfoDemo: 'Estás usando la cuenta demo. La descarga está desactivada — todos los datos aquí son de ejemplo y se resetean automáticamente.',
+    backupInfoBody:
+      'Esta función te permite descargar tu base de datos SQLite personal — un único archivo que contiene todas tus misiones, tareas, ideas, proyectos, notas y contraseñas cifradas. Puedes usarlo como backup local o para migrar a otra instancia. Solo disponible en cuentas reales.',
+    backupInfoVault:
+      'Las contraseñas de tu vault están cifradas con tu master password, que nunca se almacena en ningún sitio. El archivo descargado es seguro incluso sin protección adicional.',
+    backupInfoDemo:
+      'Estás usando la cuenta demo. La descarga está desactivada — todos los datos aquí son de ejemplo y se resetean automáticamente.',
     gotIt: 'Entendido',
     // Toasts
     toastCreated: 'Creado exitosamente',
