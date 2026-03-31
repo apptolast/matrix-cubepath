@@ -248,6 +248,14 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold text-matrix-accent tracking-widest uppercase">Matrix</h1>
           <p className="text-xs text-matrix-muted mt-1 tracking-wider">{l('appSubtitle')}</p>
+          <a
+            href="https://stackbp.es"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block mt-2 text-[10px] font-mono text-matrix-muted/70 hover:text-matrix-accent dark:hover:text-matrix-accent hover:text-purple-500 tracking-widest uppercase transition-colors duration-200"
+          >
+            by stackbp.es
+          </a>
         </div>
 
         {/* Tab toggle — only shown when registration is open */}
@@ -397,7 +405,7 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
               <button
                 type="button"
                 onClick={() => switchMode('forgot')}
-                className="text-xs text-matrix-muted hover:text-matrix-text transition-colors"
+                className="text-xs text-matrix-muted hover:text-matrix-accent dark:hover:text-matrix-accent hover:text-purple-500 transition-colors duration-200"
               >
                 {l('forgotPassword')}
               </button>
@@ -435,7 +443,7 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
           <button
             type="button"
             onClick={toggleTheme}
-            className="p-1 text-matrix-muted hover:text-matrix-text transition-colors"
+            className="p-1 text-matrix-muted hover:text-matrix-accent dark:hover:text-matrix-accent hover:text-purple-500 transition-colors duration-200"
             aria-label="Toggle theme"
           >
             {theme === 'dark' ? (
@@ -460,7 +468,7 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
           <button
             type="button"
             onClick={toggleLanguage}
-            className="p-1 text-[10px] font-mono text-matrix-muted hover:text-matrix-text tracking-wider uppercase transition-colors leading-none"
+            className="p-1 text-[10px] font-mono text-matrix-muted hover:text-matrix-accent dark:hover:text-matrix-accent hover:text-purple-500 tracking-wider uppercase transition-colors duration-200 leading-none"
           >
             {language === 'en' ? 'es' : 'en'}
           </button>

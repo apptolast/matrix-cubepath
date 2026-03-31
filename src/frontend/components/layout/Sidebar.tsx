@@ -109,6 +109,18 @@ export function Sidebar() {
             );
           })}
         </nav>
+        {showLabels && (
+          <div className="px-3 pb-3 pt-1 border-t border-matrix-border/40 mt-1">
+            <a
+              href="https://stackbp.es"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block text-[10px] font-mono text-matrix-muted/60 hover:text-matrix-accent dark:hover:text-matrix-accent hover:text-purple-500 tracking-widest uppercase transition-colors duration-200 text-center py-1"
+            >
+              by stackbp.es
+            </a>
+          </div>
+        )}
       </aside>
     </>
   );
