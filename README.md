@@ -1,3 +1,5 @@
+<a name="top"></a>
+
 # Matrix — Sistema de Gestión de Proyectos
 
 <p align="left">
@@ -13,7 +15,9 @@
   <a href="#el-problema">El Problema</a> •
   <a href="#características">Características</a> •
   <a href="#despliegue-en-cubepath">Despliegue</a> •
-  <a href="#tech-stack">Stack</a>
+  <a href="#tech-stack">Stack</a> •
+  <a href="#origen-del-proyecto">Origen</a> •
+  <a href="#licencia">Licencia</a>
 </p>
 
 ---
@@ -40,6 +44,8 @@ Haz clic en el botón `$ access --demo` en la página de login — rellena autom
 
 La cuenta demo viene con datos precargados (misiones, tareas, ideas, contraseñas). Usa el botón **Restaurar** en Settings para resetear los datos de demo en cualquier momento. Las acciones destructivas (eliminar misión, resetear base de datos) están ocultas para el usuario demo.
 
+[<sub>↑ Índice</sub>](#top)
+
 ---
 
 ## El Problema
@@ -54,6 +60,8 @@ Preguntas que aparecen constantemente:
 - ¿Dónde guardé esa API key?
 
 **Matrix** reúne todo esto en una plataforma self-hosted — tus datos, tu servidor, tus reglas.
+
+[<sub>↑ Índice</sub>](#top)
 
 ---
 
@@ -125,6 +133,8 @@ Inglés y español soportados en toda la aplicación — tanto la interfaz como 
 
 Totalmente funcional en móvil y tablet sin perder la experiencia de escritorio. El sidebar se colapsa en un overlay deslizable con botón hamburguesa. Las columnas Kanban se apilan verticalmente en pantallas pequeñas. Cada tarjeta de tarea incluye un selector de estado inline (solo en móvil) como alternativa al drag and drop. Todos los modales y vistas se adaptan con breakpoints de Tailwind — sin dependencias extra.
 
+[<sub>↑ Índice</sub>](#top)
+
 ---
 
 ## Despliegue en CubePath
@@ -161,6 +171,8 @@ Matrix corre en producción sobre un VPS de [CubePath](https://cubepath.dev) con
 └───────────────────────────────────────────────────┘
 ```
 
+[<sub>↑ Índice</sub>](#top)
+
 ---
 
 ## Tech Stack
@@ -177,6 +189,8 @@ Matrix corre en producción sobre un VPS de [CubePath](https://cubepath.dev) con
 | CI/CD      | GitHub Actions (typecheck) + Dokploy auto-deploy                 |
 | Testing    | Vitest                                                           |
 
+[<sub>↑ Índice</sub>](#top)
+
 ---
 
 ## Origen del proyecto
@@ -191,6 +205,8 @@ Matrix-CubePath es la evolución web de [Matrix](https://github.com/bpstack/matr
 | **Escaneo de proyectos** | Sistema de archivos local (directorios, git info, file stats) | GitHub API (repos, lenguajes, commits, detección de README) |
 | **Despliegue**           | Binario empaquetado con auto-updates                          | Contenedor Docker en cualquier VPS o cloud provider         |
 
+[<sub>↑ Índice</sub>](#top)
+
 ---
 
 ## Licencia
@@ -201,3 +217,5 @@ All rights reserved.
 
 You may view this code for educational purposes only.
 You may not copy, modify, distribute, or use this software without explicit permission.
+
+[<sub>↑ Índice</sub>](#top)
