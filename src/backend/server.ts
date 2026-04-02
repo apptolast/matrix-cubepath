@@ -112,10 +112,13 @@ if (process.env.NODE_ENV === 'production') {
   });
 }
 
-app.use((err: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+app.use((err: unknown, req: express.Request, res: express.Response, _next: express.NextFunction) => {
   const message = err instanceof Error ? err.message : 'Internal server error';
-  logger.error('api', message);
-  res.status(500).json({ error: 'Internal server error' });
+  logger.error('api', message, {
+    stack: err instanceof Error ? err.stack?.split('\n')[1]?.trim() : undefined,
+    url: req.url,
+  });
+  if (!res.headersSent) res.status(500).json({ error: 'Internal server error' });
 });
 
 startStatusPolling();
