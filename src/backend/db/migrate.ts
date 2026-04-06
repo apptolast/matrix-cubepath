@@ -189,6 +189,32 @@ export function runMigrations() {
     updated_at TEXT NOT NULL
   )`);
 
+  db.run(sql`CREATE TABLE IF NOT EXISTS doc_folders (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    parent_id INTEGER,
+    name TEXT NOT NULL,
+    sort_order INTEGER DEFAULT 0,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+  )`);
+
+  db.run(sql`CREATE TABLE IF NOT EXISTS doc_files (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    folder_id INTEGER NOT NULL REFERENCES doc_folders(id),
+    name TEXT NOT NULL,
+    content TEXT NOT NULL DEFAULT '',
+    sort_order INTEGER DEFAULT 0,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+  )`);
+
+  // Seed root folder (id=1) — INSERT OR IGNORE is idempotent on existing DBs
+  db.run(
+    sql.raw(
+      `INSERT OR IGNORE INTO doc_folders (id, parent_id, name, sort_order, created_at, updated_at) VALUES (1, NULL, 'Docs', 0, datetime('now'), datetime('now'))`,
+    ),
+  );
+
   // FK indexes for query performance
   db.run(sql.raw(`CREATE INDEX IF NOT EXISTS idx_objectives_mission_id ON objectives(mission_id)`));
   db.run(sql.raw(`CREATE INDEX IF NOT EXISTS idx_plans_objective_id ON plans(objective_id)`));

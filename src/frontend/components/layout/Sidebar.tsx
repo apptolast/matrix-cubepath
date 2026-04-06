@@ -10,6 +10,7 @@ const tabs: { key: Tab; icon: string }[] = [
   { key: 'tasks', icon: '☰' },
   { key: 'ideas', icon: '✦' },
   { key: 'passwords', icon: '🔒' },
+  { key: 'docs', icon: '📄' },
   { key: 'settings', icon: '⚙' },
 ];
 
@@ -23,6 +24,8 @@ export function Sidebar() {
     closeSidebar,
     language,
     deadlinesHidden,
+    docsIsDirty,
+    setDocsIsDirty,
   } = useUiStore();
   const { data: deadlines } = useDeadlines();
   const { data: settings } = useSettings();
@@ -31,6 +34,15 @@ export function Sidebar() {
   const showLabels = !sidebarCollapsed || sidebarOpen;
 
   const handleTabClick = (tab: Tab) => {
+    if (activeTab === 'docs' && docsIsDirty && tab !== 'docs') {
+      const confirmed = window.confirm(
+        language === 'es'
+          ? '¿Tienes cambios sin guardar en Docs. ¿Salir igualmente?'
+          : 'You have unsaved changes in Docs. Leave anyway?',
+      );
+      if (!confirmed) return;
+      setDocsIsDirty(false);
+    }
     setActiveTab(tab);
     closeSidebar();
   };

@@ -84,9 +84,8 @@ export function SettingsView() {
   const [visibleConnStrings, setVisibleConnStrings] = useState<Set<number>>(new Set());
 
   useEffect(() => {
-    if (servicesData) {
+    if (servicesData && !servicesModified) {
       setLocalServices(servicesData);
-      setServicesModified(false);
     }
   }, [servicesData]);
 
@@ -803,17 +802,23 @@ export function SettingsView() {
                             </div>
                           </div>
 
-                          {servicesModified && (
-                            <button
-                              onClick={() =>
-                                setServicesApi.mutate(localServices, { onSuccess: () => setServicesModified(false) })
-                              }
-                              disabled={setServicesApi.isPending}
-                              className="px-4 py-1.5 rounded-md text-xs font-semibold bg-matrix-accent pilled-active hover:bg-matrix-accent-hover transition-colors disabled:opacity-40"
-                            >
-                              {setServicesApi.isPending ? '...' : t('saveServices' as LangKey, language)}
-                            </button>
-                          )}
+                          <button
+                            onClick={() =>
+                              setServicesApi.mutate(localServices, {
+                                onSuccess: () => {
+                                  setServicesModified(false);
+                                  toast.ok('saved' as LangKey);
+                                },
+                                onError: (err) => {
+                                  toast.error(err.message || 'Error');
+                                },
+                              })
+                            }
+                            disabled={setServicesApi.isPending || !servicesModified}
+                            className="px-4 py-1.5 rounded-md text-xs font-semibold bg-matrix-accent pilled-active hover:bg-matrix-accent-hover transition-colors disabled:opacity-40"
+                          >
+                            {setServicesApi.isPending ? '...' : t('saveServices' as LangKey, language)}
+                          </button>
                         </div>
                       )}
                     </div>

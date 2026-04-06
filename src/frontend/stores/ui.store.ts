@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-export type Tab = 'overview' | 'projects' | 'tasks' | 'ideas' | 'passwords' | 'settings';
+export type Tab = 'overview' | 'projects' | 'tasks' | 'ideas' | 'passwords' | 'docs' | 'settings';
 export type Theme = 'dark' | 'light';
 
 interface UiState {
@@ -13,6 +13,8 @@ interface UiState {
   deadlinesHidden: boolean;
   isDemo: boolean;
   switchingLanguage: boolean;
+  docsSelectedFileId: number | null;
+  docsIsDirty: boolean;
   setActiveTab: (tab: Tab) => void;
   toggleSidebar: () => void;
   openSidebar: () => void;
@@ -24,6 +26,8 @@ interface UiState {
   toggleDeadlinesHidden: () => void;
   setIsDemo: (isDemo: boolean) => void;
   setSwitchingLanguage: (v: boolean) => void;
+  setDocsSelectedFileId: (id: number | null) => void;
+  setDocsIsDirty: (dirty: boolean) => void;
 }
 
 export const useUiStore = create<UiState>((set) => ({
@@ -36,6 +40,8 @@ export const useUiStore = create<UiState>((set) => ({
   deadlinesHidden: false,
   isDemo: false,
   switchingLanguage: false,
+  docsSelectedFileId: null,
+  docsIsDirty: false,
   setActiveTab: (tab) => set({ activeTab: tab }),
   toggleSidebar: () => set((s) => ({ sidebarCollapsed: !s.sidebarCollapsed })),
   openSidebar: () => set({ sidebarOpen: true }),
@@ -47,4 +53,6 @@ export const useUiStore = create<UiState>((set) => ({
   toggleDeadlinesHidden: () => set((s) => ({ deadlinesHidden: !s.deadlinesHidden })),
   setIsDemo: (isDemo) => set({ isDemo }),
   setSwitchingLanguage: (switchingLanguage) => set({ switchingLanguage }),
+  setDocsSelectedFileId: (docsSelectedFileId) => set({ docsSelectedFileId }),
+  setDocsIsDirty: (docsIsDirty) => set({ docsIsDirty }),
 }));

@@ -36,6 +36,171 @@ import {
   SEED_PASSWORDS,
 } from './seed-data';
 
+// ── Docs content ─────────────────────────────────────────────────────────────
+
+const DOC_SYSTEM_DESIGN = `# System Design
+
+## Overview
+Matrix is a self-hosted productivity platform built as a single-container web app. Each user gets their own isolated SQLite database — no shared state, no multi-tenant complexity.
+
+## Stack
+- **Backend**: Node.js + Express + Drizzle ORM
+- **Frontend**: React 18 + Vite + TailwindCSS
+- **Database**: SQLite (better-sqlite3) — one file per user
+- **Auth**: scrypt + HMAC session tokens (httpOnly cookies)
+- **Deploy**: Docker multi-stage + Dokploy on CubePath VPS
+
+## Data Model
+\`\`\`
+mission → objectives → plans → tasks
+                             ↘ ideas (linked to objectives or plans)
+projects (linked to missions/objectives/plans)
+passwords (vault, AES-256 encrypted)
+docs (folder tree + markdown files)
+\`\`\`
+
+## Per-User Isolation
+Every authenticated request runs inside an AsyncLocalStorage context (\`userDbContext\`) that injects the user's SQLite DB. Repositories call \`getDb()\` which reads from this context — no user ID needed in queries.
+
+## Request Flow
+\`\`\`
+Browser → Traefik → Express → requireAuth → userDbContext.run(db, next) → Router → Controller → Repository → SQLite
+\`\`\``;
+
+const DOC_API_REFERENCE = `# API Reference
+
+All routes are prefixed with \`/api\`. Protected routes require an active session cookie.
+
+## Auth
+| Method | Route | Description |
+|--------|-------|-------------|
+| POST | \`/auth/register\` | Create account |
+| POST | \`/auth/login\` | Start session |
+| POST | \`/auth/logout\` | End session |
+
+## Docs
+| Method | Route | Description |
+|--------|-------|-------------|
+| GET | \`/docs/tree\` | Full folder + file tree (no content) |
+| GET | \`/docs/search?q=\` | Search file names and content |
+| POST | \`/docs/folders\` | Create folder |
+| PATCH | \`/docs/folders/:id\` | Rename folder |
+| PATCH | \`/docs/folders/:id/sort\` | Update sort order |
+| DELETE | \`/docs/folders/:id\` | Delete folder (recursive) |
+| GET | \`/docs/files/:id\` | Get file with content |
+| POST | \`/docs/files\` | Create file |
+| PATCH | \`/docs/files/:id\` | Update name / content / sort |
+| DELETE | \`/docs/files/:id\` | Delete file |
+
+## Tasks
+| Method | Route | Description |
+|--------|-------|-------------|
+| GET | \`/tasks\` | All tasks (optional \`?planId=\`) |
+| POST | \`/tasks\` | Create task |
+| PATCH | \`/tasks/:id\` | Update task |
+| DELETE | \`/tasks/:id\` | Delete task |`;
+
+const DOC_DEPLOY = `# Deployment Guide
+
+## Prerequisites
+- CubePath VPS with Dokploy installed
+- GitHub repository connected to Dokploy
+- Domain configured in Traefik
+
+## Environment Variables
+\`\`\`env
+SESSION_SECRET=<random 32+ char string>
+DATA_DIR=/data
+NODE_ENV=production
+PORT=3939
+SECURE_COOKIE=true
+DEMO_USER=demo
+DEMO_PASSWORD=demo1234
+ALLOW_REGISTRATION=false
+\`\`\`
+
+## Docker Volume
+The app stores all SQLite databases under \`DATA_DIR\`. The Docker Compose file mounts a named volume:
+\`\`\`yaml
+volumes:
+  - matrix_data:/data
+\`\`\`
+**Never delete this volume** — it contains all user data.
+
+## Deploy Steps
+1. Push to \`main\` branch
+2. Dokploy auto-detects the push via webhook
+3. Multi-stage build: \`deps → builder → production\`
+4. Container restarts with new image
+5. Migrations run on first request per user (idempotent)
+
+## Rollback
+In Dokploy → Deployments → select a previous build → Redeploy.`;
+
+const DOC_GIT_WORKFLOW = `# Git Workflow
+
+## Branches
+- \`main\` — production branch, auto-deploys via Dokploy
+- \`feature/*\` — feature branches, merge via PR
+- Never force-push to \`main\`
+
+## Commit Convention
+\`\`\`
+type: short description
+
+fix: correct session token validation
+feat: add docs module
+chore: update dependencies
+docs: add API reference
+\`\`\`
+
+## CI Checks
+Every PR runs:
+1. \`pnpm typecheck\` — TypeScript strict mode
+2. \`pnpm lint\` — ESLint
+3. \`pnpm format:check\` — Prettier
+
+All three must pass before merge.
+
+## Release Flow
+1. Create PR from \`feature/\` → \`main\`
+2. CI passes ✓
+3. Merge → Dokploy auto-deploys
+4. Verify at matrix.stackbp.es`;
+
+const DOC_SPRINT_NOTES = `# Sprint Notes
+
+## Week 3 — Final Push
+
+### Done
+- ✅ Auth: email login + password reset (server-log flow, no SMTP required)
+- ✅ Docs module: folder tree + markdown editor with syntax highlighting
+- ✅ Demo seed: full mock data across all modules
+- ✅ CI/CD: GitHub Actions typecheck + Dokploy auto-deploy
+
+### In Progress
+- 🔄 PWA: workbox-build schema bug blocking SW generation — tracking upstream fix
+- 🔄 Mobile polish: settings page overflow on small screens
+
+### Blocked
+- ⛔ SMTP integration: waiting for VPS firewall rules
+
+## Week 2 — Core Features
+
+All core modules shipped:
+- Tasks (Kanban + priorities + deadlines)
+- Projects (scan + GitHub sync)
+- Ideas (pipeline + AI evaluation)
+- Passwords (AES-256 vault)
+- Overview (stats + activity + widgets)
+
+## Week 1 — Foundation
+
+- Per-user SQLite architecture ✓
+- Docker multi-stage build ✓
+- Dokploy deployment ✓
+- Traefik HTTPS ✓`;
+
 export const DEMO_USERNAME = process.env.DEMO_USER || 'demo';
 export const DEMO_EMAIL = process.env.DEMO_EMAIL || 'demo@demo.stackbp';
 export const DEMO_PASSWORD = process.env.DEMO_PASSWORD || 'demo1234';
@@ -268,6 +433,36 @@ function populate(db: Database.Database, lang: SeedLang): void {
     else entityId = ref.n; // task — 1-based row number
     actStmt.run(a.action, a.entityType, entityId, L[a.descKey], dt(a.createdOffset));
   }
+
+  // Docs — folders (root id=1 already seeded by migration)
+  const archFolderId = ins(
+    db,
+    'doc_folders',
+    ['parent_id', 'name', 'sort_order', 'created_at', 'updated_at'],
+    [1, L.docFolderArchitecture, 0, dt(-12), dt(-3)],
+  );
+  const procFolderId = ins(
+    db,
+    'doc_folders',
+    ['parent_id', 'name', 'sort_order', 'created_at', 'updated_at'],
+    [1, L.docFolderProcesses, 1, dt(-12), dt(-4)],
+  );
+  const notesFolderId = ins(
+    db,
+    'doc_folders',
+    ['parent_id', 'name', 'sort_order', 'created_at', 'updated_at'],
+    [1, L.docFolderNotes, 2, dt(-8), dt(-1)],
+  );
+
+  // Docs — files
+  const docFileStmt = db.prepare(
+    `INSERT INTO doc_files (folder_id, name, content, sort_order, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)`,
+  );
+  docFileStmt.run(archFolderId, L.docFileSystemDesign, DOC_SYSTEM_DESIGN, 0, dt(-11), dt(-3));
+  docFileStmt.run(archFolderId, L.docFileApiRef, DOC_API_REFERENCE, 1, dt(-10), dt(-2));
+  docFileStmt.run(procFolderId, L.docFileDeploy, DOC_DEPLOY, 0, dt(-9), dt(-4));
+  docFileStmt.run(procFolderId, L.docFileGitWorkflow, DOC_GIT_WORKFLOW, 1, dt(-9), dt(-5));
+  docFileStmt.run(notesFolderId, L.docFileSprintNotes, DOC_SPRINT_NOTES, 0, dt(-7), dt(-1));
 
   // Settings + Vault setup
   const setStmt = db.prepare(`INSERT OR REPLACE INTO settings (key, value, updated_at) VALUES (?, ?, ?)`);

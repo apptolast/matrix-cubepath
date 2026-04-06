@@ -1001,6 +1001,7 @@ const PANEL_CONFIG: Record<Tab, React.FC[]> = {
   projects: [TechRadar, DependenciesHealth, SystemStatus],
   ideas: [IdeaFunnelWidget, TopScoredIdeas, MotivationalQuote],
   passwords: [ShortcutsHelp, SystemStatus, MotivationalQuote],
+  docs: [ShortcutsHelp, MotivationalQuote],
   settings: [ShortcutsHelp, SystemStatus, MotivationalQuote],
 };
 

@@ -151,6 +151,15 @@
   "actIdea5": "Idea creada: Exportar datos como JSON/CSV",
   "actTask29": "Tarea completada: Manifiesto web con iconos",
 
+  "docFolderArchitecture": "Arquitectura",
+  "docFolderProcesses": "Procesos",
+  "docFolderNotes": "Notas",
+  "docFileSystemDesign": "System Design.md",
+  "docFileApiRef": "API Reference.md",
+  "docFileDeploy": "Deploy.md",
+  "docFileGitWorkflow": "Git Workflow.md",
+  "docFileSprintNotes": "Sprint Notes.md",
+
   "pw1Label": "GitHub",
   "pw1Notes": "Cuenta personal de GitHub",
   "pw2Label": "CubePath VPS",

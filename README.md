@@ -123,7 +123,7 @@ Descarga tu base de datos SQLite personal directamente desde Settings — un ún
 
 ### Seguridad y Multi-usuario
 
-Cada usuario tiene su propia base de datos SQLite aislada — los datos de un usuario nunca se mezclan con los de otro. Headers HTTP de seguridad en todas las respuestas. Detalles de errores internos ocultos en producción. Apagado graceful del servidor con timeout de respaldo. El registro de nuevos usuarios se controla por variable de entorno.
+Cada usuario tiene su propia base de datos SQLite aislada — los datos de un usuario nunca se mezclan con los de otro. Headers HTTP de seguridad en todas las respuestas (HSTS, CSP, X-Frame-Options, X-Content-Type-Options, Permissions-Policy, Referrer-Policy). `x-powered-by` desactivado. `security.txt` y `robots.txt` servidos. Detalles de errores internos ocultos en producción. Apagado graceful del servidor con timeout de respaldo. El registro de nuevos usuarios se controla por variable de entorno.
 
 ### i18n — Sistema Bilingüe Completo (EN/ES)
 

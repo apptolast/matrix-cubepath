@@ -309,6 +309,14 @@ const dict = {
     toastDemoRestored: 'Demo data restored',
     toastLangSwitching: 'Switching app and demo data language…',
     toastLangDone: 'Language changed to English',
+    // Docs
+    docs: 'Docs',
+    newFile: 'New File',
+    newFolder: 'New Folder',
+    noFileSelected: 'Select a file to edit',
+    untitled: 'Untitled',
+    deleteFileConfirm: 'Delete this file?',
+    deleteFolderConfirm: 'Delete this folder and all its contents?',
   },
   es: {
     overview: 'Resumen',
@@ -621,6 +629,14 @@ const dict = {
     toastDemoRestored: 'Datos demo restaurados',
     toastLangSwitching: 'Cambiando idioma de la app y datos de demostración…',
     toastLangDone: 'Cambiado al español correctamente',
+    // Docs
+    docs: 'Docs',
+    newFile: 'Nuevo archivo',
+    newFolder: 'Nueva carpeta',
+    noFileSelected: 'Selecciona un archivo para editar',
+    untitled: 'Sin título',
+    deleteFileConfirm: '¿Eliminar este archivo?',
+    deleteFolderConfirm: '¿Eliminar esta carpeta y todo su contenido?',
   },
 } as const;
 

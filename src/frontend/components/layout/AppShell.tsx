@@ -8,6 +8,7 @@ import { SettingsView } from '../settings/SettingsView';
 import { ProjectsView } from '../projects/ProjectsView';
 import { IdeasView } from '../ideas/IdeasView';
 import PasswordsView from '../passwords/PasswordsView';
+import { DocsView } from '../docs/DocsView';
 import { RightPanel } from './RightPanel';
 import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts';
 import { ToastContainer } from '../ui/ToastContainer';
@@ -33,6 +34,8 @@ export function AppShell() {
         return <SettingsView />;
       case 'passwords':
         return <PasswordsView />;
+      case 'docs':
+        return <DocsView />;
       default:
         return (
           <div className="flex items-center justify-center h-full text-matrix-muted">

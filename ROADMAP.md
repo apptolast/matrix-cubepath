@@ -52,7 +52,12 @@
 - [x] Global rate limiter: 300 req/min per IP on all API endpoints
 - [x] Auth rate limiter: 10 req/15min on `/auth/login` and `/auth/register`
 - [x] Registration gating — `ALLOW_REGISTRATION=true` env var required to enable signup (currently disabled); `GET /api/auth/info` exposes flag to frontend
-- [x] HTTP security headers: `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin`
+- [x] HTTP security headers: `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin`, `X-XSS-Protection`, `Permissions-Policy`
+- [x] `Strict-Transport-Security` (HSTS) with 2-year max-age, includeSubDomains, preload (production only)
+- [x] `Content-Security-Policy` (CSP) — restricts scripts, styles, connections to self + Google Analytics (production only)
+- [x] `x-powered-by` header disabled — prevents Express fingerprinting
+- [x] `/.well-known/security.txt` served with contact info for vulnerability reporting
+- [x] `/robots.txt` — blocks `/api/` crawling, allows public pages
 - [x] Internal error messages hidden in production (generic `Internal server error` in global error handler)
 
 ### Authentication ✅
@@ -176,6 +181,16 @@
 ---
 
 ## Pending
+
+### Web Check / Production Hardening
+
+- [x] Security headers hardened (HSTS, CSP, X-XSS-Protection, Permissions-Policy)
+- [x] `x-powered-by` disabled
+- [x] `security.txt` and `robots.txt` served
+- [ ] TLS cipher suites — configure Traefik for TLS 1.2+ only (Dokploy/Traefik config)
+- [ ] DNSSEC — enable at DNS provider for stackbp.es
+- [ ] Email auth (SPF/DKIM/DMARC) — add DNS TXT records via Resend dashboard
+- [ ] Sitemap.xml (optional — SPA with login, low priority)
 
 ### Issues to Investigate
 

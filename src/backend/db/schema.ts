@@ -138,3 +138,24 @@ export const passwords = sqliteTable('passwords', {
   createdAt: text('created_at').notNull(),
   updatedAt: text('updated_at').notNull(),
 });
+
+export const docFolders = sqliteTable('doc_folders', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  parentId: integer('parent_id'), // null = root; self-referential
+  name: text('name').notNull(),
+  sortOrder: integer('sort_order').default(0),
+  createdAt: text('created_at').notNull(),
+  updatedAt: text('updated_at').notNull(),
+});
+
+export const docFiles = sqliteTable('doc_files', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  folderId: integer('folder_id')
+    .notNull()
+    .references(() => docFolders.id),
+  name: text('name').notNull(),
+  content: text('content').notNull().default(''),
+  sortOrder: integer('sort_order').default(0),
+  createdAt: text('created_at').notNull(),
+  updatedAt: text('updated_at').notNull(),
+});
