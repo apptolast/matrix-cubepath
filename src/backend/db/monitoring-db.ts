@@ -76,6 +76,32 @@ export function initMonitoringDb(): void {
   monitoringDb
     .prepare(`UPDATE alerts SET resolved_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now') WHERE resolved_at IS NULL AND created_at < strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-24 hours')`)
     .run();
+
+  // Purge orphaned snapshots: entries whose last update is >1h old are likely from
+  // renamed/removed services (auto-discovery uses current K8s service names).
+  // Fresh collectors will re-populate current services within minutes of startup.
+  const purgedOrphans = monitoringDb
+    .prepare(
+      `DELETE FROM metric_snapshots WHERE id IN (
+         SELECT m.id FROM metric_snapshots m
+         INNER JOIN (
+           SELECT resource_name, resource_type, category, COALESCE(namespace,'') as ns,
+                  MAX(collected_at) as max_at
+           FROM metric_snapshots
+           GROUP BY resource_name, resource_type, category, ns
+         ) latest ON m.resource_name = latest.resource_name
+                  AND m.resource_type = latest.resource_type
+                  AND m.category = latest.category
+                  AND COALESCE(m.namespace,'') = latest.ns
+                  AND m.collected_at = latest.max_at
+         WHERE latest.max_at < strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-1 hours')
+       )`,
+    )
+    .run();
+  if (purgedOrphans.changes > 0) {
+    // Use process.stdout directly to avoid lint no-console rule
+    process.stdout.write(`[monitoring-db] Purged ${purgedOrphans.changes} orphaned snapshots from renamed/removed services\n`);
+  }
 }
 
 export function closeMonitoringDb(): void {
