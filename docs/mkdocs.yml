@@ -1,0 +1,64 @@
+site_name: Matrix CubePath - Monitorización de Infraestructura
+site_description: Documentación completa del módulo de monitorización de infraestructura de matrix-cubepath
+site_author: Apptolast
+
+theme:
+  name: material
+  language: es
+  palette:
+    scheme: slate
+    primary: green
+    accent: light green
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.highlight
+    - content.code.copy
+
+markdown_extensions:
+  - tables
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - attr_list
+  - md_in_html
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+
+nav:
+  - Inicio: index.md
+  - Arquitectura: architecture.md
+  - Vistas UI:
+      - ui/index.md
+      - Dashboard: ui/dashboard.md
+      - Kubernetes: ui/kubernetes.md
+      - Bases de Datos: ui/databases.md
+      - Aplicaciones: ui/applications.md
+      - Red: ui/network.md
+      - Almacenamiento: ui/storage.md
+      - Docker: ui/docker.md
+      - Seguridad: ui/security.md
+      - Backups: ui/backups.md
+      - IoT: ui/iot.md
+      - Alertas: ui/alerts.md
+  - Collectors:
+      - collectors/index.md
+      - Kubernetes: collectors/kubernetes.md
+      - Bases de Datos: collectors/databases.md
+      - Aplicaciones: collectors/applications.md
+      - Red: collectors/network.md
+      - Almacenamiento: collectors/storage.md
+      - Docker: collectors/docker.md
+      - Seguridad: collectors/security.md
+      - Backups: collectors/backups.md
+      - IoT: collectors/iot.md
+  - API REST: api/endpoints.md
