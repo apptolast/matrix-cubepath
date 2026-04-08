@@ -14,9 +14,19 @@ spec:
         app: matrix-cubepath
     spec:
       serviceAccountName: matrix-cubepath
+      initContainers:
+        - name: fix-permissions
+          image: busybox:1.36
+          command: ["sh", "-c", "chown -R 1000:1000 /data"]
+          volumeMounts:
+            - name: matrix-data
+              mountPath: /data
+          securityContext:
+            runAsUser: 0
       containers:
         - name: matrix-cubepath
           image: localhost:5000/matrix-cubepath:latest
+          command: ["node", "dist/backend/start.js"]
           ports:
             - containerPort: 3939
           envFrom:
