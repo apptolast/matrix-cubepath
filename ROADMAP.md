@@ -208,20 +208,6 @@
   - Future: `POST /api/import` to restore from exported JSON (validate schema with Zod before inserting)
 - [x] PWA support (manifest, service worker, install prompt, offline caching, update notification)
 
-### Password Vault Security Hardening
-
-- [ ] Encrypt metadata fields (domain, username) — currently stored in plaintext in the DB
-- [ ] Add rate limiting on GET password endpoints (currently only unlock is rate-limited)
-- [ ] Add CSRF token protection on state-changing operations
-- [ ] Master password recovery mechanism (recovery phrase or backup key)
-- [ ] Make `bulkDelete` transactional (currently not wrapped in a DB transaction)
-- [ ] 2FA/TOTP support for vault unlock
-- [ ] Encrypted vault backup/export
-- [ ] Password breach detection (HaveIBeenPwned integration)
-- [ ] Password quality analysis (reuse detection, strength scoring)
-- [ ] Configurable password generator (custom length, character sets, exclude ambiguous chars)
-- [ ] Vault unlock/access activity logging (timestamps, failed attempts)
-
 ### Migration Gaps (Electron → Web) ✅
 
 See [Migration section in README](./README.md#migration-from-matrix-electron) for context.
