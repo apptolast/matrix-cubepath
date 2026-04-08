@@ -4,7 +4,7 @@ import { logger } from '../../lib/logger';
 
 const CTX = 'docker-collector';
 
-const REGISTRY_URL = 'http://localhost:5000/v2/_catalog';
+const REGISTRY_URL = process.env.DOCKER_REGISTRY_URL ?? 'http://localhost:5000/v2/_catalog';
 
 async function collectRegistry(): Promise<void> {
   let status: ResourceStatus = 'critical';

@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useApplications, MonitoringSnapshot } from '../../hooks/useMonitoring';
 import { StatusBadge } from './shared/StatusBadge';
+import { ErrorState } from './shared/ErrorState';
 import { Skeleton } from '../ui/Skeleton';
 
 interface AppData {
@@ -59,7 +60,7 @@ function LoadingSkeleton() {
 }
 
 export function ApplicationsView() {
-  const { data: snapshots, isLoading } = useApplications();
+  const { data: snapshots, isLoading, isError, refetch } = useApplications();
   const [expandedNs, setExpandedNs] = useState<Set<string>>(new Set());
 
   const apps = useMemo(() => {
@@ -103,6 +104,14 @@ export function ApplicationsView() {
     return (
       <div className="p-4">
         <LoadingSkeleton />
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="p-4">
+        <ErrorState onRetry={refetch} />
       </div>
     );
   }

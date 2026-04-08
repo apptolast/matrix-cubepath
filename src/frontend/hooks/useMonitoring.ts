@@ -117,6 +117,7 @@ export function useDocker() {
     queryKey: ['monitoring', 'docker'],
     queryFn: () => apiFetch('/monitoring/docker'),
     staleTime: 120_000,
+    refetchInterval: 300_000,
     retry: 1,
   });
 }
@@ -126,6 +127,7 @@ export function useSecurity() {
     queryKey: ['monitoring', 'security'],
     queryFn: () => apiFetch('/monitoring/security'),
     staleTime: 120_000,
+    refetchInterval: 600_000,
     retry: 1,
   });
 }
@@ -135,6 +137,7 @@ export function useBackups() {
     queryKey: ['monitoring', 'backups'],
     queryFn: () => apiFetch('/monitoring/backups'),
     staleTime: 300_000,
+    refetchInterval: 3_600_000,
     retry: 1,
   });
 }

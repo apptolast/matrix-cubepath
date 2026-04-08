@@ -57,7 +57,22 @@ async function collectCronJobs(): Promise<void> {
           `CronJob ${name} last succeeded ${Math.round(hoursSinceSuccess)}h ago (>${HEALTHY_THRESHOLD_HOURS}h)`,
         );
       }
-    } else if (!lastScheduleTime) {
+    } else if (lastScheduleTime) {
+      // Scheduled but never succeeded — the job runs but always fails
+      const lastSchedule = new Date(lastScheduleTime);
+      const hoursSinceSchedule = (Date.now() - lastSchedule.getTime()) / (1000 * 60 * 60);
+      if (hoursSinceSchedule > CRITICAL_THRESHOLD_HOURS) {
+        status = 'critical';
+        monitoringRepo.insertAlert(
+          'backup',
+          `${namespace}/${name}`,
+          'critical',
+          `CronJob ${name} has been scheduled but never succeeded (last schedule ${Math.round(hoursSinceSchedule)}h ago)`,
+        );
+      } else {
+        status = 'warning';
+      }
+    } else {
       // Never scheduled and never succeeded
       status = 'warning';
     }

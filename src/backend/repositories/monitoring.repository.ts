@@ -236,12 +236,13 @@ export const monitoringRepo = {
            SUM(CASE WHEN m.status = 'critical' THEN 1 ELSE 0 END) as critical
          FROM metric_snapshots m
          INNER JOIN (
-           SELECT resource_name, resource_type, category, MAX(collected_at) as max_at
+           SELECT resource_name, resource_type, category, COALESCE(namespace, '') as ns, MAX(collected_at) as max_at
            FROM metric_snapshots
-           GROUP BY resource_name, resource_type, category
+           GROUP BY resource_name, resource_type, category, ns
          ) latest ON m.resource_name = latest.resource_name
                   AND m.resource_type = latest.resource_type
                   AND m.category = latest.category
+                  AND COALESCE(m.namespace, '') = latest.ns
                   AND m.collected_at = latest.max_at
          GROUP BY m.category
          ORDER BY m.category`,

@@ -2,22 +2,17 @@ import React from 'react';
 import { useIoT } from '../../hooks/useMonitoring';
 import { StatusBadge } from './shared/StatusBadge';
 import { MetricCard } from './shared/MetricCard';
+import { ErrorState } from './shared/ErrorState';
 import { useUiStore } from '../../stores/ui.store';
 import { t } from '../../lib/i18n';
-
-function parseJson(raw: string): Record<string, unknown> {
-  try {
-    return JSON.parse(raw);
-  } catch {
-    return {};
-  }
-}
+import { safeParseJson } from '../../lib/monitoring-utils';
 
 export function IoTView() {
   const { language } = useUiStore();
-  const { data, isLoading } = useIoT();
+  const { data, isLoading, isError, refetch } = useIoT();
 
   if (isLoading) return <p className="text-matrix-muted text-sm p-4">{t('loading', language)}</p>;
+  if (isError) return <ErrorState onRetry={refetch} />;
   if (!data || data.length === 0) return <p className="text-matrix-muted text-sm p-4">{t('noData', language)}</p>;
 
   const emqx = data.filter((s) => s.resource_type === 'emqx' || s.resource_type === 'mqtt_broker');
@@ -27,7 +22,7 @@ export function IoTView() {
     <div className="space-y-6">
       {/* EMQX Broker */}
       {emqx.map((item) => {
-        const v = parseJson(item.value_json);
+        const v = safeParseJson(item.value_json);
         const connectedClients = v.connectedClients ?? v.connected_clients ?? '—';
         const maxConnections = v.maxConnections ?? v.max_connections ?? '—';
         const subscriptions = v.subscriptionCount ?? v.subscription_count ?? '—';

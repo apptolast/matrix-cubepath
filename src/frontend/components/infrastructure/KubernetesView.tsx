@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useKubernetes, MonitoringSnapshot } from '../../hooks/useMonitoring';
 import { StatusBadge } from './shared/StatusBadge';
 import { ResourceTable } from './shared/ResourceTable';
+import { ErrorState } from './shared/ErrorState';
 import { Skeleton } from '../ui/Skeleton';
 
 type SubTab = 'nodes' | 'pods' | 'deployments' | 'services' | 'namespaces' | 'events';
@@ -52,7 +53,7 @@ function LoadingSkeleton() {
 }
 
 export function KubernetesView() {
-  const { data: snapshots, isLoading } = useKubernetes();
+  const { data: snapshots, isLoading, isError, refetch } = useKubernetes();
   const [activeTab, setActiveTab] = useState<SubTab>('nodes');
 
   const byType = useMemo(() => {
@@ -88,6 +89,14 @@ export function KubernetesView() {
     return (
       <div className="p-4">
         <LoadingSkeleton />
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="p-4">
+        <ErrorState onRetry={refetch} />
       </div>
     );
   }

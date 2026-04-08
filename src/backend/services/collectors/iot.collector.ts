@@ -8,7 +8,8 @@ const CTX = 'iot-collector';
 // ── Configuration ──────────────────────────────────────────────────────────
 
 const EMQX_NAMESPACE = 'apptolast-invernadero-api';
-const EMQX_SERVICE_HOST = `emqx.${EMQX_NAMESPACE}.svc.cluster.local`;
+const EMQX_SERVICE_HOST =
+  process.env.EMQX_SERVICE_HOST ?? `mqttinvernaderoapi.${EMQX_NAMESPACE}.svc.cluster.local`;
 const EMQX_DASHBOARD_PORT = 18083;
 const EMQX_MQTT_PORT = 1883;
 
@@ -170,9 +171,11 @@ async function collectEmqxTcp(): Promise<IoTMetrics> {
 
 // ── Status determination ───────────────────────────────────────────────────
 
-function determineStatus(metrics: IoTMetrics): ResourceStatus {
+function determineStatus(metrics: IoTMetrics, source: string): ResourceStatus {
   if (!metrics.up) return 'critical';
-  if (metrics.connectedClients === 0) return 'warning';
+  // Only warn about zero clients when we have real data from the API
+  // TCP fallback returns synthetic zeros — we can't know the real client count
+  if (source === 'api' && metrics.connectedClients === 0) return 'warning';
   return 'healthy';
 }
 
@@ -202,7 +205,7 @@ export async function collectIoT(): Promise<void> {
     source = 'tcp';
   }
 
-  const status = determineStatus(metrics);
+  const status = determineStatus(metrics, source);
 
   monitoringRepo.insertSnapshot(
     'iot',

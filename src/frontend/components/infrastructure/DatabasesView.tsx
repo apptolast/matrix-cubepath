@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { useDatabases, MonitoringSnapshot } from '../../hooks/useMonitoring';
 import { StatusBadge } from './shared/StatusBadge';
+import { ErrorState } from './shared/ErrorState';
 import { Skeleton } from '../ui/Skeleton';
 
 interface DbData {
@@ -85,7 +86,7 @@ function LoadingSkeleton() {
 }
 
 export function DatabasesView() {
-  const { data: snapshots, isLoading } = useDatabases();
+  const { data: snapshots, isLoading, isError, refetch } = useDatabases();
 
   const databases = useMemo(() => {
     if (!snapshots) return [];
@@ -113,6 +114,14 @@ export function DatabasesView() {
     return (
       <div className="p-4">
         <LoadingSkeleton />
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="p-4">
+        <ErrorState onRetry={refetch} />
       </div>
     );
   }

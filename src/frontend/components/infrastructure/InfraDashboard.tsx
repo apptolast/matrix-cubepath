@@ -3,8 +3,10 @@ import { useMonitoringDashboard } from '../../hooks/useMonitoring';
 import { useMonitoringStore } from '../../stores/monitoring.store';
 import { useUiStore } from '../../stores/ui.store';
 import { t, LangKey } from '../../lib/i18n';
+import { timeAgo } from '../../lib/monitoring-utils';
 import { MetricCard } from './shared/MetricCard';
 import { StatusBadge } from './shared/StatusBadge';
+import { ErrorState } from './shared/ErrorState';
 import { Skeleton } from '../ui/Skeleton';
 
 const categoryIcons: Record<string, string> = {
@@ -36,17 +38,6 @@ function overallStatus(healthy: number, warning: number, critical: number) {
   if (warning > 0) return 'warning' as const;
   if (healthy > 0) return 'healthy' as const;
   return 'unknown' as const;
-}
-
-function timeAgo(dateStr: string): string {
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const mins = Math.floor(diff / 60000);
-  if (mins < 1) return 'just now';
-  if (mins < 60) return `${mins}m ago`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  return `${days}d ago`;
 }
 
 function severityColor(severity: string) {
@@ -89,11 +80,19 @@ function DashboardSkeleton() {
 }
 
 export function InfraDashboard() {
-  const { data, isLoading } = useMonitoringDashboard();
+  const { data, isLoading, isError, refetch } = useMonitoringDashboard();
   const { setActiveSubView } = useMonitoringStore();
   const { language } = useUiStore();
 
   if (isLoading) return <DashboardSkeleton />;
+
+  if (isError) {
+    return (
+      <div className="p-4">
+        <ErrorState onRetry={refetch} />
+      </div>
+    );
+  }
 
   if (!data || !data.enabled) {
     return (

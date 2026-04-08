@@ -1,16 +1,10 @@
 import React from 'react';
 import { useNetwork } from '../../hooks/useMonitoring';
 import { StatusBadge } from './shared/StatusBadge';
+import { ErrorState } from './shared/ErrorState';
 import { useUiStore } from '../../stores/ui.store';
 import { t } from '../../lib/i18n';
-
-function parseJson(raw: string): Record<string, unknown> {
-  try {
-    return JSON.parse(raw);
-  } catch {
-    return {};
-  }
-}
+import { safeParseJson } from '../../lib/monitoring-utils';
 
 function certExpiryStatus(expiryDate: string): 'healthy' | 'warning' | 'critical' {
   const diff = new Date(expiryDate).getTime() - Date.now();
@@ -30,9 +24,10 @@ function certExpiryColor(expiryDate: string): string {
 
 export function NetworkView() {
   const { language } = useUiStore();
-  const { data, isLoading } = useNetwork();
+  const { data, isLoading, isError, refetch } = useNetwork();
 
   if (isLoading) return <p className="text-matrix-muted text-sm p-4">{t('loading', language)}</p>;
+  if (isError) return <ErrorState onRetry={refetch} />;
   if (!data || data.length === 0) return <p className="text-matrix-muted text-sm p-4">{t('noData', language)}</p>;
 
   const ingress = data.filter((s) => s.resource_type === 'ingress_route');
@@ -57,7 +52,7 @@ export function NetworkView() {
               </thead>
               <tbody>
                 {ingress.map((item) => {
-                  const v = parseJson(item.value_json);
+                  const v = safeParseJson(item.value_json);
                   const hosts = Array.isArray(v.hosts) ? (v.hosts as string[]).join(', ') : String(v.hosts ?? '—');
                   return (
                     <tr key={item.id} className="border-b border-matrix-border/50 bg-matrix-surface hover:bg-white/[0.03]">
@@ -90,7 +85,7 @@ export function NetworkView() {
               </thead>
               <tbody>
                 {certs.map((item) => {
-                  const v = parseJson(item.value_json);
+                  const v = safeParseJson(item.value_json);
                   const dnsNames = Array.isArray(v.dnsNames) ? (v.dnsNames as string[]).join(', ') : String(v.dnsNames ?? '—');
                   const expiry = v.notAfter as string | undefined;
                   return (
@@ -127,7 +122,7 @@ export function NetworkView() {
               </thead>
               <tbody>
                 {dns.map((item) => {
-                  const v = parseJson(item.value_json);
+                  const v = safeParseJson(item.value_json);
                   return (
                     <tr key={item.id} className="border-b border-matrix-border/50 bg-matrix-surface hover:bg-white/[0.03]">
                       <td className="px-3 py-2 text-gray-300 font-mono text-xs">{item.resource_name}</td>

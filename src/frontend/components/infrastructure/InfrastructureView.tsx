@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { Component } from 'react';
+import type { ErrorInfo, ReactNode } from 'react';
 import { useMonitoringStore, MonitoringSubView } from '../../stores/monitoring.store';
-import { useRefreshMonitoring } from '../../hooks/useMonitoring';
+import { useRefreshMonitoring, useMonitoringDashboard } from '../../hooks/useMonitoring';
 import { useUiStore } from '../../stores/ui.store';
 import { t, LangKey } from '../../lib/i18n';
+import { timeAgo } from '../../lib/monitoring-utils';
 import { InfraDashboard } from './InfraDashboard';
 import { KubernetesView } from './KubernetesView';
 import { DatabasesView } from './DatabasesView';
@@ -14,6 +16,75 @@ import { SecurityView } from './SecurityView';
 import { BackupsView } from './BackupsView';
 import { IoTView } from './IoTView';
 import { AlertsView } from './AlertsView';
+
+// ── Error Boundary ────────────────────────────────────────────────────────
+
+interface ErrorBoundaryProps {
+  children: ReactNode;
+}
+
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error: Error | null;
+}
+
+class InfraErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
+    console.error('InfrastructureView error:', error, errorInfo);
+  }
+
+  render(): ReactNode {
+    if (this.state.hasError) {
+      return (
+        <div className="flex flex-col items-center justify-center py-16 text-center">
+          <div className="text-red-400 text-sm mb-2">Something went wrong</div>
+          <p className="text-xs text-matrix-muted mb-4 max-w-md">
+            {this.state.error?.message ?? 'An unexpected error occurred'}
+          </p>
+          <button
+            onClick={() => this.setState({ hasError: false, error: null })}
+            className="text-xs px-3 py-1.5 rounded border border-matrix-border text-matrix-accent hover:bg-matrix-surface transition-colors"
+          >
+            Reload
+          </button>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
+// ── Stale data indicator ──────────────────────────────────────────────────
+
+function LastUpdated() {
+  const { dataUpdatedAt } = useMonitoringDashboard();
+
+  if (!dataUpdatedAt) return null;
+
+  const ageMs = Date.now() - dataUpdatedAt;
+  const isStale = ageMs > 5 * 60 * 1000; // > 5 min
+
+  return (
+    <span
+      className={`text-[10px] ${isStale ? 'text-yellow-400' : 'text-matrix-muted'}`}
+      title={new Date(dataUpdatedAt).toISOString()}
+    >
+      {timeAgo(new Date(dataUpdatedAt).toISOString())}
+    </span>
+  );
+}
+
+// ── Tabs ──────────────────────────────────────────────────────────────────
 
 const tabs: { key: MonitoringSubView; labelKey: LangKey }[] = [
   { key: 'dashboard', labelKey: 'dashboard' },
@@ -83,6 +154,8 @@ export function InfrastructureView() {
           ))}
         </div>
 
+        <LastUpdated />
+
         <button
           onClick={() => refreshMonitoring.mutate()}
           disabled={refreshMonitoring.isPending}
@@ -93,8 +166,10 @@ export function InfrastructureView() {
         </button>
       </div>
 
-      {/* Active sub-view */}
-      <div className="flex-1 min-h-0 overflow-y-auto">{renderSubView()}</div>
+      {/* Active sub-view with error boundary */}
+      <div className="flex-1 min-h-0 overflow-y-auto">
+        <InfraErrorBoundary>{renderSubView()}</InfraErrorBoundary>
+      </div>
     </div>
   );
 }

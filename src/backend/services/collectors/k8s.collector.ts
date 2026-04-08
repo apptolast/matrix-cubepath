@@ -15,10 +15,23 @@ async function collectNodes(): Promise<void> {
     const readyCondition = conditions.find((c) => c.type === 'Ready');
     const isReady = readyCondition?.status === 'True';
 
+    // Check pressure conditions: MemoryPressure, DiskPressure, PIDPressure
+    const pressureTypes = ['MemoryPressure', 'DiskPressure', 'PIDPressure', 'NetworkUnavailable'];
+    const hasPressure = conditions.some(
+      (c) => pressureTypes.includes(c.type) && c.status === 'True',
+    );
+
     const capacity = node.status?.capacity ?? {};
     const allocatable = node.status?.allocatable ?? {};
 
-    const status: ResourceStatus = isReady ? 'healthy' : 'critical';
+    let status: ResourceStatus;
+    if (!isReady) {
+      status = 'critical';
+    } else if (hasPressure) {
+      status = 'warning';
+    } else {
+      status = 'healthy';
+    }
 
     monitoringRepo.insertSnapshot(
       'k8s',

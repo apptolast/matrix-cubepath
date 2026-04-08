@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useMonitoringAlerts, useAcknowledgeAlert } from '../../hooks/useMonitoring';
 import { useUiStore } from '../../stores/ui.store';
 import { t } from '../../lib/i18n';
+import { timeAgo } from '../../lib/monitoring-utils';
+import { ErrorState } from './shared/ErrorState';
 
 type SeverityFilter = 'all' | 'critical' | 'warning' | 'info';
 
@@ -13,26 +15,20 @@ const severityColors: Record<string, string> = {
   info: 'bg-blue-500/15 text-blue-400 border-blue-500/30',
 };
 
-function relativeTime(dateStr: string): string {
-  const ms = Date.now() - new Date(dateStr).getTime();
-  if (ms < 0) return 'in future';
-  const mins = Math.floor(ms / (1000 * 60));
-  if (mins < 1) return 'just now';
-  const hours = Math.floor(ms / (1000 * 60 * 60));
-  if (hours < 1) return `${mins}m ago`;
-  const days = Math.floor(ms / (1000 * 60 * 60 * 24));
-  if (days < 1) return `${hours}h ago`;
-  if (days < 30) return `${days}d ago`;
-  return `${Math.floor(days / 30)}mo ago`;
-}
-
 export function AlertsView() {
   const { language } = useUiStore();
-  const { data, isLoading } = useMonitoringAlerts();
+  const { data, isLoading, isError, refetch } = useMonitoringAlerts();
   const ackMutation = useAcknowledgeAlert();
   const [filter, setFilter] = useState<SeverityFilter>('all');
 
   if (isLoading) return <p className="text-matrix-muted text-sm p-4">{t('loading', language)}</p>;
+  if (isError) {
+    return (
+      <div className="p-4">
+        <ErrorState onRetry={refetch} />
+      </div>
+    );
+  }
   if (!data || data.length === 0) return <p className="text-matrix-muted text-sm p-4">{t('noData', language)}</p>;
 
   const filtered = filter === 'all' ? data : data.filter((a) => a.severity === filter);
@@ -99,13 +95,13 @@ export function AlertsView() {
                 </div>
                 <p className="text-xs text-gray-300 leading-relaxed">{alert.message}</p>
                 <div className="flex items-center gap-3 mt-1.5">
-                  <span className="text-[10px] text-matrix-muted">{relativeTime(alert.created_at)}</span>
+                  <span className="text-[10px] text-matrix-muted">{timeAgo(alert.created_at)}</span>
                   {alert.acknowledged ? (
                     <span className="text-[10px] text-green-400/70">acknowledged</span>
                   ) : null}
                   {alert.resolved_at && (
                     <span className="text-[10px] text-matrix-muted">
-                      resolved {relativeTime(alert.resolved_at)}
+                      resolved {timeAgo(alert.resolved_at)}
                     </span>
                   )}
                 </div>

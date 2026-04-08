@@ -63,6 +63,8 @@ export function initMonitoringDb(): void {
       ON alerts (severity, acknowledged);
     CREATE INDEX IF NOT EXISTS idx_alerts_created
       ON alerts (created_at);
+    CREATE INDEX IF NOT EXISTS idx_alerts_resource_message_resolved
+      ON alerts (resource_name, message, resolved_at);
   `);
 
   // Retention cleanup: remove snapshots older than 7 days on startup

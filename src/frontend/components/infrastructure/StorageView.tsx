@@ -1,16 +1,10 @@
 import React from 'react';
 import { useStorage } from '../../hooks/useMonitoring';
 import { StatusBadge } from './shared/StatusBadge';
+import { ErrorState } from './shared/ErrorState';
 import { useUiStore } from '../../stores/ui.store';
 import { t } from '../../lib/i18n';
-
-function parseJson(raw: string): Record<string, unknown> {
-  try {
-    return JSON.parse(raw);
-  } catch {
-    return {};
-  }
-}
+import { safeParseJson } from '../../lib/monitoring-utils';
 
 function UsageBar({ used, total }: { used: number; total: number }) {
   const pct = total > 0 ? Math.min((used / total) * 100, 100) : 0;
@@ -27,9 +21,10 @@ function UsageBar({ used, total }: { used: number; total: number }) {
 
 export function StorageView() {
   const { language } = useUiStore();
-  const { data, isLoading } = useStorage();
+  const { data, isLoading, isError, refetch } = useStorage();
 
   if (isLoading) return <p className="text-matrix-muted text-sm p-4">{t('loading', language)}</p>;
+  if (isError) return <ErrorState onRetry={refetch} />;
   if (!data || data.length === 0) return <p className="text-matrix-muted text-sm p-4">{t('noData', language)}</p>;
 
   const pvcs = data.filter((s) => s.resource_type === 'pvc');
@@ -56,7 +51,7 @@ export function StorageView() {
               </thead>
               <tbody>
                 {pvcs.map((item) => {
-                  const v = parseJson(item.value_json);
+                  const v = safeParseJson(item.value_json);
                   const capacity = String(v.capacity ?? '—');
                   const phase = String(v.phase ?? '—');
                   const storageClass = String(v.storageClassName ?? v.storageClass ?? '—');
@@ -102,7 +97,7 @@ export function StorageView() {
               </thead>
               <tbody>
                 {longhorn.map((item) => {
-                  const v = parseJson(item.value_json);
+                  const v = safeParseJson(item.value_json);
                   return (
                     <tr key={item.id} className="border-b border-matrix-border/50 bg-matrix-surface hover:bg-white/[0.03]">
                       <td className="px-3 py-2 text-gray-300">{item.resource_name}</td>

@@ -1,80 +1,11 @@
-import { coreV1Api, customObjectsApi, isK8sAvailable } from '../k8s-client';
+import { coreV1Api, isK8sAvailable } from '../k8s-client';
 import { monitoringRepo } from '../../repositories/monitoring.repository';
 import type { ResourceStatus } from '../../repositories/monitoring.repository';
 import { logger } from '../../lib/logger';
 
 const CTX = 'security-collector';
 
-const CERT_CRITICAL_DAYS = 7;
-const CERT_WARNING_DAYS = 14;
-
-async function collectTLSCertificates(): Promise<void> {
-  if (!customObjectsApi) return;
-
-  try {
-    const result = await customObjectsApi.listClusterCustomObject({
-      group: 'cert-manager.io',
-      version: 'v1',
-      plural: 'certificates',
-    });
-
-    const items = (result as { items?: unknown[] }).items ?? [];
-    for (const cert of items as Record<string, unknown>[]) {
-      const meta = cert.metadata as Record<string, string> | undefined;
-      const spec = cert.spec as Record<string, unknown> | undefined;
-      const statusObj = cert.status as Record<string, unknown> | undefined;
-      const name = meta?.name ?? 'unknown';
-      const namespace = meta?.namespace ?? 'default';
-
-      const secretName = (spec?.secretName as string) ?? '';
-      const dnsNames = (spec?.dnsNames as string[]) ?? [];
-      const notAfter = (statusObj?.notAfter as string) ?? '';
-      const conditions = (statusObj?.conditions as Record<string, string>[]) ?? [];
-      const readyCondition = conditions.find((c) => c.type === 'Ready');
-      const isReady = readyCondition?.status === 'True';
-
-      let status: ResourceStatus = isReady ? 'healthy' : 'warning';
-      let daysUntilExpiry: number | null = null;
-
-      if (notAfter) {
-        const expiryDate = new Date(notAfter);
-        const now = new Date();
-        daysUntilExpiry = Math.floor((expiryDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-
-        if (daysUntilExpiry < CERT_CRITICAL_DAYS) {
-          status = 'critical';
-          monitoringRepo.insertAlert(
-            'security',
-            `${namespace}/${name}`,
-            'critical',
-            `TLS certificate expires in ${daysUntilExpiry} days (${notAfter})`,
-          );
-        } else if (daysUntilExpiry < CERT_WARNING_DAYS) {
-          status = 'warning';
-          monitoringRepo.insertAlert(
-            'security',
-            `${namespace}/${name}`,
-            'warning',
-            `TLS certificate expires in ${daysUntilExpiry} days (${notAfter})`,
-          );
-        }
-      }
-
-      monitoringRepo.insertSnapshot(
-        'security',
-        'certificate',
-        name,
-        namespace,
-        status,
-        JSON.stringify({ secretName, dnsNames, notAfter, daysUntilExpiry, ready: isReady }),
-      );
-    }
-
-    logger.info(CTX, `Collected ${items.length} TLS certificates`);
-  } catch (err) {
-    logger.error(CTX, 'Failed to collect TLS certificates', err);
-  }
-}
+// Note: TLS certificate monitoring is handled by network.collector.ts to avoid duplicates
 
 async function collectWireGuardVPN(): Promise<void> {
   if (!coreV1Api) return;
@@ -195,7 +126,6 @@ export async function collectSecurity(): Promise<void> {
   }
 
   const collectors = [
-    { name: 'tls-certificates', fn: collectTLSCertificates },
     { name: 'wireguard-vpn', fn: collectWireGuardVPN },
     { name: 'passbolt', fn: collectPassbolt },
   ];

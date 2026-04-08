@@ -2,22 +2,17 @@ import React from 'react';
 import { useDocker } from '../../hooks/useMonitoring';
 import { StatusBadge } from './shared/StatusBadge';
 import { MetricCard } from './shared/MetricCard';
+import { ErrorState } from './shared/ErrorState';
 import { useUiStore } from '../../stores/ui.store';
 import { t } from '../../lib/i18n';
-
-function parseJson(raw: string): Record<string, unknown> {
-  try {
-    return JSON.parse(raw);
-  } catch {
-    return {};
-  }
-}
+import { safeParseJson } from '../../lib/monitoring-utils';
 
 export function DockerView() {
   const { language } = useUiStore();
-  const { data, isLoading } = useDocker();
+  const { data, isLoading, isError, refetch } = useDocker();
 
   if (isLoading) return <p className="text-matrix-muted text-sm p-4">{t('loading', language)}</p>;
+  if (isError) return <ErrorState onRetry={refetch} />;
   if (!data || data.length === 0) return <p className="text-matrix-muted text-sm p-4">{t('noData', language)}</p>;
 
   const registries = data.filter((s) => s.resource_type === 'registry');
@@ -32,7 +27,7 @@ export function DockerView() {
           <h3 className="text-sm font-semibold text-matrix-accent mb-2">Registry</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {registries.map((item) => {
-              const v = parseJson(item.value_json);
+              const v = safeParseJson(item.value_json);
               return (
                 <MetricCard
                   key={item.id}
@@ -63,7 +58,7 @@ export function DockerView() {
               </thead>
               <tbody>
                 {containers.map((item) => {
-                  const v = parseJson(item.value_json);
+                  const v = safeParseJson(item.value_json);
                   return (
                     <tr key={item.id} className="border-b border-matrix-border/50 bg-matrix-surface hover:bg-white/[0.03]">
                       <td className="px-3 py-2 text-gray-300">{item.resource_name}</td>

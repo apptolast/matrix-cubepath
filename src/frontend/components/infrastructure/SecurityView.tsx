@@ -2,16 +2,10 @@ import React from 'react';
 import { useSecurity } from '../../hooks/useMonitoring';
 import { StatusBadge } from './shared/StatusBadge';
 import { MetricCard } from './shared/MetricCard';
+import { ErrorState } from './shared/ErrorState';
 import { useUiStore } from '../../stores/ui.store';
 import { t } from '../../lib/i18n';
-
-function parseJson(raw: string): Record<string, unknown> {
-  try {
-    return JSON.parse(raw);
-  } catch {
-    return {};
-  }
-}
+import { safeParseJson } from '../../lib/monitoring-utils';
 
 function daysUntil(dateStr: string): number {
   return (new Date(dateStr).getTime() - Date.now()) / (1000 * 60 * 60 * 24);
@@ -19,9 +13,10 @@ function daysUntil(dateStr: string): number {
 
 export function SecurityView() {
   const { language } = useUiStore();
-  const { data, isLoading } = useSecurity();
+  const { data, isLoading, isError, refetch } = useSecurity();
 
   if (isLoading) return <p className="text-matrix-muted text-sm p-4">{t('loading', language)}</p>;
+  if (isError) return <ErrorState onRetry={refetch} />;
   if (!data || data.length === 0) return <p className="text-matrix-muted text-sm p-4">{t('noData', language)}</p>;
 
   const certExpiry = data.filter((s) => s.resource_type === 'cert_expiry');
@@ -49,7 +44,7 @@ export function SecurityView() {
               </thead>
               <tbody>
                 {certExpiry.map((item) => {
-                  const v = parseJson(item.value_json);
+                  const v = safeParseJson(item.value_json);
                   const expiry = v.notAfter as string | undefined;
                   const days = expiry ? daysUntil(expiry) : null;
                   const colorClass =
@@ -85,7 +80,7 @@ export function SecurityView() {
           <h3 className="text-sm font-semibold text-matrix-accent mb-2">VPN (WireGuard)</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {vpn.map((item) => {
-              const v = parseJson(item.value_json);
+              const v = safeParseJson(item.value_json);
               return (
                 <MetricCard
                   key={item.id}
@@ -107,7 +102,7 @@ export function SecurityView() {
           <h3 className="text-sm font-semibold text-matrix-accent mb-2">Password Manager (Passbolt)</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {passbolt.map((item) => {
-              const v = parseJson(item.value_json);
+              const v = safeParseJson(item.value_json);
               return (
                 <MetricCard
                   key={item.id}

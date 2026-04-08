@@ -5,8 +5,6 @@ import { logger } from '../../lib/logger';
 
 const CTX = 'storage-collector';
 
-const PVC_USAGE_WARNING_THRESHOLD = 0.9;
-
 async function collectPVCs(): Promise<void> {
   if (!coreV1Api) return;
 
@@ -30,25 +28,8 @@ async function collectPVCs(): Promise<void> {
       status = 'unknown';
     }
 
-    // Check capacity usage if both spec and status capacity are available
-    const specCapacity = pvc.spec?.resources?.requests?.storage;
-    const actualCapacity = pvc.status?.capacity?.storage;
-    if (specCapacity && actualCapacity) {
-      const specBytes = parseStorageSize(specCapacity);
-      const actualBytes = parseStorageSize(actualCapacity);
-      if (specBytes > 0 && actualBytes > 0) {
-        const usageRatio = actualBytes / specBytes;
-        if (usageRatio > PVC_USAGE_WARNING_THRESHOLD) {
-          status = 'warning';
-          monitoringRepo.insertAlert(
-            'storage',
-            `${namespace}/${name}`,
-            'warning',
-            `PVC usage is at ${Math.round(usageRatio * 100)}% of capacity`,
-          );
-        }
-      }
-    }
+    // Note: K8s PVC API does not expose actual disk usage (only allocated capacity).
+    // Real usage metrics come from kubelet or Longhorn, not PVC status.
 
     monitoringRepo.insertSnapshot(
       'storage',
@@ -59,32 +40,6 @@ async function collectPVCs(): Promise<void> {
       JSON.stringify({ phase, capacity, storageClassName, volumeName }),
     );
   }
-}
-
-function parseStorageSize(size: string): number {
-  const match = size.match(/^(\d+(?:\.\d+)?)\s*(Ki|Mi|Gi|Ti|Pi|Ei|k|M|G|T|P|E)?$/);
-  if (!match) return 0;
-
-  const value = parseFloat(match[1]);
-  const unit = match[2] ?? '';
-
-  const multipliers: Record<string, number> = {
-    '': 1,
-    Ki: 1024,
-    Mi: 1024 ** 2,
-    Gi: 1024 ** 3,
-    Ti: 1024 ** 4,
-    Pi: 1024 ** 5,
-    Ei: 1024 ** 6,
-    k: 1000,
-    M: 1000 ** 2,
-    G: 1000 ** 3,
-    T: 1000 ** 4,
-    P: 1000 ** 5,
-    E: 1000 ** 6,
-  };
-
-  return value * (multipliers[unit] ?? 1);
 }
 
 async function collectLonghornVolumes(): Promise<void> {
