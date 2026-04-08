@@ -62,6 +62,9 @@ lerna-debug.log*
 coverage/
 .nyc_output/
 
+# K8s secrets (never commit)
+k8s/secret.yaml
+
 # AI agents / tools
 .agents/
 .claude/

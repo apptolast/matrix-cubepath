@@ -58,6 +58,7 @@
     ]
   },
   "dependencies": {
+    "@kubernetes/client-node": "^1.4.0",
     "@tanstack/react-query": "^5.90.21",
     "@types/nodemailer": "^7.0.11",
     "better-sqlite3": "^12.6.2",

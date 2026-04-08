@@ -22,6 +22,7 @@ import { localSettingsRouter } from './routes/local-settings.routes';
 import { logsRouter } from './routes/logs.routes';
 import { notesRouter } from './routes/notes.routes';
 import { docsRouter } from './routes/docs.routes';
+import { monitoringRouter } from './routes/monitoring.routes';
 import { DEMO_USERNAME } from './db/seed-demo';
 
 const app = express();
@@ -96,6 +97,7 @@ app.use('/api', localSettingsRouter);
 app.use('/api', logsRouter);
 app.use('/api', notesRouter);
 app.use('/api', docsRouter);
+app.use('/api', monitoringRouter);
 
 // Demo data reset — only allowed for the demo user
 app.post('/api/demo/reset', (req, res) => {

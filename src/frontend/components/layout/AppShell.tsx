@@ -9,6 +9,7 @@ import { ProjectsView } from '../projects/ProjectsView';
 import { IdeasView } from '../ideas/IdeasView';
 import PasswordsView from '../passwords/PasswordsView';
 import { DocsView } from '../docs/DocsView';
+import { InfrastructureView } from '../infrastructure/InfrastructureView';
 import { RightPanel } from './RightPanel';
 import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts';
 import { ToastContainer } from '../ui/ToastContainer';
@@ -36,6 +37,8 @@ export function AppShell() {
         return <PasswordsView />;
       case 'docs':
         return <DocsView />;
+      case 'infrastructure':
+        return <InfrastructureView />;
       default:
         return (
           <div className="flex items-center justify-center h-full text-matrix-muted">

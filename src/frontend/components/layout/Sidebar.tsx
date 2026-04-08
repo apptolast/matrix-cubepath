@@ -11,6 +11,7 @@ const tabs: { key: Tab; icon: string }[] = [
   { key: 'ideas', icon: '✦' },
   { key: 'passwords', icon: '🔒' },
   { key: 'docs', icon: '📄' },
+  { key: 'infrastructure', icon: '🖥' },
   { key: 'settings', icon: '⚙' },
 ];
 

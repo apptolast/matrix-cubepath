@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: matrix-cubepath
+  namespace: matrix-cubepath
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: matrix-cubepath
+  template:
+    metadata:
+      labels:
+        app: matrix-cubepath
+    spec:
+      serviceAccountName: matrix-cubepath
+      containers:
+        - name: matrix-cubepath
+          image: localhost:5000/matrix-cubepath:latest
+          ports:
+            - containerPort: 3939
+          envFrom:
+            - configMapRef:
+                name: matrix-cubepath-config
+            - secretRef:
+                name: matrix-cubepath-secrets
+                optional: true
+          env:
+            - name: NODE_ENV
+              value: "production"
+            - name: DATA_DIR
+              value: "/data"
+            - name: MONITORING_ENABLED
+              value: "true"
+            - name: MONITORING_K8S_MODE
+              value: "in-cluster"
+          volumeMounts:
+            - name: matrix-data
+              mountPath: /data
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 3939
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 3939
+            initialDelaySeconds: 30
+            periodSeconds: 30
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            readOnlyRootFilesystem: false
+      volumes:
+        - name: matrix-data
+          persistentVolumeClaim:
+            claimName: matrix-cubepath-data

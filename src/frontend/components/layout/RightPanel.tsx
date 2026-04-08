@@ -1002,6 +1002,7 @@ const PANEL_CONFIG: Record<Tab, React.FC[]> = {
   ideas: [IdeaFunnelWidget, TopScoredIdeas, MotivationalQuote],
   passwords: [ShortcutsHelp, SystemStatus, MotivationalQuote],
   docs: [ShortcutsHelp, MotivationalQuote],
+  infrastructure: [SystemStatus, MotivationalQuote],
   settings: [ShortcutsHelp, SystemStatus, MotivationalQuote],
 };
 
