@@ -180,6 +180,22 @@ async function collectEvents(): Promise<void> {
       severity,
       `[${reason}] ${message}`,
     );
+
+    monitoringRepo.insertSnapshot(
+      'k8s',
+      'event',
+      `${namespace}/${resourceName}`,
+      namespace || null,
+      severity === 'critical' ? 'critical' : 'warning',
+      JSON.stringify({
+        type: 'Warning',
+        reason,
+        message,
+        resourceName,
+        namespace,
+        eventTime: eventTime ? eventTime.toISOString() : null,
+      }),
+    );
   }
 }
 

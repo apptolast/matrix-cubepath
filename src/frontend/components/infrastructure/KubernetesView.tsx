@@ -155,16 +155,22 @@ function NodesTable({ data }: { data: Record<string, unknown>[] }) {
     {
       key: 'cpuCapacity',
       label: 'CPU Capacity',
-      render: (item: Record<string, unknown>) => (
-        <span className="text-gray-300">{String(item.cpuCapacity ?? item.cpu_capacity ?? '-')}</span>
-      ),
+      render: (item: Record<string, unknown>) => {
+        const capacity = item.capacity as Record<string, unknown> | undefined;
+        return (
+          <span className="text-gray-300">{String(capacity?.cpu ?? item.cpuCapacity ?? '-')}</span>
+        );
+      },
     },
     {
       key: 'memoryCapacity',
       label: 'Memory Capacity',
-      render: (item: Record<string, unknown>) => (
-        <span className="text-gray-300">{String(item.memoryCapacity ?? item.memory_capacity ?? '-')}</span>
-      ),
+      render: (item: Record<string, unknown>) => {
+        const capacity = item.capacity as Record<string, unknown> | undefined;
+        return (
+          <span className="text-gray-300">{String(capacity?.memory ?? item.memoryCapacity ?? '-')}</span>
+        );
+      },
     },
     {
       key: 'conditions',

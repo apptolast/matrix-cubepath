@@ -62,8 +62,8 @@ lerna-debug.log*
 coverage/
 .nyc_output/
 
-# K8s secrets (never commit)
-k8s/secret.yaml
+# K8s deployment (server-specific, never commit)
+k8s/
 
 # AI agents / tools
 .agents/

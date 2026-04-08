@@ -48,7 +48,7 @@ export const monitoringRepo = {
     getMonitoringDb()
       .prepare(
         `INSERT INTO metric_snapshots (category, resource_type, resource_name, namespace, status, value_json, collected_at)
-         VALUES (?, ?, ?, ?, ?, ?, datetime('now'))`,
+         VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))`,
       )
       .run(category, resourceType, resourceName, namespace, status, valueJson);
   },
@@ -58,12 +58,13 @@ export const monitoringRepo = {
       .prepare(
         `SELECT m.* FROM metric_snapshots m
          INNER JOIN (
-           SELECT resource_name, resource_type, MAX(collected_at) as max_at
+           SELECT resource_name, resource_type, COALESCE(namespace, '') as ns, MAX(collected_at) as max_at
            FROM metric_snapshots
            WHERE category = ?
-           GROUP BY resource_name, resource_type
+           GROUP BY resource_name, resource_type, ns
          ) latest ON m.resource_name = latest.resource_name
                   AND m.resource_type = latest.resource_type
+                  AND COALESCE(m.namespace, '') = latest.ns
                   AND m.collected_at = latest.max_at
          WHERE m.category = ?
          ORDER BY m.resource_name`,
@@ -76,12 +77,13 @@ export const monitoringRepo = {
       .prepare(
         `SELECT m.* FROM metric_snapshots m
          INNER JOIN (
-           SELECT resource_name, resource_type, category, MAX(collected_at) as max_at
+           SELECT resource_name, resource_type, category, COALESCE(namespace, '') as ns, MAX(collected_at) as max_at
            FROM metric_snapshots
-           GROUP BY resource_name, resource_type, category
+           GROUP BY resource_name, resource_type, category, ns
          ) latest ON m.resource_name = latest.resource_name
                   AND m.resource_type = latest.resource_type
                   AND m.category = latest.category
+                  AND COALESCE(m.namespace, '') = latest.ns
                   AND m.collected_at = latest.max_at
          ORDER BY m.category, m.resource_name`,
       )
@@ -93,15 +95,22 @@ export const monitoringRepo = {
     fromTime: string,
     toTime: string,
     limit = 500,
+    namespace?: string,
+    category?: MonitoringCategory,
   ): MetricSnapshot[] {
-    return getMonitoringDb()
-      .prepare(
-        `SELECT * FROM metric_snapshots
-         WHERE resource_name = ? AND collected_at >= ? AND collected_at <= ?
-         ORDER BY collected_at DESC
-         LIMIT ?`,
-      )
-      .all(resourceName, fromTime, toTime, limit) as MetricSnapshot[];
+    let sql = `SELECT * FROM metric_snapshots WHERE resource_name = ? AND collected_at >= ? AND collected_at <= ?`;
+    const params: (string | number)[] = [resourceName, fromTime, toTime];
+    if (namespace !== undefined) {
+      sql += ` AND COALESCE(namespace, '') = ?`;
+      params.push(namespace);
+    }
+    if (category !== undefined) {
+      sql += ` AND category = ?`;
+      params.push(category);
+    }
+    sql += ` ORDER BY collected_at DESC LIMIT ?`;
+    params.push(limit);
+    return getMonitoringDb().prepare(sql).all(...params) as MetricSnapshot[];
   },
 
   getHistoryByCategory(
@@ -140,7 +149,7 @@ export const monitoringRepo = {
     getMonitoringDb()
       .prepare(
         `INSERT INTO alerts (category, resource_name, severity, message, created_at)
-         VALUES (?, ?, ?, ?, datetime('now'))`,
+         VALUES (?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))`,
       )
       .run(category, resourceName, severity, message);
   },
@@ -173,7 +182,7 @@ export const monitoringRepo = {
   resolveAlert(resourceName: string, message: string): void {
     getMonitoringDb()
       .prepare(
-        `UPDATE alerts SET resolved_at = datetime('now')
+        `UPDATE alerts SET resolved_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
          WHERE resource_name = ? AND message = ? AND resolved_at IS NULL`,
       )
       .run(resourceName, message);
@@ -192,7 +201,7 @@ export const monitoringRepo = {
     getMonitoringDb()
       .prepare(
         `INSERT INTO monitoring_config (key, value, updated_at)
-         VALUES (?, ?, datetime('now'))
+         VALUES (?, ?, strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
          ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at`,
       )
       .run(key, value);

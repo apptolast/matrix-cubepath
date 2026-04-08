@@ -63,7 +63,7 @@ export function useKubernetes() {
 }
 
 export function useKubernetesDetail(resourceType: string, name: string) {
-  return useQuery<MonitoringSnapshot>({
+  return useQuery<MonitoringSnapshot[]>({
     queryKey: ['monitoring', 'kubernetes', resourceType, name],
     queryFn: () =>
       apiFetch(`/monitoring/kubernetes/${encodeURIComponent(resourceType)}/${encodeURIComponent(name)}`),

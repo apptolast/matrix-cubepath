@@ -165,8 +165,8 @@ export const monitoringController = {
       } else if (category) {
         res.json(monitoringRepo.getHistoryByCategory(category, fromTime, toTime));
       } else {
-        // Return all recent snapshots limited by time range
-        res.json(monitoringRepo.getHistoryByCategory('k8s', fromTime, toTime));
+        res.status(400).json({ error: 'Either resource or category must be provided' });
+        return;
       }
     } catch (err) {
       logger.error('monitoring', 'getHistory error', err);

@@ -67,12 +67,12 @@ export function initMonitoringDb(): void {
 
   // Retention cleanup: remove snapshots older than 7 days on startup
   monitoringDb
-    .prepare(`DELETE FROM metric_snapshots WHERE collected_at < datetime('now', '-7 days')`)
+    .prepare(`DELETE FROM metric_snapshots WHERE collected_at < strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-7 days')`)
     .run();
 
   // Resolve alerts older than 24h that haven't been acknowledged
   monitoringDb
-    .prepare(`UPDATE alerts SET resolved_at = datetime('now') WHERE resolved_at IS NULL AND created_at < datetime('now', '-24 hours')`)
+    .prepare(`UPDATE alerts SET resolved_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now') WHERE resolved_at IS NULL AND created_at < strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-24 hours')`)
     .run();
 }
 
