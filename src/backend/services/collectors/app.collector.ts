@@ -144,7 +144,17 @@ async function discoverApps(): Promise<AppDefinition[]> {
       apps.push({ name, namespace, healthPath, port, https });
     }
 
-    logger.info(CTX, `Discovered ${apps.length} application services via K8s API`);
+    // Merge FALLBACK_APPS entries that are in skipped namespaces (e.g. rancher in cattle-system)
+    // These are never discovered dynamically but we still want to monitor them.
+    for (const fallback of FALLBACK_APPS) {
+      const key = `${fallback.namespace}/${fallback.name}`;
+      if (!seenKeys.has(key)) {
+        apps.push(fallback);
+        seenKeys.add(key);
+      }
+    }
+
+    logger.info(CTX, `Discovered ${apps.length} application services via K8s API (incl. fallback overrides)`);
     return apps.length > 0 ? apps : FALLBACK_APPS;
   } catch (err) {
     logger.warn(CTX, 'Failed to discover apps via K8s, using fallback list', err);
