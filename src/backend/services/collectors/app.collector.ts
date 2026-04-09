@@ -1,3 +1,4 @@
+import https from 'node:https';
 import { coreV1Api, isK8sAvailable } from '../k8s-client';
 import { monitoringRepo } from '../../repositories/monitoring.repository';
 import type { ResourceStatus } from '../../repositories/monitoring.repository';
@@ -29,12 +30,12 @@ const APP_OVERRIDES: Record<string, Partial<AppDefinition>> = {
   'openclaw':          { healthPath: '/' },
   'minecraft-stats':   { healthPath: '/' },
   'passbolt':          { healthPath: '/healthcheck/status.json', https: true },
-  'wireguard':         { healthPath: '/' },
+  'wgdashboard':       { healthPath: '/', port: 10086 },
   'shlink':            { healthPath: '/rest/health' },
   'greenhouse-admin':  { healthPath: '/' },
-  'invernaderos-api':  { healthPath: '/' },
-  'menus-backend':     { healthPath: '/' },
-  'whoop-david-api':   { healthPath: '/' },
+  'invernaderos-api':  { healthPath: '/', port: 8080 },
+  'menus-backend':     { healthPath: '/', port: 80 },
+  'whoop-david-api':   { healthPath: '/', port: 8080 },
   'redisinsight':      { healthPath: '/' },
   'rancher':           { healthPath: '/healthz', https: true },
   'traefik-dashboard': { healthPath: '/ping', port: 9000 },
@@ -64,12 +65,12 @@ const FALLBACK_APPS: AppDefinition[] = [
   { name: 'openclaw', namespace: 'openclaw', healthPath: '/', port: 3000 },
   { name: 'minecraft-stats', namespace: 'minecraft', healthPath: '/', port: 80 },
   { name: 'passbolt', namespace: 'passbolt', healthPath: '/healthcheck/status.json', port: 443, https: true },
-  { name: 'wireguard', namespace: 'apptolast-wireguard', healthPath: '/', port: 51821 },
+  { name: 'wgdashboard', namespace: 'apptolast-wireguard', healthPath: '/', port: 10086 },
   { name: 'shlink', namespace: 'shlink', healthPath: '/rest/health', port: 8080 },
-  { name: 'greenhouse-admin', namespace: 'apptolast-greenhouse-admin-prod', healthPath: '/', port: 80 },
-  { name: 'invernaderos-api', namespace: 'apptolast-invernadero-api', healthPath: '/', port: 3000 },
-  { name: 'menus-backend', namespace: 'apptolast-menus-dev', healthPath: '/', port: 3000 },
-  { name: 'whoop-david-api', namespace: 'apptolast-whoop-david-api-prod', healthPath: '/', port: 3000 },
+  { name: 'greenhouse-admin', namespace: 'apptolast-greenhouse-admin-dev', healthPath: '/', port: 80 },
+  { name: 'invernaderos-api', namespace: 'apptolast-invernadero-api-prod', healthPath: '/', port: 8080 },
+  { name: 'menus-backend', namespace: 'apptolast-menus-dev', healthPath: '/', port: 80 },
+  { name: 'whoop-david-api', namespace: 'apptolast-whoop-david-api-prod', healthPath: '/', port: 8080 },
   { name: 'redisinsight', namespace: 'redisinsight', healthPath: '/', port: 5540 },
   { name: 'rancher', namespace: 'cattle-system', healthPath: '/healthz', port: 443, https: true },
   { name: 'traefik-dashboard', namespace: 'traefik', healthPath: '/ping', port: 9000 },
@@ -171,6 +172,18 @@ async function resolveServiceIP(app: AppDefinition): Promise<string | null> {
   }
 }
 
+/** HTTPS GET that skips certificate validation (for internal services with self-signed certs) */
+function httpsGetInsecure(url: string, timeoutMs: number): Promise<{ statusCode: number }> {
+  return new Promise((resolve, reject) => {
+    const req = https.get(url, { rejectUnauthorized: false, timeout: timeoutMs }, (res) => {
+      res.resume();
+      resolve({ statusCode: res.statusCode ?? 500 });
+    });
+    req.on('error', reject);
+    req.on('timeout', () => { req.destroy(); reject(new Error('Timeout')); });
+  });
+}
+
 function determineStatus(statusCode: number, responseTimeMs: number): ResourceStatus {
   if (statusCode >= 200 && statusCode < 300) {
     return responseTimeMs > SLOW_THRESHOLD_MS ? 'warning' : 'healthy';
@@ -205,11 +218,9 @@ async function checkApp(app: AppDefinition): Promise<void> {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
-    const response = await fetch(url, {
-      method: 'GET',
-      signal: controller.signal,
-      redirect: 'follow',
-    });
+    const response = app.https
+      ? await httpsGetInsecure(url, TIMEOUT_MS).then((r) => ({ status: r.statusCode }))
+      : await fetch(url, { method: 'GET', signal: controller.signal, redirect: 'follow' });
 
     clearTimeout(timeoutId);
     const responseTimeMs = Date.now() - startTime;
