@@ -79,6 +79,17 @@ const FALLBACK_APPS: AppDefinition[] = [
 
 // ── Discovery ─────────────────────────────────────────────────────────────
 
+// Services that should never be HTTP health-checked (UDP, non-HTTP protocols, internal-only)
+const SKIP_SERVICES = new Set([
+  'wireguard',           // UDP service, not HTTP-checkable
+  'minecraft',           // Game server (TCP 25565), not HTTP
+  'sftp-service',        // SFTP (TCP 22), not HTTP
+  'mqttinvernaderoapi',  // MQTT broker, not HTTP
+  'kubernetes',          // K8s API server, requires auth
+  'traefik-crds',        // Internal CRD webhook, not a real app
+  'capi-webhook-service', // Internal webhook
+]);
+
 function shouldSkipAppService(
   name: string,
   namespace: string,
@@ -86,6 +97,7 @@ function shouldSkipAppService(
   ports: { port: number }[],
 ): boolean {
   if (SKIP_NAMESPACES.has(namespace)) return true;
+  if (SKIP_SERVICES.has(name)) return true;
   if (name.endsWith('-external') || name.endsWith('-hl')) return true;
 
   const appLabel = labels['app'] ?? '';
