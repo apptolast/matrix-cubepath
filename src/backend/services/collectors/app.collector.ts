@@ -24,21 +24,21 @@ interface AppDefinition {
 // These override auto-discovered defaults for apps that need special config.
 
 const APP_OVERRIDES: Record<string, Partial<AppDefinition>> = {
-  'n8n':               { healthPath: '/', port: 5678 },
-  'langflow':          { healthPath: '/health', port: 7860 },
-  'gibbon':            { healthPath: '/' },
-  'openclaw':          { healthPath: '/' },
-  'minecraft-stats':   { healthPath: '/' },
-  'passbolt':          { healthPath: '/healthcheck/status.json', https: true },
-  'wgdashboard':       { healthPath: '/', port: 10086 },
-  'shlink':            { healthPath: '/rest/health' },
-  'greenhouse-admin':  { healthPath: '/' },
-  'invernaderos-api':  { healthPath: '/', port: 8080 },
-  'menus-backend':     { healthPath: '/', port: 80 },
-  'whoop-david-api':   { healthPath: '/', port: 8080 },
-  'redisinsight':      { healthPath: '/' },
-  'rancher':           { healthPath: '/healthz', https: true },
-  'traefik-dashboard': { healthPath: '/ping', port: 9000 },
+  'n8n-prod':                    { healthPath: '/' },
+  'langflow-service-backend':    { healthPath: '/health', port: 7860 },
+  'langflow-service':            { healthPath: '/' },
+  'gibbon':                      { healthPath: '/' },
+  'mission-control':             { healthPath: '/' },
+  'minecraft-stats':             { healthPath: '/' },
+  'passbolt':                    { healthPath: '/healthcheck/status.json', https: true, port: 443 },
+  'wgdashboard':                 { healthPath: '/', port: 10086 },
+  'shlink':                      { healthPath: '/rest/health' },
+  'greenhouse-admin':            { healthPath: '/' },
+  'invernaderos-api':            { healthPath: '/', port: 8080 },
+  'menus-backend':               { healthPath: '/', port: 80 },
+  'whoop-david-api':             { healthPath: '/', port: 8080 },
+  'redisinsight-service':        { healthPath: '/' },
+  'rancher':                     { healthPath: '/healthz', https: true },
 };
 
 // Known database ports to exclude from app discovery
@@ -59,21 +59,22 @@ const CACHE_TTL_MS = 300_000; // 5 min
 // ── Fallback: static app list ─────────────────────────────────────────────
 
 const FALLBACK_APPS: AppDefinition[] = [
-  { name: 'n8n', namespace: 'n8n', healthPath: '/', port: 5678 },
-  { name: 'langflow', namespace: 'langflow', healthPath: '/health', port: 7860 },
+  { name: 'n8n-prod', namespace: 'n8n', healthPath: '/', port: 80 },
+  { name: 'langflow-service-backend', namespace: 'langflow', healthPath: '/health', port: 7860 },
+  { name: 'langflow-service', namespace: 'langflow', healthPath: '/', port: 8080 },
   { name: 'gibbon', namespace: 'gibbon', healthPath: '/', port: 80 },
-  { name: 'openclaw', namespace: 'openclaw', healthPath: '/', port: 3000 },
-  { name: 'minecraft-stats', namespace: 'minecraft', healthPath: '/', port: 80 },
+  { name: 'mission-control', namespace: 'openclaw', healthPath: '/', port: 3000 },
+  { name: 'minecraft-stats', namespace: 'minecraft-stats', healthPath: '/', port: 80 },
   { name: 'passbolt', namespace: 'passbolt', healthPath: '/healthcheck/status.json', port: 443, https: true },
   { name: 'wgdashboard', namespace: 'apptolast-wireguard', healthPath: '/', port: 10086 },
-  { name: 'shlink', namespace: 'shlink', healthPath: '/rest/health', port: 8080 },
+  { name: 'shlink', namespace: 'shlink', healthPath: '/rest/health', port: 80 },
   { name: 'greenhouse-admin', namespace: 'apptolast-greenhouse-admin-dev', healthPath: '/', port: 80 },
   { name: 'invernaderos-api', namespace: 'apptolast-invernadero-api-prod', healthPath: '/', port: 8080 },
   { name: 'menus-backend', namespace: 'apptolast-menus-dev', healthPath: '/', port: 80 },
   { name: 'whoop-david-api', namespace: 'apptolast-whoop-david-api-prod', healthPath: '/', port: 8080 },
-  { name: 'redisinsight', namespace: 'redisinsight', healthPath: '/', port: 5540 },
+  { name: 'redisinsight-service', namespace: 'redisinsight', healthPath: '/', port: 5540 },
   { name: 'rancher', namespace: 'cattle-system', healthPath: '/healthz', port: 443, https: true },
-  { name: 'traefik-dashboard', namespace: 'traefik', healthPath: '/ping', port: 9000 },
+  { name: 'health-dashboard', namespace: 'health-dashboard', healthPath: '/', port: 80 },
 ];
 
 // ── Discovery ─────────────────────────────────────────────────────────────
